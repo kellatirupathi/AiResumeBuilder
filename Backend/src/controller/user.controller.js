@@ -8,7 +8,7 @@ const start = async (req, res) => {
   if (req.user) {
     return res.status(200).json(new ApiResponse(200, req.user, "User Found"));
   } else {
-    return res.status(404).json(new ApiResponse(404, null, "Use Not Found"));
+    return res.status(404).json(new ApiResponse(404, null, "User Not Found"));
   }
 };
 
@@ -17,7 +17,7 @@ const registerUser = async (req, res) => {
   const { fullName, email, password } = req.body;
 
   if (!fullName || !email || !password) {
-    console.log("Registration Failed data insufficeient ");
+    console.log("Registration Failed data insufficient");
     return res
       .status(400)
       .json(
@@ -95,7 +95,7 @@ const loginUser = async (req, res) => {
 
     if (!isPasswordCorrect) {
       console.log("Login Failed: Invalid credentials");
-      return res.status(406).json(new ApiError(406, "Invalid credentials."));
+      return res.status(401).json(new ApiError(401, "Invalid credentials.")); // Use 401 for bad creds
     }
 
     const jwtToken = jwt.sign(
@@ -103,16 +103,16 @@ const loginUser = async (req, res) => {
       process.env.JWT_SECRET_KEY,
       { expiresIn: process.env.JWT_SECRET_EXPIRES_IN }
     );
-
-    // FIXED COOKIE SETTINGS
+    
+    // **FIXED COOKIE OPTIONS FOR PRODUCTION**
     const cookieOptions = {
       httpOnly: true,
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
-      sameSite: "none",
-      secure: true, // Must be true when sameSite is 'none'
-      path: "/" // Explicitly set cookie path
+      secure: true, // Must be true for cross-domain cookies
+      sameSite: "none", // Allows the cookie to be sent on requests from different domains
+      path: "/", // Ensure cookie is available on all paths
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000) // 1 day expiration
     };
-    
+
     console.log("Login Successful");
     console.log("Cookie settings:", cookieOptions);
     return res
@@ -140,26 +140,22 @@ const loginUser = async (req, res) => {
   }
 };
 
+// **FIXED LOGOUT FUNCTION**
 const logoutUser = (req, res) => {
   console.log("Logout attempt");
-  if (req.user) {
-    // Use the same cookie options as login but with expires in the past
-    const cookieOptions = {
-      httpOnly: true,
-      expires: new Date(0),
-      sameSite: "none",
-      secure: true,
-      path: "/"
-    };
-    
-    console.log("Logging out user, clearing cookie with options:", cookieOptions);
-    return res
-      .clearCookie("token", cookieOptions)
-      .status(200)
-      .json(new ApiResponse(200, null, "User logged out successfully."));
-  } else {
-    return res.status(404).json(new ApiError(404, "User not found."));
-  }
+  
+  // Use the same secure options to clear the cookie
+  const cookieOptions = {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    path: "/"
+  };
+  
+  return res
+    .clearCookie("token", cookieOptions)
+    .status(200)
+    .json(new ApiResponse(200, null, "User logged out successfully."));
 };
 
 export { start, loginUser, logoutUser, registerUser };
