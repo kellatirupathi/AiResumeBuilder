@@ -2,12 +2,15 @@ import axios from "axios";
 import { VITE_APP_URL } from "@/config/config";
 
 const axiosInstance = axios.create({
+  // **FIX:** Added a slash before "api/"
   baseURL: VITE_APP_URL + "/api/",
   headers: {
     "Content-Type": "application/json",
   },
   withCredentials: true,
 });
+
+// ... rest of the file remains the same ...
 
 const startUser = async () => {
   try {
