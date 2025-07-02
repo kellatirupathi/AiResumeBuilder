@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{firstName}} {{lastName}}</title>
+  <style>
+    /* Base Styles */
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.4;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      background-color: white;
+    }
+    
+    .resume {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0;
+      padding: 0;
+      background-color: white;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      border-radius: 0.375rem;
+      overflow: hidden;
+    }
+    
+    /* Header Section */
+    .header {
+      padding: 2rem;
+    }
+    
+    .header-container {
+      max-width: 48rem;
+      margin: 0 auto;
+    }
+    
+    .name-container {
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+    
+    .name {
+      font-size: 2.25rem;
+      font-weight: 300;
+      letter-spacing: 0.025em;
+      margin: 0 0 0.5rem 0;
+      color: #111827;
+    }
+    
+    .divider {
+      height: 1px;
+      width: 4rem;
+      margin: 0.75rem auto;
+      background-color: {{themeColor}};
+    }
+    
+    .job-title {
+      font-size: 1.125rem;
+      font-weight: 300;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #6b7280;
+      margin: 0;
+    }
+    
+    .contact-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2rem;
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-bottom: 1rem;
+    }
+    
+    .contact-link {
+      color: #6b7280;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    
+    .contact-link:hover {
+      color: #1f2937;
+    }
+    
+    .summary {
+      margin-bottom: 0;
+    }
+    
+    .summary-text {
+      font-size: 0.875rem;
+      line-height: 1.625;
+      color: #4b5563;
+      text-align: center;
+      max-width: 48rem;
+      margin: 0 auto;
+    }
+    
+    /* Content Section */
+    .thin-divider {
+      height: 1px;
+      width: 100%;
+      max-width: 64rem;
+      margin: 0 auto;
+      background-color: {{themeColorTransparent20}};
+    }
+    
+    .main-content {
+      padding: 1rem;
+      padding-top: 0.5rem;
+    }
+    
+    .content-container {
+      max-width: 48rem;
+      margin: 0 auto;
+    }
+    
+    .columns {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 3rem;
+    }
+    
+    @media (min-width: 768px) {
+      .columns {
+        grid-template-columns: 1fr 2fr;
+      }
+    }
+    
+    /* Section Styling */
+    .section {
+      margin-bottom: 1.5rem;
+    }
+    
+    .section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .section-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: {{themeColor}};
+      margin: 0 0 1rem 0;
+    }
+    
+    /* Skills Section */
+    .skills-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    
+    .skill-tag {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      background-color: #f3f4f6;
+      color: #4b5563;
+      border-radius: 0.375rem;
+      display: inline-block;
+    }
+    
+    /* Education Section */
+    .education-container {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .education-item:not(:last-child) {
+      margin-bottom: 1rem;
+    }
+    
+    .degree {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #1f2937;
+      margin: 0;
+    }
+    
+    .school {
+      font-size: 0.75rem;
+      color: #4b5563;
+      margin: 0.25rem 0;
+    }
+    
+    .education-date {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    
+    .grade {
+      font-size: 0.75rem;
+      color: #4b5563;
+      font-style: italic;
+      margin-top: 0.25rem;
+    }
+    
+    .education-description {
+      font-size: 0.75rem;
+      color: #4b5563;
+      margin-top: 0.5rem;
+    }
+    
+    /* Certification Section */
+    .certification-container {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .certification-item:not(:last-child) {
+      margin-bottom: 1rem;
+    }
+    
+    .cert-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #1f2937;
+      margin: 0;
+    }
+    
+    .cert-details {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 0.25rem 0;
+    }
+    
+    .cert-issuer {
+      font-size: 0.75rem;
+      color: #4b5563;
+    }
+    
+    .cert-link {
+      font-size: 0.75rem;
+      color: {{themeColor}};
+      text-decoration: underline;
+      margin-left: 0.5rem;
+    }
+    
+    .cert-date {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    
+    /* Experience Section */
+    .experience-container {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .experience-item {
+      margin-bottom: 1rem;
+    }
+    
+    .experience-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.25rem;
+    }
+    
+    .job-title-text {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #1f2937;
+      margin: 0;
+    }
+    
+    .job-date {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    
+    .company {
+      font-size: 0.875rem;
+      color: #4b5563;
+      font-style: italic;
+      margin-bottom: 0.75rem;
+    }
+    
+    .job-description {
+      font-size: 0.875rem;
+      color: #4b5563;
+    }
+    
+    /* Project Section */
+    .projects-container {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .project-item:not(:last-child) {
+      margin-bottom: 1.5rem;
+    }
+    
+    .project-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.5rem;
+    }
+    
+    .project-title {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #1f2937;
+      margin: 0;
+    }
+    
+    .project-links {
+      display: flex;
+      gap: 0.75rem;
+      font-size: 0.75rem;
+    }
+    
+    .project-link {
+      color: {{themeColor}};
+      text-decoration: underline;
+    }
+    
+    .project-tech {
+      font-size: 0.75rem;
+      color: #6b7280;
+      font-style: italic;
+      margin-bottom: 0.5rem;
+    }
+    
+    .project-description {
+      font-size: 0.875rem;
+      color: #4b5563;
+    }
+    
+    @media print {
+      .resume {
+        box-shadow: none;
+        border-radius: 0;
+      }
+      
+      .experience-item, .project-item, .certification-item, .education-item {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="resume">
+    <!-- Header Section -->
+    <div class="header">
+      <div class="header-container">
+        <div class="name-container">
+          <h1 class="name">{{firstName}} {{lastName}}</h1>
+          <div class="divider"></div>
+          {{#if jobTitle}}
+            <h2 class="job-title">{{jobTitle}}</h2>
+          {{/if}}
+        </div>
+        
+        <div class="contact-row">
+          {{#if email}}
+            <a href="mailto:{{email}}" class="contact-link">{{email}}</a>
+          {{/if}}
+          
+          {{#if phone}}
+            <a href="tel:{{phone}}" class="contact-link">{{phone}}</a>
+          {{/if}}
+          
+          {{#if address}}
+            <span>{{address}}</span>
+          {{/if}}
+          
+          {{#if linkedinUrl}}
+            <a href="{{formatUrl linkedinUrl}}" target="_blank" rel="noopener noreferrer" class="contact-link">LinkedIn</a>
+          {{/if}}
+          
+          {{#if githubUrl}}
+            <a href="{{formatUrl githubUrl}}" target="_blank" rel="noopener noreferrer" class="contact-link">GitHub</a>
+          {{/if}}
+          
+          {{#if portfolioUrl}}
+            <a href="{{formatUrl portfolioUrl}}" target="_blank" rel="noopener noreferrer" class="contact-link">Portfolio</a>
+          {{/if}}
+        </div>
+        
+        {{#if summary}}
+          <div class="summary">
+            <p class="summary-text">{{summary}}</p>
+          </div>
+        {{/if}}
+      </div>
+    </div>
+    
+    <!-- Thin Divider -->
+    <div class="thin-divider"></div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="content-container">
+        <div class="columns">
+          <!-- Left Column - Skills, Education, Certifications -->
+          <div class="column">
+            <!-- Skills Section -->
+            {{#if skills.length}}
+              <div class="section">
+                <h3 class="section-title">Skills</h3>
+                
+                <div class="skills-container">
+                  {{#each skills}}
+                    <span class="skill-tag">{{this.name}}</span>
+                  {{/each}}
+                </div>
+              </div>
+            {{/if}}
+            
+            <!-- Education Section -->
+            {{#if education.length}}
+              <div class="section">
+                <h3 class="section-title">Education</h3>
+                
+                <div class="education-container">
+                  {{#each education}}
+                    <div class="education-item">
+                      <h4 class="degree">
+                        {{this.degree}}{{#if this.major}}{{#if this.degree}} in {{/if}}{{this.major}}{{/if}}
+                      </h4>
+                      
+                      <h5 class="school">{{this.universityName}}</h5>
+                      
+                      <div class="education-date">
+                        {{this.startDate}}{{#if this.startDate}}{{#if this.endDate}} - {{/if}}{{/if}}
+                        {{this.endDate}}
+                      </div>
+                      
+                      {{#if this.grade}}
+                        <div class="grade">
+                          {{this.gradeType}}: {{this.grade}}
+                        </div>
+                      {{/if}}
+                      
+                      {{#if this.description}}
+                        <p class="education-description">{{this.description}}</p>
+                      {{/if}}
+                    </div>
+                  {{/each}}
+                </div>
+              </div>
+            {{/if}}
+            
+            <!-- Certifications Section -->
+            {{#if certifications.length}}
+              <div class="section">
+                <h3 class="section-title">Certifications</h3>
+                
+                <div class="certification-container">
+                  {{#each certifications}}
+                    <div class="certification-item">
+                      <h4 class="cert-title">{{this.name}}</h4>
+                      
+                      <div class="cert-details">
+                        <span class="cert-issuer">{{this.issuer}}</span>
+                        
+                        {{#if this.credentialLink}}
+                          <a href="{{formatUrl this.credentialLink}}" target="_blank" rel="noopener noreferrer" class="cert-link">View</a>
+                        {{/if}}
+                      </div>
+                      
+                      {{#if this.date}}
+                        <div class="cert-date">{{this.date}}</div>
+                      {{/if}}
+                    </div>
+                  {{/each}}
+                </div>
+              </div>
+            {{/if}}
+          </div>
+          
+          <!-- Right Column - Experience, Projects -->
+          <div class="column">
+            <!-- Experience Section -->
+            {{#if experience.length}}
+              <div class="section">
+                <h3 class="section-title">Experience</h3>
+                
+                <div class="experience-container">
+                  {{#each experience}}
+                    <div class="experience-item">
+                      <div class="experience-header">
+                        <h4 class="job-title-text">{{this.title}}</h4>
+                        <span class="job-date">
+                          {{this.startDate}}{{#if this.startDate}}{{#if (or this.endDate this.currentlyWorking)}} - {{/if}}{{/if}}
+                          {{#if this.currentlyWorking}}Present{{else}}{{this.endDate}}{{/if}}
+                        </span>
+                      </div>
+                      
+                      <h5 class="company">
+                        {{this.companyName}}
+                        {{#if this.city}}{{#if this.companyName}}, {{/if}}{{this.city}}{{/if}}
+                        {{#if this.state}}{{#if this.city}}, {{/if}}{{this.state}}{{/if}}
+                      </h5>
+                      
+                      <div class="job-description">{{{this.workSummary}}}</div>
+                    </div>
+                  {{/each}}
+                </div>
+              </div>
+            {{/if}}
+            
+            <!-- Projects Section -->
+            {{#if projects.length}}
+              <div class="section">
+                <h3 class="section-title">Projects</h3>
+                
+                <div class="projects-container">
+                  {{#each projects}}
+                    <div class="project-item">
+                      <div class="project-header">
+                        <h4 class="project-title">{{this.projectName}}</h4>
+                        
+                        <div class="project-links">
+                          {{#if this.githubLink}}
+                            <a href="{{formatUrl this.githubLink}}" target="_blank" rel="noopener noreferrer" class="project-link">GitHub</a>
+                          {{/if}}
+                          
+                          {{#if this.deployedLink}}
+                            <a href="{{formatUrl this.deployedLink}}" target="_blank" rel="noopener noreferrer" class="project-link">Live Demo</a>
+                          {{/if}}
+                        </div>
+                      </div>
+                      
+                      {{#if this.techStack}}
+                        <p class="project-tech">{{this.techStack}}</p>
+                      {{/if}}
+                      
+                      <div class="project-description">{{{this.projectSummary}}}</div>
+                    </div>
+                  {{/each}}
+                </div>
+              </div>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
