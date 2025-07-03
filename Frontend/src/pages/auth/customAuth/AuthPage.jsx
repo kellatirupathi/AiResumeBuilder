@@ -13,6 +13,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { loginUser, registerUser } from "@/Services/login";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from 'react-redux';
+import { addUserData } from "@/features/user/userFeatures";
+
 
 function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -24,12 +27,11 @@ function AuthPage() {
   const [signInError, setSignInError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  // Animation for background particles
   const [particles, setParticles] = useState([]);
 
   useEffect(() => {
-    // Create random particles for background effect
     const generateParticles = () => {
       const newParticles = [];
       for (let i = 0; i < 30; i++) {
@@ -43,7 +45,6 @@ function AuthPage() {
       }
       setParticles(newParticles);
     };
-
     generateParticles();
   }, []);
 
@@ -51,7 +52,6 @@ function AuthPage() {
     setSignInError("");
     event.preventDefault();
     
-    // Email validation
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailPattern.test(email)) {
       setSignInError("Please enter a valid email address.");
@@ -65,63 +65,70 @@ function AuthPage() {
     };
 
     try {
-      console.log("Login Started in Frontend");
-      const user = await loginUser(data);
-      console.log("Login Completed");
-
-      if (user?.statusCode === 200) {
-        navigate("/");
+      const userResponse = await loginUser(data);
+      if (userResponse?.statusCode === 200) {
+        dispatch(addUserData(userResponse.data.user)); // Update Redux store
+        navigate("/dashboard"); // Navigate after successful login and state update
       }
     } catch (error) {
       setSignInError(error.message || "Failed to sign in. Please try again.");
-      console.log("Login Failed");
     } finally {
       setLoading(false);
     }
   };
-
+  
+  // *** FIXED SIGN-UP AND AUTO-LOGIN LOGIC ***
   const handleSignUpSubmit = async (event) => {
     setSignUpError("");
     event.preventDefault();
 
-    // Email validation
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailPattern.test(email)) {
       setSignUpError("Please enter a valid email address.");
       return;
     }
-
-    // Password validation (at least 6 characters)
+    
     if (password.length < 6) {
       setSignUpError("Password must be at least 6 characters long.");
       return;
     }
 
     setLoading(true);
-    console.log("User Registration Started");
-    const data = {
+    
+    const registrationData = {
       fullName: fullName,
       email: email,
       password: password,
     };
     
     try {
-      const response = await registerUser(data);
-      if (response?.statusCode === 201) {
-        console.log("User Registration Successful");
-        // Automatically sign in after successful registration
+      // Step 1: Register the user
+      const registrationResponse = await registerUser(registrationData);
+      
+      // Step 2: If registration is successful, then log the user in
+      if (registrationResponse?.statusCode === 201) {
+        console.log("User Registration Successful, now logging in...");
+        
         const loginData = {
           email: email,
           password: password,
         };
-        const user = await loginUser(loginData);
-        if (user?.statusCode === 200) {
-          navigate("/");
+        const loginResponse = await loginUser(loginData);
+        
+        // Step 3: If login is successful, update state and navigate
+        if (loginResponse?.statusCode === 200) {
+          console.log("Auto-login successful!");
+          dispatch(addUserData(loginResponse.data.user)); // Update Redux state
+          navigate("/dashboard"); // Navigate to dashboard
+        } else {
+          // Handle case where auto-login fails
+          setSignUpError("Registration successful, but login failed. Please try signing in manually.");
+          setIsSignUp(false); // Switch to sign-in view
         }
       }
     } catch (error) {
-      console.log("User Registration Failed");
-      setSignUpError(error.message || "Registration failed. Please try again.");
+      console.log("User Registration or Login Failed");
+      setSignUpError(error.message || "An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -129,7 +136,6 @@ function AuthPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-pink-700 p-4 overflow-hidden">
-      {/* Animated background particles */}
       {particles.map((particle) => (
         <motion.div
           key={particle.id}
@@ -154,8 +160,9 @@ function AuthPage() {
       ))}
 
       <div className="w-full max-w-4xl flex flex-col md:flex-row shadow-2xl rounded-3xl overflow-hidden relative z-10 h-[600px]">
-        {/* Left panel - branding and information */}
+        {/* Left panel */}
         <div className="bg-gradient-to-br from-emerald-500 to-indigo-600 p-8 md:p-12 text-white md:w-2/5 relative flex flex-col justify-between">
+          {/* Background decoration */}
           <div className="absolute inset-0 overflow-hidden">
             <svg className="absolute left-0 top-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
               <defs>
