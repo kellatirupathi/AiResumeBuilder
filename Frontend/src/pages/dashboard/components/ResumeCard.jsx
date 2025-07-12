@@ -1,5 +1,5 @@
-import React from "react";
-import { Eye, Edit, Trash2, MoreVertical, Calendar, ChevronRight } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { Eye, Edit, Trash2, MoreVertical, Calendar, ChevronRight, Share2 } from "lucide-react"; // Import Share2 icon
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,10 +30,22 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
   const [openAlert, setOpenAlert] = React.useState(false);
   const [showMobileMenu, setShowMobileMenu] = React.useState(false);
   
-  // Use resume._id as a seed for consistent gradient for each resume
   const gradientIndex = resume._id ? Math.abs(resume._id.charCodeAt(0) + resume._id.charCodeAt(resume._id.length - 1)) % gradients.length : 0;
   const gradient = gradients[gradientIndex];
   const navigate = useNavigate();
+
+  const handleShare = () => {
+    const publicLink = `${window.location.origin}/public/resume/${resume._id}`;
+    navigator.clipboard.writeText(publicLink).then(() => {
+      toast.success("Link copied to clipboard!", {
+        description: "Your resume's public link is ready to be shared."
+      });
+    }).catch(err => {
+      toast.error("Failed to copy link", {
+        description: "Please try again manually."
+      });
+    });
+  };
 
   const handleDelete = async () => {
     setLoading(true);
@@ -81,7 +93,6 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
   if (viewMode === "list") {
     return (
       <div className="group flex items-center justify-between rounded-xl shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-800 transition-all duration-300 bg-white dark:bg-gray-800/90 backdrop-blur-sm overflow-hidden">
-        {/* Left side with colored bar and title */}
         <div className="flex items-center flex-1">
           <div className={`w-2 self-stretch bg-gradient-to-b ${gradient}`}></div>
           <div className="p-4 pl-6">
@@ -95,7 +106,6 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
           </div>
         </div>
         
-        {/* Right side with actions */}
         <div className="flex items-center gap-3 pr-4">
           <div className="hidden sm:flex items-center gap-2">
             <Button
@@ -117,6 +127,15 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
               <Edit className="w-4 h-4" />
             </Button>
             <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleShare}
+                className="rounded-full w-9 h-9 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                title="Share Resume Link"
+              >
+                <Share2 className="w-4 h-4" />
+            </Button>
+            <Button
               variant="ghost"
               size="sm"
               onClick={() => setOpenAlert(true)}
@@ -127,7 +146,6 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
             </Button>
           </div>
           
-          {/* Mobile menu button */}
           <div className="sm:hidden relative">
             <Button
               variant="ghost"
@@ -138,7 +156,6 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
               <MoreVertical className="h-4 w-4" />
             </Button>
 
-            {/* Mobile menu popup */}
             {showMobileMenu && (
               <div className="absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-10">
                 <div className="py-1" role="menu">
@@ -160,6 +177,15 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
                   >
                     <Edit className="mr-2 h-4 w-4 text-purple-500" /> Edit Resume
                   </button>
+                   <button
+                      onClick={() => {
+                        handleShare();
+                        setShowMobileMenu(false);
+                      }}
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"
+                    >
+                      <Share2 className="mr-2 h-4 w-4 text-emerald-500" /> Share Link
+                    </button>
                   <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
                   <button
                     onClick={() => {
@@ -218,13 +244,10 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
     );
   }
 
-  // Grid View
   return (
     <div className="group relative flex flex-col h-[280px] rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 bg-white dark:bg-gray-800/90 backdrop-blur-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-      {/* Top gradient band */}
       <div className={`h-2 w-full bg-gradient-to-r ${gradient}`}></div>
       
-      {/* Actions dropdown for mobile */}
       <div className="absolute top-3 right-3 z-10 md:hidden">
         <Button
           variant="ghost"
@@ -235,7 +258,6 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
           <MoreVertical className="h-4 w-4 text-gray-600 dark:text-gray-300" />
         </Button>
         
-        {/* Mobile menu popup */}
         {showMobileMenu && (
           <div className="absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5">
             <div className="py-1" role="menu">
@@ -257,6 +279,15 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
               >
                 <Edit className="mr-2 h-4 w-4 text-purple-500" /> Edit Resume
               </button>
+              <button
+                  onClick={() => {
+                    handleShare();
+                    setShowMobileMenu(false);
+                  }}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"
+              >
+                  <Share2 className="mr-2 h-4 w-4 text-emerald-500" /> Share Link
+              </button>
               <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
               <button
                 onClick={() => {
@@ -272,7 +303,6 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
         )}
       </div>
       
-      {/* Resume title */}
       <div className="p-6 flex-grow">
         <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
           {resume.title}
@@ -283,7 +313,6 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
         </div>
       </div>
       
-      {/* Action buttons */}
       <div className="border-t border-gray-100 dark:border-gray-700 p-4 pt-3 pb-3 flex justify-between items-center mt-auto">
         <div className="flex space-x-1">
           <Button
@@ -303,6 +332,15 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
             title="Edit Resume"
           >
             <Edit className="w-4 h-4" />
+          </Button>
+          <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleShare}
+              className="rounded-full w-9 h-9 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+              title="Share Resume Link"
+            >
+              <Share2 className="w-4 h-4" />
           </Button>
           <Button
             variant="ghost"
