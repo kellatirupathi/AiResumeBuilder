@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { Search, Download, LogOut, User, FileText } from 'lucide-react';
 import ResumePreviewModal from "./ResumePreviewModal";
 import { cn } from "@/lib/utils";
+import { VITE_PUBLIC_URL } from "@/config/config.js";
 
 function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("users");
@@ -234,7 +235,7 @@ const getFlattenedResumeData = (resumes) => {
         const flat = {
             title: resume.title, 
             userName: resume.user?.fullName, 
-            resumeLink: `${VITE_APP_URL}api/pdf/public/${resume._id}`,
+            resumeLink: `${VITE_PUBLIC_URL.replace(/\/$/, '')}/public/resume/${resume._id}`,
             userEmail: resume.user?.email, 
             createdAt: format(new Date(resume.createdAt), 'yyyy-MM-dd'),
             updatedAt: format(new Date(resume.updatedAt), 'yyyy-MM-dd HH:mm'),
