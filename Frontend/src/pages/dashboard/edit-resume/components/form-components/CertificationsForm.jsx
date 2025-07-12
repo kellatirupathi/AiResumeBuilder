@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import ReactDOM from "react-dom"; // Import ReactDOM for portals
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,9 @@ import {
   ArrowUpDown,
   ArrowDown,
   ArrowUp,
-  Link as LinkIcon
+  Link as LinkIcon,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { updateThisResume } from "@/Services/resumeAPI";
 import { addResumeData } from "@/features/resume/resumeFeatures";
@@ -27,45 +30,131 @@ const formFields = {
   credentialLink: "",
 };
 
-// ... DatePicker and other helpers can remain the same if they are here ...
-// For brevity, I'll assume they are correct or in a separate file. 
-// If they are in this file, just keep them as they are.
 const MONTHS = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
   ];
-const YEARS = Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - i);
+
+// DatePicker sub-component refactored to use a portal
+function DatePicker({ index, field, value, onChange, isDisabled, label }) {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const triggerRef = useRef(null);
+  const [dropdownCoords, setDropdownCoords] = useState({ top: 0, left: 0, width: 0 });
+
+  const initialDate = value ? new Date(value.split(' ').join(' 1, ')) : new Date();
+  const [currentYear, setCurrentYear] = useState(initialDate.getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(initialDate.getMonth());
+
+  const calculateDropdownPosition = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+
+      // Position dropdown below by default, or above if not enough space
+      setDropdownCoords({
+        left: rect.left,
+        top: spaceBelow > 310 ? rect.bottom + window.scrollY + 4 : rect.top + window.scrollY - 300 - 4,
+        width: rect.width,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (showDropdown) {
+      calculateDropdownPosition();
+      // Add listeners to handle resize and scroll
+      window.addEventListener('resize', calculateDropdownPosition);
+      window.addEventListener('scroll', calculateDropdownPosition, true);
+    }
+    return () => {
+      window.removeEventListener('resize', calculateDropdownPosition);
+      window.removeEventListener('scroll', calculateDropdownPosition, true);
+    };
+  }, [showDropdown]);
+
+  useEffect(() => {
+    // Close on outside click
+    const handleClickOutside = (event) => {
+      if (triggerRef.current && !triggerRef.current.contains(event.target) && event.target.closest('.date-picker-portal') === null) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleDateSelection = (year, month) => {
+    const formattedDate = `${MONTHS[month]} ${year}`;
+    // Pass the synthetic event object to the parent handler
+    onChange({ target: { name: field, value: formattedDate } }, index);
+    setShowDropdown(false);
+  };
+
+  const dropdownJsx = (
+    <div
+      style={{
+        position: 'absolute',
+        top: `${dropdownCoords.top}px`,
+        left: `${dropdownCoords.left}px`,
+        width: `${dropdownCoords.width}px`,
+      }}
+      className="date-picker-portal"
+    >
+      <div className="z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl p-3 w-full">
+        {/* Year and Month navigation */}
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center">
+            <button type="button" onClick={() => setCurrentYear(y => y - 1)} className="p-1 hover:bg-gray-100 rounded-full"><ChevronDown /></button>
+            <span className="mx-2 font-medium">{currentYear}</span>
+            <button type="button" onClick={() => setCurrentYear(y => y + 1)} className="p-1 hover:bg-gray-100 rounded-full"><ChevronUp /></button>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {MONTHS.map((month, monthIndex) => (
+            <button
+              key={month}
+              type="button"
+              onClick={() => handleDateSelection(currentYear, monthIndex)}
+              className={`px-2 py-1.5 text-sm rounded-md transition-colors ${currentMonth === monthIndex && initialDate.getFullYear() === currentYear ? 'bg-primary text-white' : 'hover:bg-primary/10'}`}
+            >
+              {month}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="w-full">
+      <div 
+        ref={triggerRef}
+        className={`flex items-center w-full justify-between p-3 border rounded-md ${isDisabled ? 'bg-gray-50' : 'bg-white'} ${showDropdown ? 'border-primary ring-2 ring-primary/20' : 'border-gray-300'} cursor-pointer transition-all`}
+        onClick={() => !isDisabled && setShowDropdown(!showDropdown)}
+      >
+        <span className={value ? 'text-gray-800' : 'text-gray-400'}>{value || label}</span>
+        <Calendar className="h-4 w-4 text-primary ml-auto" />
+      </div>
+      {showDropdown && ReactDOM.createPortal(dropdownJsx, document.body)}
+    </div>
+  );
+};
 
 
 function CertificationsForm({ resumeInfo, enanbledNext, enanbledPrev }) {
   const dispatch = useDispatch();
   const { resume_id } = useParams();
   
-  // *** FIX: Read certifications directly from Redux store ***
   const certificatesList = useSelector(state => state.editResume.resumeData?.certifications) || [];
   
   const [loading, setLoading] = useState(false);
-  const [datePickerOpen, setDatePickerOpen] = useState(null);
   const [sortOrder, setSortOrder] = useState("desc");
   const [isSorting, setIsSorting] = useState(false);
   const [activeCertificate, setActiveCertificate] = useState(0);
 
-  // Helper function to dispatch updates to Redux
   const setCertificatesList = (newList) => {
     dispatch(addResumeData({ ...resumeInfo, certifications: newList }));
   };
-
-  useEffect(() => {
-    // This effect handles closing the date picker on outside clicks
-    const handleClickOutside = (event) => {
-      if (!event.target.closest('.date-picker-container') && !event.target.closest('.date-picker-trigger')) {
-        setDatePickerOpen(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const AddNewCertificate = () => {
     const newList = [...certificatesList, { ...formFields }];
@@ -73,12 +162,10 @@ function CertificationsForm({ resumeInfo, enanbledNext, enanbledPrev }) {
     setActiveCertificate(newList.length - 1);
   };
 
-  // *** START: MODIFIED CODE for permanent deletion ***
   const RemoveCertificate = async (index) => {
-    const originalList = [...certificatesList]; // Save original list for revert on failure
+    const originalList = [...certificatesList];
     const newList = certificatesList.filter((_, i) => i !== index);
     
-    // Immediately update UI via Redux
     setCertificatesList(newList);
     
     if (activeCertificate >= newList.length) {
@@ -91,7 +178,6 @@ function CertificationsForm({ resumeInfo, enanbledNext, enanbledPrev }) {
       },
     };
 
-    // Save changes to the backend
     try {
       await updateThisResume(resume_id, data);
       toast("Certification removed", {
@@ -103,11 +189,9 @@ function CertificationsForm({ resumeInfo, enanbledNext, enanbledPrev }) {
         description: "Could not save the change. Please try again.",
         variant: "destructive",
       });
-      // Revert UI change if API call fails
       setCertificatesList(originalList);
     }
   };
-  // *** END: MODIFIED CODE ***
 
   const sortCertificates = () => {
     setIsSorting(true);
@@ -164,46 +248,10 @@ function CertificationsForm({ resumeInfo, enanbledNext, enanbledPrev }) {
     setCertificatesList(list);
   };
   
-  const handleDateSelection = (index, field, year, month) => {
-    const formattedDate = `${MONTHS[month]} ${year}`;
-    handleChange({ target: { name: field, value: formattedDate } }, index);
-    setDatePickerOpen(null);
-  };
-
-  const DatePicker = ({ index, field, value }) => {
-    const isOpen = datePickerOpen === `${index}-${field}`;
-    const initialDate = value ? new Date(value.split(' ').join(' 1, ')) : new Date();
-    const [currentYear, setCurrentYear] = useState(initialDate.getFullYear());
-    const [currentMonth, setCurrentMonth] = useState(initialDate.getMonth());
-
-    return (
-        <div className="relative w-full">
-            <div className="date-picker-trigger flex items-center w-full relative cursor-pointer border border-gray-300 rounded-md px-3 py-2 focus:border-primary focus:ring focus:ring-primary/20 transition-all" onClick={() => setDatePickerOpen(isOpen ? null : `${index}-${field}`)}>
-                {value ? <span>{value}</span> : <span className="text-gray-400">Select date</span>}
-                <Calendar className="h-4 w-4 text-primary ml-auto" />
-            </div>
-            {isOpen && (
-                <div className="date-picker-container absolute z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl p-3 w-72">
-                     <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center">
-                          <button type="button" onClick={() => setCurrentYear(y => y-1)} className="p-1 hover:bg-gray-100 rounded-full"><ChevronDown /></button>
-                          <span className="mx-2 font-medium">{currentYear}</span>
-                          <button type="button" onClick={() => setCurrentYear(y => y+1)} className="p-1 hover:bg-gray-100 rounded-full"><ChevronUp /></button>
-                        </div>
-                      </div>
-                    <div className="grid grid-cols-3 gap-2">
-                        {MONTHS.map((month, monthIndex) => (
-                            <button key={month} type="button" onClick={() => handleDateSelection(index, field, currentYear, monthIndex)} className={`px-2 py-1.5 text-sm rounded-md transition-colors ${currentMonth === monthIndex ? 'bg-primary text-white' : 'hover:bg-primary/10'}`}>{month}</button>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-  };
-
   const getCertificateDescription = (cert) => cert.name || cert.issuer || `Certification ${certificatesList.indexOf(cert) + 1}`;
   
+  const getSortAnimationClass = (index) => (isSorting ? 'animate-pulse bg-primary/5' : '');
+
   return (
     <div className="animate-fadeIn">
       <div className="p-8 bg-white rounded-xl shadow-md border-t-4 border-t-primary mt-10 transition-all duration-300 hover:shadow-lg">
@@ -251,7 +299,7 @@ function CertificationsForm({ resumeInfo, enanbledNext, enanbledPrev }) {
             </div>
 
             {certificatesList.map((item, index) => (
-              <div key={`content-${index}`} className={`border border-gray-200 rounded-lg overflow-hidden transition-all duration-300 ${activeCertificate === index ? 'block' : 'hidden'}`}>
+              <div key={`content-${index}`} className={`border border-gray-200 rounded-lg overflow-hidden transition-all duration-300 ${getSortAnimationClass(index)} ${activeCertificate === index ? "block" : "hidden"}`}>
                 <div className="bg-gray-50 px-5 py-3 flex justify-between items-center">
                   <h3 className="font-semibold text-gray-800 flex items-center gap-2">
                     <span className="flex items-center justify-center bg-primary/10 text-primary h-6 w-6 rounded-full text-xs font-bold">{index + 1}</span>
@@ -273,7 +321,7 @@ function CertificationsForm({ resumeInfo, enanbledNext, enanbledPrev }) {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 flex items-center gap-2"><Calendar className="h-4 w-4 text-primary" />Date Received</label>
-                    <DatePicker index={index} field="date" value={item?.date || ""} onChange={(e) => handleChange(e, index)} />
+                    <DatePicker index={index} field="date" value={item?.date || ""} onChange={(e) => handleChange(e, index)} label="Select date"/>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 flex items-center gap-2"><LinkIcon className="h-4 w-4 text-primary" />Credential Link</label>
