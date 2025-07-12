@@ -169,6 +169,29 @@ const removeResume = async (req, res) => {
   }
 };
 
+const getPublicResume = async (req, res) => {
+  try {
+    const { resumeId } = req.params;
+
+    if (!resumeId) {
+      return res.status(400).json(new ApiError(400, "Resume ID is required."));
+    }
+    
+    // Find the resume by ID without user authentication
+    const resume = await Resume.findById(resumeId);
+
+    if (!resume) {
+      return res.status(404).json(new ApiError(404, "Resume not found."));
+    }
+    
+    return res.status(200).json(new ApiResponse(200, resume, "Public resume data fetched successfully."));
+
+  } catch(error) {
+    console.error("Error fetching public resume:", error);
+    return res.status(500).json(new ApiError(500, "Internal Server Error", [], error.stack));
+  }
+}
+
 export {
   start,
   createResume,
@@ -176,4 +199,5 @@ export {
   getResume,
   updateResume,
   removeResume,
+  getPublicResume
 };
