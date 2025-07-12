@@ -2,21 +2,19 @@ import axios from "axios";
 import { VITE_APP_URL } from "@/config/config";
 
 const axiosInstance = axios.create({
-  // **FIX:** Added a slash before "api/"
-  baseURL: VITE_APP_URL + "/api/",
+  baseURL: VITE_APP_URL + "api/",
   headers: {
     "Content-Type": "application/json",
   },
   withCredentials: true,
 });
 
-// ... rest of the file remains the same ...
-
 const createNewResume = async (data) => {
   try {
+    // Ensure template is included in the data
     const resumeData = {
       ...data.data,
-      template: data.data.template || "modern", 
+      template: data.data.template || "modern", // Default to modern template if not specified
     };
     
     const response = await axiosInstance.post(
@@ -82,26 +80,47 @@ const deleteThisResume = async (resumeID) => {
   }
 };
 
+const getPublicResumeData = async (resumeID) => {
+  try {
+    const response = await axiosInstance.get(
+      `resumes/public/${resumeID}`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error?.response?.data?.message || error?.message || "Something Went Wrong"
+    );
+  }
+};
+
+// Function to download a resume as PDF
 const downloadResumePDF = async (resumeID) => {
   try {
+    // First get the resume data to access firstName and lastName
     const resumeResponse = await getResumeData(resumeID);
     const resumeData = resumeResponse.data;
     
+    // Using axios with responseType: 'blob' to handle binary data
     const response = await axiosInstance.get(
       `pdf/download?id=${resumeID}`,
       { responseType: 'blob' }
     );
     
+    // Create a URL for the blob
     const url = window.URL.createObjectURL(new Blob([response.data]));
+    
+    // Create a temporary link element
     const link = document.createElement('a');
     link.href = url;
     
+    // Generate filename using firstName and lastName if available
     let filename = 'resume.pdf';
     if (resumeData?.firstName && resumeData?.lastName) {
       filename = `${resumeData.firstName}_${resumeData.lastName}_Resume.pdf`;
     } else if (resumeData?.firstName) {
       filename = `${resumeData.firstName}_Resume.pdf`;
     } else {
+      // Try to get filename from Content-Disposition header as fallback
       const contentDisposition = response.headers['content-disposition'];
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename="(.+)"/);
@@ -113,10 +132,12 @@ const downloadResumePDF = async (resumeID) => {
     
     link.setAttribute('download', filename);
     
+    // Append to body, click and remove
     document.body.appendChild(link);
     link.click();
     setTimeout(() => {
       document.body.removeChild(link);
+      // Clean up the URL object
       window.URL.revokeObjectURL(url);
     }, 100);
     
@@ -135,5 +156,6 @@ export {
   getResumeData,
   updateThisResume,
   createNewResume,
-  downloadResumePDF
+  downloadResumePDF,
+  getPublicResumeData
 };
