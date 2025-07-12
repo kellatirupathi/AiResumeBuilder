@@ -13,7 +13,8 @@ import {
   Maximize,
   Trophy,
   ChevronRight,
-  Layout
+  Layout,
+  Share2 // New icon import
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -58,7 +59,19 @@ function ViewResume() {
     }
   };
 
-  // Updated PDF download function that uses the server-side generation
+  const handleShareLink = () => {
+    const publicLink = `${window.location.origin}/public/resume/${resume_id}`;
+    navigator.clipboard.writeText(publicLink).then(() => {
+      toast.success("link copied to clipboard!", {
+        description: "Anyone with this link can view your resume."
+      });
+    }).catch(err => {
+      toast.error("Failed to copy link", {
+        description: "Please try again manually."
+      });
+    });
+  };
+
   const handleDownloadPDF = async () => {
     try {
       setDownloadingState(true);
@@ -131,22 +144,14 @@ function ViewResume() {
                     </div>
                   ) : (
                     <div className="relative group">
-                      {/* Floating elements for visual flair */}
                       <div className="absolute -left-12 top-20 w-24 h-24 bg-blue-400/20 rounded-full blur-3xl"></div>
                       <div className="absolute right-10 top-10 w-32 h-32 bg-purple-400/20 rounded-full blur-3xl"></div>
                       <div className="absolute bottom-10 left-20 w-40 h-40 bg-emerald-400/20 rounded-full blur-3xl"></div>
-                      
-                      {/* Glow effect for the resume */}
                       <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/30 via-blue-500/30 to-indigo-500/30 rounded-2xl blur-xl transform -translate-y-4 scale-105 opacity-80"></div>
                       
-                      {/* Resume container with frame effect */}
                       <div className="bg-white/5 backdrop-blur-xl p-6 rounded-2xl shadow-2xl border border-white/10 overflow-hidden relative">
-                        {/* Frame effect */}
                         <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-emerald-500/10 rounded-xl opacity-30"></div>
-                        
-                        {/* Resume viewer */}
                         <div className="relative">
-                          {/* Status badge */}
                           <div className="absolute -right-2 -top-2 z-10">
                             <motion.div 
                               initial={{ scale: 0.8, opacity: 0 }}
@@ -158,7 +163,6 @@ function ViewResume() {
                             </motion.div>
                           </div>
                           
-                          {/* The actual resume preview */}
                           <div 
                             ref={resumeRef} 
                             id="resume-container"
@@ -175,7 +179,6 @@ function ViewResume() {
                             <ResumePreview />
                           </div>
                           
-                          {/* Fullscreen button overlay */}
                           <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <Button 
                               size="sm" 
@@ -199,8 +202,6 @@ function ViewResume() {
                   className="lg:w-1/3"
                 >
                   <div className="bg-white/5 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
-                    {/* Tabs - Single tab only for Download */}
-
                     
                     {/* Tab content with glass morphism */}
                     <div className="p-6 space-y-6">
@@ -220,9 +221,7 @@ function ViewResume() {
                             <p className="text-indigo-200 text-sm mb-6">Get your professional resume as a PDF file</p>
                           </div>
                           
-                          {/* Download options */}
                           <div className="space-y-4">
-                            {/* Download button or progress */}
                             {downloadingState ? (
                               <div className="space-y-3 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                                 <div className="w-full h-2 bg-indigo-900/50 rounded-full overflow-hidden">
@@ -242,7 +241,6 @@ function ViewResume() {
                                 className="w-full py-6 bg-gradient-to-r from-emerald-500 via-blue-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-base rounded-xl relative overflow-hidden group"
                                 onClick={handleDownloadPDF}
                               >
-                                {/* Animated background */}
                                 <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
                                 
                                 <span className="flex items-center relative z-10">
@@ -251,8 +249,18 @@ function ViewResume() {
                                 </span>
                               </Button>
                             )}
+
+                            {/* Share Link Button */}
+                            <Button 
+                              variant="outline" 
+                              className="w-full py-4 flex items-center justify-center gap-3 bg-white/10 backdrop-blur-sm hover:bg-white/15 border border-white/20 text-white rounded-xl transition-all duration-300"
+                              onClick={handleShareLink}
+                            >
+                              <Share2 className="h-4 w-4" />
+                              <span className="font-medium">Share Public Link</span>
+                            </Button>
+
                             
-                            {/* Navigation buttons */}
                             <div className="mt-4 space-y-3">
                               <Button 
                                 className="w-full py-4 flex items-center justify-center gap-3 bg-white/10 backdrop-blur-sm hover:bg-white/15 border border-white/20 text-white rounded-xl transition-all duration-300"
@@ -272,7 +280,6 @@ function ViewResume() {
                             </div>
                           </div>
                           
-                          {/* Pro Tips with glass effect */}
                           <div className="mt-6 bg-emerald-900/20 backdrop-blur-sm p-4 rounded-xl border border-emerald-500/30">
                             <h4 className="text-sm font-medium text-emerald-300 mb-3 flex items-center">
                               <Trophy className="h-4 w-4 mr-2" />
