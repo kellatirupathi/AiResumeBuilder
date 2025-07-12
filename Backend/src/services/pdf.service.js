@@ -326,19 +326,19 @@ export const generatePDF = async (resumeData) => {
     </style>`);
 
     const isProduction = process.env.NODE_ENV === 'production';
-
-const browser = await puppeteer.launch({
-  headless: 'new',
-  executablePath: isProduction 
-    ? process.env.PUPPETEER_EXECUTABLE_PATH // Render sets this path if the browser is installed
-    : undefined, // Let Puppeteer find it locally during development
-  args: [
-    '--no-sandbox', 
-    '--disable-setuid-sandbox',
-    '--disable-dev-shm-usage', // Recommended for Linux containers
-    '--single-process'        // May improve stability in resource-constrained environments
-  ]
-});
+    
+    const browser = await puppeteer.launch({
+      headless: 'new',
+      executablePath: isProduction 
+        ? process.env.PUPPETEER_EXECUTABLE_PATH 
+        : undefined, 
+      args: [
+        '--no-sandbox', 
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage', 
+        '--single-process'        
+      ]
+    });
     const page = await browser.newPage();
     
     // Set the page content
