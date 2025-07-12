@@ -43,3 +43,35 @@ export const generateResumePDF = async (req, res) => {
     );
   }
 };
+
+// Generate and serve a public PDF for a specific resume
+export const generatePublicResumePDF = async (req, res) => {
+  try {
+    const { resumeId } = req.params;
+
+    if (!resumeId) {
+      return res.status(400).json(new ApiError(400, "Resume ID is required"));
+    }
+
+    // Find the resume by ID without checking for user ownership
+    const resume = await Resume.findById(resumeId);
+
+    if (!resume) {
+      return res.status(404).json(new ApiError(404, "Resume not found"));
+    }
+
+    // Generate PDF using the service
+    const pdfBuffer = await generatePDF(resume.toObject());
+
+    // Set headers to display PDF inline in the browser
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${resume.firstName || 'resume'}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+
+    // Send the PDF
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error("Error generating public PDF:", error);
+    return res.status(500).json(new ApiError(500, "Failed to generate public PDF", [error.message], error.stack));
+  }
+};
