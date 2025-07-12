@@ -160,9 +160,7 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// --- Handlebars Helpers (Unchanged) ---
-// Your existing helpers are fine and should be kept as they are.
-
+// Register handlebars helpers
 handlebars.registerHelper('isEqual', function(arg1, arg2, options) {
   return (arg1 === arg2) ? options.fn(this) : options.inverse(this);
 });
@@ -191,6 +189,7 @@ handlebars.registerHelper('or', function(a, b) {
   return a || b;
 });
 
+// Add the formatUrl helper
 handlebars.registerHelper('formatUrl', function(url) {
   if (!url) return '';
   if (!/^https?:\/\//i.test(url)) {
@@ -199,16 +198,19 @@ handlebars.registerHelper('formatUrl', function(url) {
   return url;
 });
 
+// Add the replaceSeparator helper
 handlebars.registerHelper('replaceSeparator', function(str, oldSep, newSep) {
   if (!str) return '';
   return str.split(oldSep).join(newSep);
 });
 
+// Helper to get first character of a string
 handlebars.registerHelper('firstChar', function(str) {
   if (!str) return '';
   return str.charAt(0);
 });
 
+// Helper to check if index is even
 handlebars.registerHelper('if_even', function(index, options) {
   if ((index % 2) === 0) {
     return options.fn(this);
@@ -217,6 +219,7 @@ handlebars.registerHelper('if_even', function(index, options) {
   }
 });
 
+// Helper to check if index is odd
 handlebars.registerHelper('if_odd', function(index, options) {
   if ((index % 2) === 1) {
     return options.fn(this);
@@ -225,24 +228,37 @@ handlebars.registerHelper('if_odd', function(index, options) {
   }
 });
 
-
-// --- Updated PDF Generation Function ---
+// Main PDF generation function
 export const generatePDF = async (resumeData) => {
-  let browser = null;
-
   try {
     const template = resumeData.template || 'modern';
     const themeColor = resumeData.themeColor || '#059669';
     
     const hexToRgb = (hex) => {
       hex = hex.replace('#', '');
+      
       const r = parseInt(hex.substring(0, 2), 16);
       const g = parseInt(hex.substring(2, 4), 16);
       const b = parseInt(hex.substring(4, 6), 16);
+      
       return `${r}, ${g}, ${b}`;
     };
     
     const themeColorRGB = hexToRgb(themeColor);
+    const themeColorTransparent80 = `${themeColor}99`;
+    const themeColorTransparent50 = `${themeColor}55`;
+    const themeColorTransparent20 = `${themeColor}33`;
+    const themeColorTransparent10 = `${themeColor}22`;
+    const themeColorTransparent05 = `${themeColor}10`;
+    
+    // Use @sparticuz/chromium to get browser details
+    const browser = await puppeteer.launch({
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+      args: chromium.args,
+    });
+    
+    const page = await browser.newPage();
     
     const templatePath = path.join(__dirname, '..', 'templates', `${template}.handlebars`);
     
@@ -250,7 +266,7 @@ export const generatePDF = async (resumeData) => {
     try {
       templateContent = fs.readFileSync(templatePath, 'utf8');
     } catch (error) {
-      console.warn(`Template ${template} not found, using modern template instead.`);
+      console.warn(`Template ${template} not found, using modern template instead`);
       templateContent = fs.readFileSync(
         path.join(__dirname, '..', 'templates', 'modern.handlebars'), 
         'utf8'
@@ -271,21 +287,30 @@ export const generatePDF = async (resumeData) => {
       ...resumeData,
       themeColor,
       themeColorRGB,
+      themeColorTransparent80,
+      themeColorTransparent50,
+      themeColorTransparent20,
+      themeColorTransparent10,
+      themeColorTransparent05
     });
 
-    // --- **KEY CHANGE** ---
-    // Use @sparticuz/chromium to get the executable path and recommended arguments
-    const executablePath = await chromium.executablePath();
-    
-    browser = await puppeteer.launch({
-      executablePath,
-      headless: chromium.headless, // Use recommended headless mode
-      args: chromium.args,
-    });
+    const htmlWithPageBreakStyles = html.replace('</style>', `
+      @media print {
+        @page {
+          margin-top: 50px;
+          margin-bottom: 50px;
+        }
+        @page:first {
+          margin-top: 0;
+          margin-bottom: 50px;
+        }
+        .page-break-inside-avoid { page-break-inside: avoid; }
+        .section-title { break-after: avoid; }
+        .section-content-item, .item-title, .item-subtitle { page-break-inside: avoid; }
+      }
+    </style>`);
 
-    const page = await browser.newPage();
-    
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    await page.setContent(htmlWithPageBreakStyles, { waitUntil: 'networkidle0' });
     
     const pdf = await page.pdf({
       format: 'A4',
@@ -294,16 +319,11 @@ export const generatePDF = async (resumeData) => {
       preferCSSPageSize: true
     });
     
+    await browser.close();
+    
     return pdf;
-
   } catch (error) {
     console.error('Error generating PDF:', error);
-    // Rethrow a clearer error to be handled by the controller
-    throw new Error('Failed to generate PDF. Puppeteer may have encountered an issue.');
-  } finally {
-    // Ensure the browser is always closed, even if an error occurs
-    if (browser) {
-      await browser.close();
-    }
+    throw new Error('Failed to generate PDF');
   }
 };
