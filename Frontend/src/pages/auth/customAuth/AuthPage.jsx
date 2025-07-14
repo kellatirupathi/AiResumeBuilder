@@ -1054,8 +1054,8 @@ function AuthPage() {
       return;
     }
 
-    // NIAT ID validation (e.g., N24H01A0532)
-    const niatIdPattern = /^N\d{2}H\d{2}A\d{4}$/i;
+    // NIAT ID validation (e.g., N24H01A0532) - CORRECTED
+    const niatIdPattern = /^N\d{2}H\d{2}[A-Z]\d{4}$/i;
     if (!niatIdPattern.test(niatId)) {
       setSignUpError("Please enter a valid NIAT ID (e.g., N24H01A0532).");
       return;
