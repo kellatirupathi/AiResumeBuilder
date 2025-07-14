@@ -1054,18 +1054,16 @@ function AuthPage() {
       return;
     }
 
-    // NIAT ID validation (e.g., N24H01A0532) - CORRECTED
-    const niatIdPattern = /^N\d{2}H\d{2}[A-Z]\d{4}$/i;
-    if (!niatIdPattern.test(niatId)) {
-      setSignUpError("Please enter a valid NIAT ID (e.g., N24H01A0532).");
-      return;
-    }
-
-
     // Password validation (at least 6 characters)
     if (password.length < 6) {
       setSignUpError("Password must be at least 6 characters long.");
       return;
+    }
+
+    // NIAT ID field check
+    if (!niatId.trim()) {
+        setSignUpError("Please enter your NIAT ID.");
+        return;
     }
 
     setLoading(true);
@@ -1285,7 +1283,7 @@ function AuthPage() {
                       <input
                         id="niatId"
                         type="text"
-                        placeholder="e.g. N24H01A0532"
+                        placeholder="Enter your NIAT ID"
                         required
                         className="outline-none w-full text-gray-800"
                         value={niatId}
