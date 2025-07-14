@@ -959,7 +959,6 @@
 // export default AuthPage;
 
 
-
 import React, { useState, useEffect } from "react";
 import {
   FaUser,
@@ -1290,7 +1289,7 @@ function AuthPage() {
                         required
                         className="outline-none w-full text-gray-800"
                         value={niatId}
-                        onChange={(e) => setNiatId(e.target.value.toUpperCase())}
+                        onChange={(e) => setNiatId(e.target.value)}
                       />
                     </div>
                   </div>
