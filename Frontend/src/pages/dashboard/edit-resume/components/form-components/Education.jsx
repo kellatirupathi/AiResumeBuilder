@@ -39,7 +39,10 @@ const months = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-const YEARS = Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - i);
+const currentYear = new Date().getFullYear();
+const startYear = currentYear - 60;
+const endYear = currentYear + 10;
+const YEARS = Array.from({ length: endYear - startYear + 1 }, (_, i) => endYear - i);
 const getDaysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
 
 const getEducationLevelWeight = (degree) => {
