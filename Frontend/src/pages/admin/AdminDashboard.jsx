@@ -359,13 +359,12 @@
 // export default AdminDashboard;
 
 
-
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
 import { Input } from "@/components/ui/input";
-import { VITE_APP_URL } from "@/config/config.js"; // <-- UPDATED
+import { VITE_APP_URL } from "@/config/config.js"; 
 import { toast } from 'sonner';
 import { checkAdminSession, getAllUsers, getAllResumes, logoutAdmin } from "@/Services/adminApi";
 import { format } from 'date-fns';
@@ -418,22 +417,26 @@ function AdminDashboard() {
     setSelectedResume(resume);
   };
 
+  // UPDATED: Added niatId to user search filter
   const filteredUsers = useMemo(() =>
     users
       .filter(user =>
         (user.fullName || '').toLowerCase().includes(userSearchQuery.toLowerCase()) ||
-        (user.email || '').toLowerCase().includes(userSearchQuery.toLowerCase())
+        (user.email || '').toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+        (user.niatId || '').toLowerCase().includes(userSearchQuery.toLowerCase())
       )
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
     [users, userSearchQuery]
   );
 
+  // UPDATED: Added user's niatId to resume search filter
   const filteredResumes = useMemo(() =>
     resumes
       .filter(resume =>
         (resume.title || '').toLowerCase().includes(resumeSearchQuery.toLowerCase()) ||
         (resume.user?.fullName || '').toLowerCase().includes(resumeSearchQuery.toLowerCase()) ||
-        (resume.user?.email || '').toLowerCase().includes(resumeSearchQuery.toLowerCase())
+        (resume.user?.email || '').toLowerCase().includes(resumeSearchQuery.toLowerCase()) ||
+        (resume.user?.niatId || '').toLowerCase().includes(resumeSearchQuery.toLowerCase())
       )
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
     [resumes, resumeSearchQuery]
@@ -441,14 +444,19 @@ function AdminDashboard() {
   
   const handleExport = () => {
     if (activeTab === 'users') {
+      // UPDATED: Added niatId to user export headers
       const headers = [
-          { key: "fullName", label: "Full Name" }, { key: "email", label: "Email" },
-          { key: "createdAt", label: "Created At" }, { key: "updatedAt", label: "Updated At" }
+          { key: "fullName", label: "Full Name" }, 
+          { key: "niatId", label: "NIAT ID" },
+          { key: "email", label: "Email" },
+          { key: "createdAt", label: "Created At" }, 
+          { key: "updatedAt", label: "Updated At" }
       ];
       const data = filteredUsers.map(u => ({...u, createdAt: format(new Date(u.createdAt), 'PPpp'), updatedAt: format(new Date(u.updatedAt), 'PPpp') }));
       exportToCsv('users_export.csv', headers, data);
     }
     if (activeTab === 'resumes') {
+        // getFlattenedResumeData is updated below, so this part works automatically
         const {headers, flattenedData} = getFlattenedResumeData(filteredResumes);
         exportToCsv('resumes_export.csv', headers, flattenedData);
     }
@@ -482,7 +490,7 @@ function AdminDashboard() {
                 <div className="flex items-center gap-4 w-full sm:w-auto">
                     <div className="relative flex-grow sm:flex-grow-0">
                       <Input 
-                          placeholder={activeTab === 'users' ? 'Search by name or email...' : 'Search resumes...'}
+                          placeholder={activeTab === 'users' ? 'Search by name, email, NIAT...' : 'Search resumes...'}
                           value={activeTab === 'users' ? userSearchQuery : resumeSearchQuery}
                           onChange={(e) => activeTab === 'users' ? setUserSearchQuery(e.target.value) : setResumeSearchQuery(e.target.value)}
                           className="pl-10"
@@ -547,6 +555,7 @@ const exportToCsv = (filename, headers, data) => {
     }
 };
 
+// UPDATED: Function to get resume data now includes User NIAT ID
 const getFlattenedResumeData = (resumes) => {
     if (!resumes || resumes.length === 0) {
         return { headers: [], flattenedData: [] };
@@ -568,6 +577,7 @@ const getFlattenedResumeData = (resumes) => {
     const baseHeaders = [
         { key: "title", label: "Resume Title" }, 
         { key: "userName", label: "User Name" },
+        { key: "userNiatId", label: "User NIAT ID" }, // Added header for NIAT ID
         { key: "resumeLink", label: "Resume Link"}, 
         { key: "userEmail", label: "User Email" },
         { key: "createdAt", label: "Created At" }, { key: "updatedAt", label: "Last Updated" }, 
@@ -589,7 +599,8 @@ const getFlattenedResumeData = (resumes) => {
         const flat = {
             title: resume.title, 
             userName: resume.user?.fullName, 
-            resumeLink: `${VITE_APP_URL}/api/pdf/public/${resume._id}`, // <-- UPDATED
+            userNiatId: resume.user?.niatId, // Added data for NIAT ID
+            resumeLink: `${VITE_APP_URL}/api/pdf/public/${resume._id}`,
             userEmail: resume.user?.email, 
             createdAt: format(new Date(resume.createdAt), 'yyyy-MM-dd'),
             updatedAt: format(new Date(resume.updatedAt), 'yyyy-MM-dd HH:mm'),
@@ -609,7 +620,7 @@ const getFlattenedResumeData = (resumes) => {
     return { headers, flattenedData };
 }
 
-// --- Reusable UsersTable Component ---
+// UPDATED: Users table component now includes NIAT ID column
 const UsersTable = ({ users }) => {
     return (
         <div className="overflow-auto mt-4 border rounded-lg h-full">
@@ -617,6 +628,7 @@ const UsersTable = ({ users }) => {
             <thead className="bg-gray-100">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIAT ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated At</th>
@@ -626,6 +638,7 @@ const UsersTable = ({ users }) => {
               {users.map(user => (
                 <tr key={user._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.fullName}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">{user.niatId}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{format(new Date(user.createdAt), 'PPpp')}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{format(new Date(user.updatedAt), 'PPpp')}</td>
@@ -638,7 +651,7 @@ const UsersTable = ({ users }) => {
 };
 
 
-// --- Reusable DetailedResumesTable Component ---
+// UPDATED: Resumes table will automatically render NIAT ID from getFlattenedResumeData
 const DetailedResumesTable = ({ resumes, allResumes, onViewResume }) => {
     const { headers, flattenedData } = useMemo(() => getFlattenedResumeData(resumes, allResumes), [resumes, allResumes]);
   
@@ -646,6 +659,7 @@ const DetailedResumesTable = ({ resumes, allResumes, onViewResume }) => {
       return <p className="mt-4 text-center text-gray-500">No matching resumes found.</p>;
     }
   
+    // Define a consistent max-width for most columns to ensure overflow is handled
     const getColumnWidth = (key) => {
         switch (key) {
             case 'title':
@@ -653,12 +667,14 @@ const DetailedResumesTable = ({ resumes, allResumes, onViewResume }) => {
             case 'userEmail':
             case 'resumeLink':
             case 'summary':
-                return 'w-64 max-w-64'; 
+                return 'w-64 max-w-64';
+            case 'userNiatId': // Added width for NIAT ID column
+                return 'w-32 max-w-32';
             case 'updatedAt':
             case 'createdAt':
-                return 'w-48 max-w-48'; 
+                return 'w-48 max-w-48';
             default:
-                return 'w-40 max-w-40'; 
+                return 'w-40 max-w-40';
         }
     };
     return (
@@ -669,7 +685,7 @@ const DetailedResumesTable = ({ resumes, allResumes, onViewResume }) => {
                     {headers.map(header => (
                         <th key={header.key} className={cn(
                           "px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky top-0 bg-gray-100 z-10",
-                          getColumnWidth(header.key)
+                          getColumnWidth(header.key) // Apply width to header
                         )}>
                         {header.label}
                         </th>
@@ -696,7 +712,10 @@ const DetailedResumesTable = ({ resumes, allResumes, onViewResume }) => {
                                     {String(row[header.key] ?? '')}
                                   </a>
                                 ) : (
-                                <span className="text-gray-600 truncate">{String(row[header.key] ?? '')}</span>
+                                <span className={cn(
+                                    "text-gray-600 truncate",
+                                    {'font-mono': header.key === 'userNiatId'}
+                                  )}>{String(row[header.key] ?? '')}</span>
                                 )}
                             </div>
                         </td>
