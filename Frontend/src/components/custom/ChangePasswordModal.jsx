@@ -57,7 +57,7 @@ function ChangePasswordModal({ isOpen, onClose }) {
         <form onSubmit={handleChangePassword} className="space-y-4 pt-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Current Password</label>
-            <div className="flex items-center border rounded-lg p-3">
+            <div className="flex items-center border rounded-lg p-3 focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 transition-all">
               <FaLock className="text-gray-400 mr-3" />
               <Input
                 type={showCurrent ? "text" : "password"}
@@ -65,7 +65,8 @@ function ChangePasswordModal({ isOpen, onClose }) {
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 placeholder="Enter your current password"
                 required
-                className="border-none focus:ring-0 outline-none"
+                // Updated className to remove the focus ring on the input itself
+                className="border-none p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
               />
               <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="text-gray-400">
                 {showCurrent ? <FaEyeSlash /> : <FaEye />}
@@ -74,7 +75,7 @@ function ChangePasswordModal({ isOpen, onClose }) {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">New Password</label>
-            <div className="flex items-center border rounded-lg p-3">
+            <div className="flex items-center border rounded-lg p-3 focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 transition-all">
               <FaLock className="text-gray-400 mr-3" />
               <Input
                 type={showNew ? "text" : "password"}
@@ -82,7 +83,8 @@ function ChangePasswordModal({ isOpen, onClose }) {
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Enter your new password"
                 required
-                className="border-none focus:ring-0 outline-none"
+                // Updated className to remove the focus ring on the input itself
+                className="border-none p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
               />
               <button type="button" onClick={() => setShowNew(!showNew)} className="text-gray-400">
                 {showNew ? <FaEyeSlash /> : <FaEye />}
@@ -91,7 +93,7 @@ function ChangePasswordModal({ isOpen, onClose }) {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Confirm New Password</label>
-            <div className="flex items-center border rounded-lg p-3">
+            <div className="flex items-center border rounded-lg p-3 focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 transition-all">
               <FaLock className="text-gray-400 mr-3" />
               <Input
                 type={showConfirm ? "text" : "password"}
@@ -99,7 +101,8 @@ function ChangePasswordModal({ isOpen, onClose }) {
                 onChange={(e) => setConfirmNewPassword(e.target.value)}
                 placeholder="Confirm your new password"
                 required
-                className="border-none focus:ring-0 outline-none"
+                // Updated className to remove the focus ring on the input itself
+                className="border-none p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
               />
               <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="text-gray-400">
                 {showConfirm ? <FaEyeSlash /> : <FaEye />}
