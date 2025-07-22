@@ -990,6 +990,7 @@ function AuthPage() {
   const [isForgotModalOpen, setForgotModalOpen] = useState(false);
   const navigate = useNavigate();
 
+  // Animation for background particles
   const [particles, setParticles] = useState([]);
 
   useEffect(() => {
@@ -1021,7 +1022,7 @@ function AuthPage() {
     const data = { email, password };
     try {
       const user = await loginUser(data);
-      if (user?.statusCode === 200) navigate("/");
+      if (user?.statusCode === 200) navigate("/dashboard"); // <-- CHANGED
     } catch (error) {
       setSignInError(error.message || "Failed to sign in. Please try again.");
     } finally {
@@ -1051,7 +1052,7 @@ function AuthPage() {
       const response = await registerUser(data);
       if (response?.statusCode === 201) {
         const user = await loginUser({ email, password });
-        if (user?.statusCode === 200) navigate("/");
+        if (user?.statusCode === 200) navigate("/dashboard"); // <-- CHANGED
       }
     } catch (error) {
       setSignUpError(error.message || "Registration failed. Please try again.");
