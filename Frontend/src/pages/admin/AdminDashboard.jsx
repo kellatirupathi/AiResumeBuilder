@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
 import { Input } from "@/components/ui/input";
-import { VITE_APP_URL } from "@/config/config.js"
+import { VITE_PUBLIC_URL } from "@/config/config.js";
 import { toast } from 'sonner';
 import { checkAdminSession, getAllUsers, getAllResumes, logoutAdmin } from "@/Services/adminApi";
 import { format } from 'date-fns';
@@ -235,7 +235,7 @@ const getFlattenedResumeData = (resumes) => {
         const flat = {
             title: resume.title, 
             userName: resume.user?.fullName, 
-            resumeLink: `${VITE_APP_URL}api/pdf/public/${resume._id}`,
+            resumeLink: `${VITE_PUBLIC_URL.replace(/\/$/, '')}/public/resume/${resume._id}`,
             userEmail: resume.user?.email, 
             createdAt: format(new Date(resume.createdAt), 'yyyy-MM-dd'),
             updatedAt: format(new Date(resume.updatedAt), 'yyyy-MM-dd HH:mm'),
