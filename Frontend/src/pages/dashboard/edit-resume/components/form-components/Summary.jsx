@@ -521,17 +521,26 @@ function Summary({ resumeInfo, enanbledNext, enanbledPrev }) {
       const result = await AIChatSession.sendMessage(prompt);
       const responseText = result.response.text();
 
-      // ** FIX STARTS HERE: Robustly handle both plain text and JSON responses **
+      // START OF UPDATED CODE
       let enhancedText = responseText;
       try {
         // Attempt to parse response as JSON
         const parsedJson = JSON.parse(responseText);
-        // If successful, extract the summary text from potential keys
-        enhancedText = parsedJson.enhanced_summary || parsedJson.text || parsedJson.summary || JSON.stringify(parsedJson, null, 2);
+
+        // Check if the parsed result is an array with at least one element
+        if (Array.isArray(parsedJson) && parsedJson.length > 0) {
+          // Extract the first element from the array
+          enhancedText = parsedJson[0];
+        } else if (typeof parsedJson === 'object' && parsedJson !== null) {
+          // Handle object responses as a fallback
+          enhancedText = parsedJson.enhanced_summary || parsedJson.text || parsedJson.summary || responseText;
+        }
+        
       } catch (e) {
-        // If it fails, it's already plain text, so we do nothing.
+        // If parsing fails, it's likely already plain text, so we use it directly.
+        console.log("Response is not JSON, treating as plain text.");
       }
-      // ** FIX ENDS HERE **
+      // END OF UPDATED CODE
       
       setSummary(enhancedText.trim());
       toast.success("Summary enhanced by AI!", {
