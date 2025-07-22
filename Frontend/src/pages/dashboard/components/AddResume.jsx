@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { CopyPlus, Loader, Plus, FileText } from "lucide-react";
+import { CopyPlus, LoaderCircle, Plus, FileText } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +31,7 @@ function AddResume({ viewMode = "grid" }) {
     { 
       id: "professional", 
       name: "Professional Resume", 
-      color: "#2563eb", // blue-600 as default color
+      color: "#333333", // blue-600 as default color
     }
   ];
 
@@ -39,7 +39,7 @@ function AddResume({ viewMode = "grid" }) {
   const defaultTemplate = "professional";
   const templateColors = {
     modern: "#059669",     // emerald-600
-    professional: "#2563eb", // blue-600
+    professional: "#333333", // blue-600
   };
 
   const resetForm = () => {
@@ -172,22 +172,22 @@ function CreateResumeDialog({
 }) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden">
-        <DialogHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6">
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
+        <DialogHeader className="bg-gradient-to-r from-emerald-500 to-indigo-600 text-white p-6 rounded-t-xl">
           <DialogTitle className="text-center text-2xl font-bold">
             Create a New Resume
           </DialogTitle>
-          <DialogDescription className="text-center pt-2 text-blue-100">
+          <DialogDescription className="text-center pt-2 text-indigo-100">
             Give your resume a name that reflects the job role you're targeting
           </DialogDescription>
         </DialogHeader>
         
-        <div className="p-6">
+        <div className="p-8">
           <div className="space-y-4">
             <div className="relative">
-              <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <FileText className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <Input
-                className="pl-10 border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-500/30 text-lg py-6"
+                className="pl-12 border-gray-300 dark:border-gray-700 focus:border-indigo-500 focus:ring-indigo-500/30 text-lg py-5 rounded-lg"
                 type="text"
                 placeholder="Ex: Software Engineer Resume"
                 value={title}
@@ -195,29 +195,30 @@ function CreateResumeDialog({
                 autoFocus
               />
             </div>
-            <p className="text-sm text-gray-500 mt-2 ml-1">
-              This will help you organize multiple resumes for different positions
+            <p className="text-sm text-gray-500 text-center mt-2">
+              This will help you organize multiple resumes for different
+              positions.
             </p>
           </div>
         </div>
         
-        <DialogFooter className="bg-gray-50 dark:bg-gray-800/50 p-4 flex justify-between">
-          <div className="w-full flex justify-between">
+        <DialogFooter className="bg-gray-50 dark:bg-gray-800/50 p-4 flex justify-between rounded-b-xl">
+          <div className="w-full flex justify-between gap-4">
             <Button
               variant="outline"
               onClick={onClose}
-              className="border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700"
+              className="w-full border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700 rounded-lg py-5"
             >
               Cancel
             </Button>
             <Button
               onClick={onCreate}
               disabled={loading || !title.trim()}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+              className="w-full bg-gradient-to-r from-emerald-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 text-white rounded-lg py-5 shadow-md hover:shadow-lg transition-all"
             >
               {loading ? (
-                <div className="flex items-center">
-                  <Loader className="w-4 h-4 mr-2 animate-spin" />
+                <div className="flex items-center gap-2">
+                  <LoaderCircle className="w-4 h-4 animate-spin" />
                   Creating...
                 </div>
               ) : (
