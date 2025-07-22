@@ -235,7 +235,7 @@ const getFlattenedResumeData = (resumes) => {
         const flat = {
             title: resume.title, 
             userName: resume.user?.fullName, 
-            resumeLink: `${VITE_PUBLIC_URL.replace(/\/$/, '')}/api/pdf/resume/${resume._id}`,
+            resumeLink: `${VITE_PUBLIC_URL.replace(/\/$/, '')}/public/resume/${resume._id}`,
             userEmail: resume.user?.email, 
             createdAt: format(new Date(resume.createdAt), 'yyyy-MM-dd'),
             updatedAt: format(new Date(resume.updatedAt), 'yyyy-MM-dd HH:mm'),
