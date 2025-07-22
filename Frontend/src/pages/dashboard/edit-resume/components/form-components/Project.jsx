@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Trash2, Code, LoaderCircle, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import SimpeRichTextEditor from "@/components/custom/SimpeRichTextEditor";
+import SimpleRichTextEditor from "@/components/custom/SimpleRichTextEditor";
 import { useDispatch, useSelector } from "react-redux";
 import { addResumeData } from "@/features/resume/resumeFeatures";
 import { toast } from "sonner";
@@ -258,7 +258,7 @@ function Project({ resumeInfo, setEnabledNext, setEnabledPrev }) {
                   
                   <div className="col-span-full mt-4">
                     <label className="text-sm font-medium text-gray-700 mb-2 block">Project Description</label>
-                    <SimpeRichTextEditor
+                    <SimpleRichTextEditor
                       index={index}
                       defaultValue={project?.projectSummary}
                       onRichTextEditorChange={(event) =>
