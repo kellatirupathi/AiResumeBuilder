@@ -11,8 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { changePassword } from '@/Services/login';
-import { Loader2, FaLock } from 'lucide-react';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { Loader2 } from 'lucide-react';
+import { FaEye, FaEyeSlash, FaLock } from 'react-icons/fa';
 
 function ChangePasswordModal({ isOpen, onClose }) {
   const [currentPassword, setCurrentPassword] = useState('');
