@@ -103,7 +103,8 @@ function AdminDashboard() {
     <>
       <div className="min-h-screen bg-gray-50 flex flex-col">
         <header className="bg-white shadow-sm noPrint">
-          <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex justify-between items-center">
+        <div className="px-4 md:px-8 py-4 flex justify-between items-center">
+
             <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
             <Button onClick={handleLogout} variant="outline" size="sm">
                 <LogOut className="h-4 w-4 mr-2" />
