@@ -602,7 +602,7 @@ function Header({ user, darkMode, toggleDarkMode }) {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <Link to="/" className="flex items-center space-x-2 group">
             <span className="text-xl font-bold bg-gradient-to-r from-emerald-500 to-indigo-600 bg-clip-text text-transparent">
-              AI Resume Builder
+              ResumeAI
             </span>
           </Link>
           <div className="hidden md:flex items-center gap-4">
