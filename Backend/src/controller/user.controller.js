@@ -339,6 +339,7 @@
 import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt"; // <-- Import bcrypt here
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 
@@ -527,8 +528,12 @@ const forgotPassword = async (req, res) => {
       return res.status(404).json(new ApiError(404, "User with this email does not exist."));
     }
     
-    user.password = newPassword;
-    await user.save(); // The pre-save hook in the model will hash the password
+    // Manually hash the new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    
+    // Update only the password field
+    await User.updateOne({ _id: user._id }, { $set: { password: hashedPassword } });
 
     return res.status(200).json(new ApiResponse(200, null, "Password has been reset successfully."));
   } catch (err) {
@@ -564,7 +569,7 @@ const changePassword = async (req, res) => {
     }
 
     user.password = newPassword;
-    await user.save(); // The pre-save hook will handle hashing
+    await user.save(); // The pre-save hook will handle hashing, and it should work for authenticated users.
 
     return res.status(200).json(new ApiResponse(200, null, "Password changed successfully."));
   } catch (err) {
