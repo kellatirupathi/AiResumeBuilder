@@ -58,7 +58,8 @@ function ForgotPasswordModal({ isOpen, onClose }) {
         <form onSubmit={handleResetPassword} className="space-y-5 pt-4">
           <div className="space-y-2">
             <label htmlFor="reset-email" className="text-sm font-medium">Email Address</label>
-            <div className="flex items-center border rounded-lg p-3">
+            {/* Added focus-within styling to the parent div */}
+            <div className="flex items-center border rounded-lg p-3 focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 transition-all">
                 <FaEnvelope className="text-gray-400 mr-3" />
                 <Input
                     id="reset-email"
@@ -67,13 +68,15 @@ function ForgotPasswordModal({ isOpen, onClose }) {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
                     required
-                    className="border-none focus:ring-0 outline-none w-full"
+                    // Updated className to remove the input's default focus ring
+                    className="border-none p-0 h-auto w-full focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
             </div>
           </div>
           <div className="space-y-2">
             <label htmlFor="new-password" className="text-sm font-medium">New Password</label>
-            <div className="flex items-center border rounded-lg p-3">
+            {/* Added focus-within styling to the parent div */}
+            <div className="flex items-center border rounded-lg p-3 focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 transition-all">
                 <FaLock className="text-gray-400 mr-3" />
                 <Input
                     id="new-password"
@@ -82,7 +85,8 @@ function ForgotPasswordModal({ isOpen, onClose }) {
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Enter new password"
                     required
-                    className="border-none focus:ring-0 outline-none w-full"
+                    // Updated className to remove the input's default focus ring
+                    className="border-none p-0 h-auto w-full focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-gray-400">
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
@@ -91,7 +95,8 @@ function ForgotPasswordModal({ isOpen, onClose }) {
           </div>
           <div className="space-y-2">
             <label htmlFor="confirm-password" className="text-sm font-medium">Confirm New Password</label>
-            <div className="flex items-center border rounded-lg p-3">
+            {/* Added focus-within styling to the parent div */}
+            <div className="flex items-center border rounded-lg p-3 focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 transition-all">
                 <FaLock className="text-gray-400 mr-3" />
                 <Input
                     id="confirm-password"
@@ -100,7 +105,8 @@ function ForgotPasswordModal({ isOpen, onClose }) {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm your new password"
                     required
-                    className="border-none focus:ring-0 outline-none w-full"
+                    // Updated className to remove the input's default focus ring
+                    className="border-none p-0 h-auto w-full focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
                 <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="text-gray-400">
                     {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
