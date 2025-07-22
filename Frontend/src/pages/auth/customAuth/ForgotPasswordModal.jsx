@@ -11,8 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { forgotPassword } from '@/Services/login';
-import { Loader2, FaEnvelope, FaLock } from 'lucide-react';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { Loader2 } from 'lucide-react';
+import { FaEye, FaEyeSlash, FaEnvelope, FaLock } from 'react-icons/fa';
 
 function ForgotPasswordModal({ isOpen, onClose }) {
   const [email, setEmail] = useState('');
