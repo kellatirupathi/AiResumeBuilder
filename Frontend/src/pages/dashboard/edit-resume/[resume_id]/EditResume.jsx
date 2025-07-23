@@ -118,9 +118,11 @@ export function EditResume() {
       </div>
 
       <div
-        className="divider cursor-ew-resize w-2 bg-gray-200 hover:bg-primary transition-colors"
+        className="divider cursor-ew-resize w-2 bg-gray-200 hover:bg-primary transition-colors flex items-center justify-center"
         onMouseDown={handleMouseDown}
-      ></div>
+      >
+        <div className="h-12 w-1 bg-gray-400 rounded-full"></div>
+      </div>
 
       <div
         className="preview-container overflow-y-auto"
