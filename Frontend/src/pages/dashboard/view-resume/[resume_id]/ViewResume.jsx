@@ -439,7 +439,6 @@
 
 // export default ViewResume;
 
-
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getResumeData, downloadResumePDF } from "@/Services/resumeAPI";
@@ -448,15 +447,17 @@ import { useDispatch } from "react-redux";
 import { addResumeData } from "@/features/resume/resumeFeatures";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Download,
-  ArrowLeft,
+import { 
+  Download, 
+  ArrowLeft, 
   CheckCircle,
   Maximize,
-  Trophy,
-  ChevronRight,
-  Layout,
-  Share2
+  Edit,
+  Home,
+  Share2,
+  Eye,
+  BarChart3,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VITE_APP_URL } from "@/config/config.js";
@@ -464,7 +465,6 @@ import { VITE_APP_URL } from "@/config/config.js";
 function ViewResume() {
   const [resumeInfo, setResumeInfo] = useState({});
   const [isLoading, setIsLoading] = useState(true);
-  const [activeSidebarTab, setActiveSidebarTab] = useState("download");
   const [fullscreenPreview, setFullscreenPreview] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadingState, setDownloadingState] = useState(false);
@@ -488,7 +488,6 @@ function ViewResume() {
         template: response.data.template || "modern"
       };
       
-      console.log("Resume loaded with template:", resumeData.template);
       dispatch(addResumeData(resumeData));
       setResumeInfo(resumeData);
     } catch (error) {
@@ -551,6 +550,22 @@ function ViewResume() {
       }, 1000);
     }
   };
+  
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+  
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0 }
+  };
+
 
   return (
     <>
@@ -636,105 +651,69 @@ function ViewResume() {
                   transition={{ duration: 0.7, delay: 0.4, ease: "easeOut" }}
                   className="lg:w-1/3"
                 >
-                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
-                    
-                    <div className="p-6 space-y-6">
-                      {activeSidebarTab === 'download' && (
-                        <motion.div 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="space-y-6"
-                        >
-                          <div className="text-center">
-                            <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-600/20">
-                              <Download className="h-8 w-8 text-white" />
-                            </div>
-                            <h3 className="text-xl font-bold text-white mb-2">Download Your Resume</h3>
-                            <p className="text-indigo-200 text-sm mb-6">Get your professional resume as a PDF file</p>
-                          </div>
-                          
-                          <div className="space-y-4">
-                            {downloadingState ? (
-                              <div className="space-y-3 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                                <div className="w-full h-2 bg-indigo-900/50 rounded-full overflow-hidden">
-                                  <motion.div 
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${downloadProgress}%` }}
-                                    className="h-full bg-gradient-to-r from-emerald-500 to-indigo-600 rounded-full"
-                                  ></motion.div>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                  <p className="text-center text-sm text-indigo-200">Processing your resume...</p>
-                                  <span className="text-sm text-white font-medium">{downloadProgress}%</span>
-                                </div>
-                              </div>
-                            ) : (
-                              <Button 
-                                className="w-full py-6 bg-gradient-to-r from-emerald-500 via-blue-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-base rounded-xl relative overflow-hidden group"
-                                onClick={handleDownloadPDF}
-                              >
-                                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
-                                
-                                <span className="flex items-center relative z-10">
-                                  <Download className="mr-2 h-5 w-5" />
-                                  Download as PDF
-                                </span>
-                              </Button>
-                            )}
+                  <motion.div 
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="space-y-6"
+                  >
+                    <motion.div variants={itemVariants} className="bg-white/5 backdrop-blur-xl p-6 rounded-2xl border border-white/10 space-y-6">
 
-                            <Button 
-                              variant="outline" 
-                              className="w-full py-4 flex items-center justify-center gap-3 bg-white/10 backdrop-blur-sm hover:bg-white/15 border border-white/20 text-white rounded-xl transition-all duration-300"
-                              onClick={handleShareLink}
+                      
+                      {downloadingState ? (
+                        <div className="space-y-3 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                          <div className="w-full h-2 bg-indigo-900/50 rounded-full overflow-hidden">
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: `${downloadProgress}%` }}
+                              className="h-full bg-gradient-to-r from-emerald-500 to-indigo-600 rounded-full"
+                            ></motion.div>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <p className="text-center text-sm text-indigo-200">Processing...</p>
+                            <span className="text-sm text-white font-medium">{downloadProgress}%</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                           <Button 
+                                className="w-full py-4 bg-gradient-to-r from-emerald-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 text-white shadow-md text-base rounded-xl group relative overflow-hidden"
+                                onClick={handleDownloadPDF}
                             >
-                              <Share2 className="h-4 w-4" />
-                              <span className="font-medium">Share Public Link</span>
+                                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
+                                <span className="relative z-10 flex items-center"><Download className="mr-2 h-4 w-4" />Download</span>
                             </Button>
-                            
-                            <div className="mt-4 space-y-3">
-                              <Button 
-                                className="w-full py-4 flex items-center justify-center gap-3 bg-white/10 backdrop-blur-sm hover:bg-white/15 border border-white/20 text-white rounded-xl transition-all duration-300"
-                                onClick={() => navigate(`/dashboard/edit-resume/${resume_id}`)}
-                              >
-                                <ArrowLeft className="h-4 w-4" />
-                                <span className="font-medium">Return to Editor</span>
-                              </Button>
-                              
-                              <Button 
-                                className="w-full py-4 flex items-center justify-center gap-3 bg-white/5 backdrop-blur-sm hover:bg-white/10 border border-white/20 text-white rounded-xl transition-all duration-300"
-                                onClick={() => navigate('/dashboard')}
-                              >
-                                <ArrowLeft className="h-4 w-4" />
-                                <span className="font-medium">Back to Dashboard</span>
-                              </Button>
-                            </div>
-                          </div>
-                          
-                          <div className="mt-6 bg-emerald-900/20 backdrop-blur-sm p-4 rounded-xl border border-emerald-500/30">
-                            <h4 className="text-sm font-medium text-emerald-300 mb-3 flex items-center">
-                              <Trophy className="h-4 w-4 mr-2" />
-                              Career Expert Tips
-                            </h4>
-                            <ul className="text-xs text-emerald-200 space-y-3">
-                              <li className="flex items-start">
-                                <ChevronRight className="h-3 w-3 mt-0.5 mr-1 flex-shrink-0 text-emerald-400" />
-                                PDF format is best for ATS systems and online job applications
-                              </li>
-                              <li className="flex items-start">
-                                <ChevronRight className="h-3 w-3 mt-0.5 mr-1 flex-shrink-0 text-emerald-400" />
-                                Keep your resume sections concise and focused on relevant achievements
-                              </li>
-                              <li className="flex items-start">
-                                <ChevronRight className="h-3 w-3 mt-0.5 mr-1 flex-shrink-0 text-emerald-400" />
-                                Tailor your resume to each job description for best results
-                              </li>
-                            </ul>
-                          </div>
-                        </motion.div>
+                            <Button 
+                                variant="outline" 
+                                className="w-full py-4 flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 border-white/20 text-white rounded-xl"
+                                onClick={handleShareLink}
+                            >
+                                <Share2 className="h-4 w-4" />
+                                <span className="font-medium">Share</span>
+                            </Button>
+                        </div>
                       )}
-                    </div>
-                  </div>
+                    </motion.div>
+                    
+                    <motion.div variants={itemVariants} className="bg-white/5 p-4 rounded-xl border border-white/10">
+                      <h4 className="font-semibold text-white mb-2 flex items-center gap-2"><BarChart3 className="h-4 w-4 text-purple-300" />Resume Analytics</h4>
+                      <div className="flex justify-between items-center">
+                        <p className="text-indigo-200 text-sm">Total Views:</p>
+                        <p className="text-3xl font-bold text-white">{resumeInfo?.viewCount || 0}</p>
+                      </div>
+                    </motion.div>
+                    
+                    <motion.div variants={itemVariants} className="space-y-2 pt-4 border-t border-white/10">
+                       <h4 className="font-semibold text-white mb-2 flex items-center gap-2"><ArrowLeft className="h-4 w-4 text-gray-300"/>Navigation</h4>
+                       <Button className="w-full py-4 flex justify-start items-center gap-3 bg-white/10 hover:bg-white/15 border-white/20 text-white rounded-xl" onClick={() => navigate(`/dashboard/edit-resume/${resume_id}`)}>
+                          <Edit className="h-4 w-4" />Return to Editor
+                      </Button>
+                      <Button className="w-full py-4 flex justify-start items-center gap-3 bg-white/5 hover:bg-white/10 border-white/20 text-white rounded-xl" onClick={() => navigate('/dashboard')}>
+                          <Home className="h-4 w-4" />Back to Dashboard
+                      </Button>
+                    </motion.div>
+                    
+                  </motion.div>
                 </motion.div>
               </div>
             </div>
@@ -770,6 +749,14 @@ function ViewResume() {
                 transition={{ delay: 0.2, duration: 0.4 }}
                 className="flex gap-3"
               >
+                 <Button
+                    variant="outline"
+                    className="text-white border-white/30 bg-white/10 hover:bg-white/20"
+                    onClick={handleShareLink}
+                >
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share PDF Link
+                </Button>
                 <Button
                   className="bg-gradient-to-r from-emerald-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 text-white border-none shadow-lg"
                   onClick={handleDownloadPDF}
