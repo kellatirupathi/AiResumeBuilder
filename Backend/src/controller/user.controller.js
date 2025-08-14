@@ -1,10 +1,11 @@
 // C:\Users\NxtWave\Downloads\code\Backend\src\controller\user.controller.js
 import mongoose from "mongoose";
 import User from "../models/user.model.js";
+import NiatId from "../models/niatId.model.js"; // <-- MODIFIED IMPORT
 import jwt from "jsonwebtoken";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
-import { sendWelcomeEmail } from "../services/email.service.js"; // Import the email service
+import { sendWelcomeEmail } from "../services/email.service.js";
 
 const start = async (req, res) => {
   if (req.user) {
@@ -31,8 +32,18 @@ const registerUser = async (req, res) => {
   }
 
   try {
-    const existingUser = await User.findOne({ email });
+    // --- START OF MODIFICATION ---
+    // Validate the NIAT ID by checking if it exists in the database.
+    const niatIdRecord = await NiatId.findOne({ niatId: niatId });
+    if (!niatIdRecord) {
+        console.log(`Registration Failed: NIAT ID not found in the database - ${niatId}`);
+        return res
+            .status(400)
+            .json(new ApiError(400, "Your NIAT ID is not registered in our system. Please crosscheck and enter the correct NIAT ID."));
+    }
+    // --- END OF MODIFICATION ---
 
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       console.log("Registration Failed already registered user");
       return res
@@ -45,9 +56,8 @@ const registerUser = async (req, res) => {
       console.log("Registration Failed already registered user with this NIAT ID");
       return res
         .status(409)
-        .json(new ApiError(409, "User with this NIAT ID already registered."));
+        .json(new ApiError(409, "This NIAT ID has already been used to create an account."));
     }
-
 
     const newUser = await User.create({
       fullName,
@@ -56,11 +66,7 @@ const registerUser = async (req, res) => {
       password,
     });
 
-    // --- NEW: Send a welcome email after the user is successfully created ---
-    // This is a "fire-and-forget" call. The user registration process will
-    // not fail if the email sending encounters an error. Errors are logged internally.
     sendWelcomeEmail(newUser.fullName, newUser.email).catch(err => {
-      // Log the error on the server for debugging purposes
       console.error(`[Non-blocking Error] Failed to send welcome email to ${newUser.email}:`, err.message);
     });
 
