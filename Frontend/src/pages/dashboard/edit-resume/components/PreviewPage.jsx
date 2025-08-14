@@ -9,7 +9,6 @@ import ProjectPreview from "./preview-components/ProjectPreview";
 import CertificationsPreview from "./preview-components/CertificationsPreview";
 import AdditionalSectionsPreview from "./preview-components/AdditionalSectionsPreview"; // New import
 
-// Modern template - Default style with primary color accent
 const ModernTemplate = ({ resumeInfo }) => {
   return (
     <div
@@ -18,13 +17,28 @@ const ModernTemplate = ({ resumeInfo }) => {
         borderColor: resumeInfo?.themeColor ? resumeInfo.themeColor : "#059669",
       }}
     >
+      {/* Personal Details and Summary - Unchanged */}
       <PersonalDeatailPreview resumeInfo={resumeInfo} />
       <SummeryPreview resumeInfo={resumeInfo} />
-      {resumeInfo?.experience && resumeInfo.experience.length > 0 && <ExperiencePreview resumeInfo={resumeInfo} />}
-      {resumeInfo?.projects && resumeInfo.projects.length > 0 && <ProjectPreview resumeInfo={resumeInfo} />}
-      {resumeInfo?.education && resumeInfo.education.length > 0 && <EducationalPreview resumeInfo={resumeInfo} />}
+      
+      {/* Rearranged Sections in the requested order */}
+      
+      {/* 1. Skills Section */}
       {resumeInfo?.skills && resumeInfo.skills.length > 0 && <SkillsPreview resumeInfo={resumeInfo} />}
+      
+      {/* 2. Experience Section */}
+      {resumeInfo?.experience && resumeInfo.experience.length > 0 && <ExperiencePreview resumeInfo={resumeInfo} />}
+      
+      {/* 3. Education Section */}
+      {resumeInfo?.education && resumeInfo.education.length > 0 && <EducationalPreview resumeInfo={resumeInfo} />}
+      
+      {/* 4. Projects Section */}
+      {resumeInfo?.projects && resumeInfo.projects.length > 0 && <ProjectPreview resumeInfo={resumeInfo} />}
+      
+      {/* 5. Certifications Section */}
       {resumeInfo?.certifications && resumeInfo.certifications.length > 0 && <CertificationsPreview resumeInfo={resumeInfo} />}
+      
+      {/* 6. Additional Sections */}
       <AdditionalSectionsPreview resumeInfo={resumeInfo} />
     </div>
   );
