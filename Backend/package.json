@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "backfill": "node scripts/backfillDriveLinks.js"
+    "backfill": "node scripts/backfillDriveLinks.js",
+    "postinstall": "puppeteer browsers install chrome"
   },
   "keywords": [],
   "author": "",
