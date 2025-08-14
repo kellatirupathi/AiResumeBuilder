@@ -239,11 +239,7 @@ function ThemeColor({ resumeInfo }) {
     
     await updateThisResume(resume_id, data)
       .then(() => {
-        toast.success("Resume template updated", {
-          description: "Your resume layout has been changed",
-          icon: <CheckCircle className="h-4 w-4" style={{ color: selectedColor }} />,
-          duration: 3000,
-        });
+        
       })
       .catch((error) => {
         toast("Error updating template", {
