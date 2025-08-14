@@ -1,3 +1,5 @@
+# C:\Users\NxtWave\Downloads\code\Backend\.gitIgnore
+
 # Node.js dependencies
 /node_modules
 
@@ -34,3 +36,6 @@
 # React specific files
 /public/build
 /public/.env
+
+# Google Cloud credentials - IMPORTANT
+google-credentials.json
