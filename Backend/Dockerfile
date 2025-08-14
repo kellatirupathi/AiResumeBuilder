@@ -18,5 +18,3 @@ EXPOSE 5001
 
 # Start the server
 CMD ["node", "src/index.js"]
-
-
