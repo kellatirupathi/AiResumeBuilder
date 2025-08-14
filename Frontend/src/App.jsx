@@ -1,4 +1,4 @@
-// C:\Users\NxtWave\Downloads\code\Frontend\src\App.jsx
+// C:\Users\NxtWave\Downloads\AiResumeBuilder-3\Frontend\src\App.jsx
 
 import React, { useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
@@ -85,7 +85,7 @@ function App() {
       <Provider store={resumeStore}>
         {/* --- MODIFIED RENDER CONDITION --- */}
         {!shouldHideHeader && <Header user={user} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}
-        <Outlet />
+        <Outlet context={{ darkMode, toggleDarkMode }} />
         <Toaster />
       </Provider>
     );
