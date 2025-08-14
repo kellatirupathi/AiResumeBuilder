@@ -384,7 +384,7 @@ function HomePage() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
           <div className="flex flex-col items-center md:items-start">
             <div className="text-2xl font-bold bg-gradient-to-r from-emerald-500 to-indigo-600 bg-clip-text text-transparent mb-2">
-              ResumeAI
+              NxtResume
             </div>
             <p className="text-gray-600 dark:text-gray-300 text-sm text-center md:text-left">Building futures, one resume at a time.</p>
           </div>
