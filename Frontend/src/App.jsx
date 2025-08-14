@@ -1,3 +1,5 @@
+// C:\Users\NxtWave\Downloads\code\Frontend\src\App.jsx
+
 import React, { useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import Header from "./components/custom/Header";
@@ -61,7 +63,12 @@ function App() {
     }
   };
   
+  // --- MODIFIED LOGIC START ---
   const isEditResumePage = location.pathname.includes('/dashboard/edit-resume');
+  const isProfilePage = location.pathname === '/profile';
+  // Combine conditions to hide header on both edit and profile pages
+  const shouldHideHeader = isEditResumePage || isProfilePage;
+  // --- MODIFIED LOGIC END ---
 
   if (loading) {
     return (
@@ -71,10 +78,13 @@ function App() {
     );
   }
 
+  // user must be available for these routes. If not, this component will return null 
+  // and the auth check useEffect above will handle redirection.
   if (user) {
     return (
       <Provider store={resumeStore}>
-        {!isEditResumePage && <Header user={user} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}
+        {/* --- MODIFIED RENDER CONDITION --- */}
+        {!shouldHideHeader && <Header user={user} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}
         <Outlet />
         <Toaster />
       </Provider>
