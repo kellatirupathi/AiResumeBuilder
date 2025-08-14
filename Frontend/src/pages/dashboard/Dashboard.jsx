@@ -1,695 +1,3 @@
-// import React, { useEffect, useState } from "react";
-// import { useSelector } from "react-redux";
-// import { getAllResumeData } from "@/Services/resumeAPI";
-// import AddResume from "./components/AddResume";
-// import ResumeCard from "./components/ResumeCard";
-// import ATSScoreChecker from "./components/ATSScoreChecker";
-// import { motion, AnimatePresence } from "framer-motion";
-// import { 
-//   Search, 
-//   Grid, 
-//   List, 
-//   Plus, 
-//   Sparkles, 
-//   Moon, 
-//   Sun, 
-//   Loader2, 
-//   FileText,
-//   LayoutDashboard,
-//   AlertCircle,
-//   ChevronDown,
-//   PieChart
-// } from "lucide-react";
-// import { Input } from "@/components/ui/input";
-// import { Button } from "@/components/ui/button";
-// import { toast } from "sonner";
-
-// function Dashboard() {
-//   const user = useSelector((state) => state.editUser.userData);
-//   const [resumeList, setResumeList] = useState([]);
-//   const [filteredList, setFilteredList] = useState([]);
-//   const [isLoading, setIsLoading] = useState(true);
-//   const [viewMode, setViewMode] = useState("grid");
-//   const [searchQuery, setSearchQuery] = useState("");
-//   const [darkMode, setDarkMode] = useState(false);
-//   const [showSortOptions, setShowSortOptions] = useState(false);
-//   const [sortOption, setSortOption] = useState("newest");
-//   const [showATSModal, setShowATSModal] = useState(false);
-
-//   const fetchAllResumeData = async () => {
-//     setIsLoading(true);
-//     try {
-//       const resumes = await getAllResumeData();
-//       console.log(`Fetched resumes from backend:`, resumes.data);
-//       setResumeList(resumes.data);
-//       setFilteredList(resumes.data);
-//     } catch (error) {
-//       console.log("Error fetching resumes:", error.message);
-//       toast.error("Failed to load resumes", {
-//         description: "Please try refreshing the page",
-//         action: {
-//           label: "Retry",
-//           onClick: () => fetchAllResumeData(),
-//         },
-//       });
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   };
-
-//   const handleOpenATSChecker = () => {
-//     if (resumeList.length === 0) {
-//       toast.error("No resumes available", {
-//         description: "Please create a resume first to use the ATS checker"
-//       });
-//       return;
-//     }
-    
-//     setShowATSModal(true);
-//   };
-
-//   useEffect(() => {
-//     fetchAllResumeData();
-    
-//     // Check for dark mode preference
-//     const storedDarkMode = localStorage.getItem("prefersDarkMode");
-//     if (storedDarkMode === "true") {
-//       setDarkMode(true);
-//     } else if (storedDarkMode === null) {
-//       // Check for system preference if no stored preference
-//       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-//       setDarkMode(prefersDark);
-//     }
-//   }, [user]);
-
-//   // Toggle dark mode and save preference
-//   const toggleDarkMode = () => {
-//     const newDarkMode = !darkMode;
-//     setDarkMode(newDarkMode);
-//     localStorage.setItem("prefersDarkMode", newDarkMode.toString());
-//   };
-
-//   // Filter and sort resumes
-//   useEffect(() => {
-//     let filtered = [...resumeList];
-    
-//     // Apply search filter
-//     if (searchQuery.trim()) {
-//       filtered = filtered.filter(resume => 
-//         resume.title.toLowerCase().includes(searchQuery.toLowerCase())
-//       );
-//     }
-    
-//     // Apply sorting
-//     if (sortOption === "newest") {
-//       filtered.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-//     } else if (sortOption === "oldest") {
-//       filtered.sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
-//     } else if (sortOption === "alphabetical") {
-//       filtered.sort((a, b) => a.title.localeCompare(b.title));
-//     }
-    
-//     setFilteredList(filtered);
-//   }, [searchQuery, resumeList, sortOption]);
-
-//   // Animation variants
-//   const containerVariants = {
-//     hidden: { opacity: 0 },
-//     visible: {
-//       opacity: 1,
-//       transition: {
-//         staggerChildren: 0.08
-//       }
-//     },
-//     exit: {
-//       opacity: 0,
-//       transition: {
-//         staggerChildren: 0.03,
-//         staggerDirection: -1
-//       }
-//     }
-//   };
-
-//   const itemVariants = {
-//     hidden: { y: 15, opacity: 0 },
-//     visible: {
-//       y: 0,
-//       opacity: 1,
-//       transition: { type: "spring", stiffness: 120, damping: 12 }
-//     },
-//     exit: {
-//       y: -10,
-//       opacity: 0,
-//       transition: { duration: 0.2 }
-//     }
-//   };
-
-//   const headerVariants = {
-//     hidden: { opacity: 0, y: -20 },
-//     visible: { 
-//       opacity: 1, 
-//       y: 0,
-//       transition: { 
-//         type: "spring", 
-//         stiffness: 100, 
-//         delay: 0.1 
-//       } 
-//     }
-//   };
-
-//   // Animation variants
-//   const floatingAnimation = {
-//     y: [0, -10, 0],
-//     transition: {
-//       duration: 4,
-//       repeat: Infinity,
-//       repeatType: "reverse",
-//       ease: "easeInOut"
-//     }
-//   };
-
-//   // Shimmer effect for loading state
-//   const shimmerAnimation = {
-//     x: [-200, 200],
-//     transition: {
-//       repeat: Infinity,
-//       duration: 1.5,
-//       ease: "linear"
-//     }
-//   };
-
-//   return (
-//     <div className={`min-h-screen transition-colors duration-500 overflow-hidden ${darkMode 
-//       ? 'bg-gradient-to-br from-gray-900 via-indigo-950/30 to-purple-950/30 text-gray-200' 
-//       : 'bg-gradient-to-br from-blue-50 via-indigo-50/30 to-purple-50/20 text-gray-800'}`}
-//     >
-//       {/* Background elements */}
-//       <div className="fixed inset-0 z-0 overflow-hidden">
-//         {/* Gradient blobs */}
-//         <div className="absolute top-20 right-10 w-96 h-96 bg-purple-400/10 dark:bg-purple-600/10 rounded-full blur-3xl"></div>
-//         <div className="absolute top-40 left-20 w-72 h-72 bg-blue-400/10 dark:bg-blue-600/10 rounded-full blur-3xl"></div>
-//         <div className="absolute bottom-10 left-20 w-80 h-80 bg-emerald-400/10 dark:bg-emerald-600/10 rounded-full blur-3xl"></div>
-//         <div className="absolute -bottom-20 right-40 w-64 h-64 bg-pink-400/10 dark:bg-pink-600/10 rounded-full blur-3xl"></div>
-        
-//         {/* Subtle grid pattern overlay */}
-//         <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] dark:opacity-[0.03]"></div>
-        
-//         {/* Floating particles effect */}
-//         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-//           {[...Array(30)].map((_, i) => (
-//             <motion.div
-//               key={i}
-//               className={`absolute w-1 h-1 rounded-full ${darkMode ? 'bg-white' : 'bg-indigo-600'} opacity-20`}
-//               style={{
-//                 left: `${Math.random() * 100}%`,
-//                 top: `${Math.random() * 100}%`,
-//               }}
-//               animate={{
-//                 y: [0, -30, 0],
-//                 opacity: [0.1, 0.3, 0.1],
-//                 scale: [1, Math.random() * 0.5 + 1, 1]
-//               }}
-//               transition={{
-//                 repeat: Infinity,
-//                 duration: 3 + Math.random() * 5,
-//                 delay: Math.random() * 2
-//               }}
-//             />
-//           ))}
-//         </div>
-
-//         {/* Decorative circles */}
-//         <motion.div 
-//           className={`absolute top-1/4 -right-24 w-96 h-96 border ${darkMode ? 'border-indigo-600/20' : 'border-indigo-300/30'} rounded-full opacity-20`}
-//           animate={{ rotate: 360 }}
-//           transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-//         />
-//         <motion.div 
-//           className={`absolute bottom-1/4 -left-32 w-96 h-96 border ${darkMode ? 'border-emerald-600/20' : 'border-emerald-300/30'} rounded-full opacity-20`}
-//           animate={{ rotate: -360 }}
-//           transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
-//         />
-//         <motion.div 
-//           className={`absolute left-1/3 -top-40 w-[40rem] h-[40rem] border ${darkMode ? 'border-purple-600/20' : 'border-purple-300/30'} rounded-full opacity-10`}
-//           animate={{ rotate: 360 }}
-//           transition={{ duration: 100, repeat: Infinity, ease: "linear" }}
-//         />
-//       </div>
-      
-//       {/* Main content */}
-//       <div className="container mx-auto px-4 pt-16 pb-16 relative z-10 max-w-7xl">
-//         {/* Header with site name and dark mode toggle */}
-//         <motion.div 
-//           variants={headerVariants}
-//           initial="hidden"
-//           animate="visible"
-//           className="mb-8 flex justify-between items-center"
-//         >
-//           <div className="flex items-center">
-//             <div className="bg-gradient-to-r from-emerald-500 to-blue-600 p-3 rounded-xl shadow-lg mr-4">
-//               <FileText className="h-6 w-6 text-white" />
-//             </div>
-//             <div>
-//               <h1 className="text-2xl font-bold tracking-tight">Resume Dashboard</h1>
-//               <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-//                 Manage your professional profile documents
-//               </p>
-//             </div>
-//           </div>
-          
-//           <button
-//             onClick={toggleDarkMode}
-//             className={`p-2.5 rounded-full ${darkMode 
-//               ? 'bg-gray-800 hover:bg-gray-700' 
-//               : 'bg-white hover:bg-gray-100'} shadow-md transition-colors`}
-//             aria-label="Toggle dark mode"
-//           >
-//             {darkMode ? <Sun className="h-5 w-5 text-amber-300" /> : <Moon className="h-5 w-5 text-indigo-600" />}
-//           </button>
-//         </motion.div>
-            
-//         {/* Action bar with search, view toggle, and sorting */}
-//         <motion.div 
-//           className={`mb-8 rounded-2xl shadow-xl border ${darkMode 
-//             ? 'bg-gray-800/90 border-gray-700' 
-//             : 'bg-white/90 border-gray-100'} backdrop-blur-md overflow-hidden`}
-//           initial={{ opacity: 0, y: 10 }}
-//           animate={{ opacity: 1, y: 0 }}
-//           transition={{ delay: 0.2, duration: 0.4 }}
-//         >
-//           <div className="p-6 flex flex-col md:flex-row gap-4 items-center justify-between">
-//             {/* Left side - Search */}
-//             <div className="relative w-full md:w-auto">
-//               <Search className={`absolute left-3.5 top-1/2 transform -translate-y-1/2 h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-//               <Input
-//                 placeholder="Search resumes..."
-//                 value={searchQuery}
-//                 onChange={(e) => setSearchQuery(e.target.value)}
-//                 className={`pl-10 w-full md:w-80 ${darkMode 
-//                   ? 'bg-gray-700/60 border-gray-600 text-gray-200' 
-//                   : 'bg-gray-50 border-gray-200'} rounded-xl`}
-//               />
-//             </div>
-
-//             {/* Right side - Controls */}
-//             <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
-//               {/* Sort dropdown (custom implementation instead of shadcn dropdown) */}
-//               <div className="relative">
-//                 <Button 
-//                   variant="outline" 
-//                   onClick={() => setShowSortOptions(!showSortOptions)}
-//                   className={`h-10 rounded-xl ${darkMode 
-//                     ? 'bg-gray-700 border-gray-600 hover:bg-gray-600 text-gray-200' 
-//                     : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700'
-//                   } whitespace-nowrap flex items-center`}
-//                 >
-//                   <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-//                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-//                   </svg>
-//                   {sortOption === "newest" && "Newest first"}
-//                   {sortOption === "oldest" && "Oldest first"}
-//                   {sortOption === "alphabetical" && "A to Z"}
-//                   <ChevronDown className="h-4 w-4 ml-2" />
-//                 </Button>
-                
-//                 {/* Custom dropdown menu */}
-//                 {showSortOptions && (
-//                   <div 
-//                     className={`absolute z-10 mt-1 w-48 rounded-md shadow-lg ${
-//                       darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-100'
-//                     }`}
-//                   >
-//                     <div className="py-1">
-//                       <button
-//                         onClick={() => {
-//                           setSortOption("newest");
-//                           setShowSortOptions(false);
-//                         }}
-//                         className={`w-full text-left px-4 py-2 text-sm ${
-//                           sortOption === "newest" 
-//                             ? darkMode 
-//                               ? "bg-emerald-900/30 text-emerald-400" 
-//                               : "bg-emerald-100 text-emerald-600" 
-//                             : darkMode 
-//                               ? "text-gray-200 hover:bg-gray-700" 
-//                               : "text-gray-700 hover:bg-gray-100"
-//                         }`}
-//                       >
-//                         <div className="flex items-center">
-//                           {sortOption === "newest" && (
-//                             <svg className="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-//                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-//                             </svg>
-//                           )}
-//                           <span className={sortOption === "newest" ? "" : "ml-6"}>Newest first</span>
-//                         </div>
-//                       </button>
-                      
-//                       <button
-//                         onClick={() => {
-//                           setSortOption("oldest");
-//                           setShowSortOptions(false);
-//                         }}
-//                         className={`w-full text-left px-4 py-2 text-sm ${
-//                           sortOption === "oldest" 
-//                             ? darkMode 
-//                               ? "bg-emerald-900/30 text-emerald-400" 
-//                               : "bg-emerald-100 text-emerald-600" 
-//                             : darkMode 
-//                               ? "text-gray-200 hover:bg-gray-700" 
-//                               : "text-gray-700 hover:bg-gray-100"
-//                         }`}
-//                       >
-//                         <div className="flex items-center">
-//                           {sortOption === "oldest" && (
-//                             <svg className="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-//                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-//                             </svg>
-//                           )}
-//                           <span className={sortOption === "oldest" ? "" : "ml-6"}>Oldest first</span>
-//                         </div>
-//                       </button>
-                      
-//                       <button
-//                         onClick={() => {
-//                           setSortOption("alphabetical");
-//                           setShowSortOptions(false);
-//                         }}
-//                         className={`w-full text-left px-4 py-2 text-sm ${
-//                           sortOption === "alphabetical" 
-//                             ? darkMode 
-//                               ? "bg-emerald-900/30 text-emerald-400" 
-//                               : "bg-emerald-100 text-emerald-600" 
-//                             : darkMode 
-//                               ? "text-gray-200 hover:bg-gray-700" 
-//                               : "text-gray-700 hover:bg-gray-100"
-//                         }`}
-//                       >
-//                         <div className="flex items-center">
-//                           {sortOption === "alphabetical" && (
-//                             <svg className="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-//                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-//                             </svg>
-//                           )}
-//                           <span className={sortOption === "alphabetical" ? "" : "ml-6"}>A to Z</span>
-//                         </div>
-//                       </button>
-//                     </div>
-//                   </div>
-//                 )}
-//               </div>
-              
-//               {/* ATS Score Checker Button */}
-//               <Button
-//                 onClick={handleOpenATSChecker}
-//                 disabled={isLoading || resumeList.length === 0}
-//                 className={`rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all`}
-//               >
-//                 <PieChart className="h-4 w-4 mr-2" /> ATS Score Checker
-//               </Button>
-              
-//               {/* New Resume button */}
-//               <Button
-//                 onClick={() => document.querySelector('.add-resume-trigger')?.click()}
-//                 className={`rounded-xl bg-gradient-to-r from-emerald-500 to-blue-600 text-white hover:from-emerald-600 hover:to-blue-700 shadow-md hover:shadow-lg transition-all`}
-//               >
-//                 <Plus className="h-4 w-4 mr-2" /> New Resume
-//               </Button>
-              
-//               {/* View mode toggle */}
-//               <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg flex p-1`}>
-//                 <button
-//                   onClick={() => setViewMode("grid")}
-//                   className={`p-2 rounded-md transition-colors ${
-//                     viewMode === "grid"
-//                       ? `${darkMode ? 'bg-gray-600' : 'bg-white'} text-emerald-500 shadow-sm`
-//                       : `${darkMode ? 'text-gray-400 hover:bg-gray-600' : 'text-gray-600 hover:bg-gray-200'}`
-//                   }`}
-//                   aria-label="Grid View"
-//                 >
-//                   <Grid className="h-5 w-5" />
-//                 </button>
-//                 <button
-//                   onClick={() => setViewMode("list")}
-//                   className={`p-2 rounded-md transition-colors ${
-//                     viewMode === "list"
-//                       ? `${darkMode ? 'bg-gray-600' : 'bg-white'} text-emerald-500 shadow-sm`
-//                       : `${darkMode ? 'text-gray-400 hover:bg-gray-600' : 'text-gray-600 hover:bg-gray-200'}`
-//                   }`}
-//                   aria-label="List View"
-//                 >
-//                   <List className="h-5 w-5" />
-//                 </button>
-//               </div>
-//             </div>
-//           </div>
-          
-//           {/* Analytics bar - only show when there are resumes */}
-//           {resumeList.length > 0 && !isLoading && !searchQuery && (
-//             <div className={`px-6 py-4 border-t ${darkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-100 bg-gray-50/50'}`}>
-//               <div className="flex flex-wrap gap-6">
-//                 <div className="flex items-center">
-//                   <div className={`h-8 w-8 rounded-lg ${darkMode ? 'bg-indigo-900/60' : 'bg-indigo-100'} flex items-center justify-center mr-3`}>
-//                     <FileText className={`h-4 w-4 ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`} />
-//                   </div>
-//                   <div>
-//                     <div className="text-xl font-bold">{resumeList.length}</div>
-//                     <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Total Resumes</div>
-//                   </div>
-//                 </div>
-                
-//                 <div className="flex items-center">
-//                   <div className={`h-8 w-8 rounded-lg ${darkMode ? 'bg-emerald-900/60' : 'bg-emerald-100'} flex items-center justify-center mr-3`}>
-//                     <svg className={`h-4 w-4 ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-//                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-//                     </svg>
-//                   </div>
-//                   <div>
-//                     <div className="text-xl font-bold">
-//                       {/* Calculate the most recent update date */}
-//                       {resumeList.length > 0 
-//                         ? (() => {
-//                             const mostRecent = new Date(Math.max(...resumeList.map(r => new Date(r.updatedAt))));
-//                             return mostRecent.toLocaleDateString();
-//                           })() 
-//                         : "-"}
-//                     </div>
-//                     <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Last Updated</div>
-//                   </div>
-//                 </div>
-                
-//                 {/* New ATS Score Analytics Widget */}
-//                 <div className="flex items-center">
-//                   <div className={`h-8 w-8 rounded-lg ${darkMode ? 'bg-purple-900/60' : 'bg-purple-100'} flex items-center justify-center mr-3`}>
-//                     <PieChart className={`h-4 w-4 ${darkMode ? 'text-purple-400' : 'text-purple-600'}`} />
-//                   </div>
-//                   <div>
-//                     <button 
-//                       onClick={handleOpenATSChecker}
-//                       className={`text-xl font-bold flex items-center ${darkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}
-//                     >
-//                       Check Score
-//                       <svg className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-//                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-//                       </svg>
-//                     </button>
-//                     <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>ATS Compatibility</div>
-//                   </div>
-//                 </div>
-//               </div>
-//             </div>
-//           )}
-//         </motion.div>
-
-//         {/* Dashboard content */}
-//         <div className="relative">
-//           {isLoading ? (
-//             <div className="flex flex-col justify-center items-center h-64 space-y-8">
-//               {/* Advanced loader with shimmer effect */}
-//               <div className="relative">
-//                 <div className={`h-28 w-28 rounded-full border-4 ${darkMode 
-//                   ? 'border-gray-700 border-t-emerald-400 border-r-blue-500/70' 
-//                   : 'border-gray-200 border-t-emerald-500 border-r-blue-600/70'} animate-spin`}>
-//                 </div>
-//                 <div className="absolute inset-0 overflow-hidden rounded-full">
-//                   <motion.div 
-//                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-//                     animate={shimmerAnimation}
-//                   />
-//                 </div>
-//               </div>
-//               <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} text-lg animate-pulse`}>
-//                 Loading your resumes...
-//               </p>
-//             </div>
-//           ) : (
-//             <>
-//               {searchQuery && filteredList.length === 0 ? (
-//                 <motion.div 
-//                   className={`text-center py-14 ${darkMode ? 'bg-gray-800/60' : 'bg-white/60'} backdrop-blur-md rounded-2xl shadow-lg border ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}
-//                   initial={{ opacity: 0, y: 20 }}
-//                   animate={{ opacity: 1, y: 0 }}
-//                   transition={{ duration: 0.4 }}
-//                 >
-//                   <div className={`mx-auto h-20 w-20 rounded-full ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} flex items-center justify-center mb-6`}>
-//                     <Search className={`h-10 w-10 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-//                   </div>
-//                   <h3 className={`text-xl font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'} mb-2`}>No matching resumes found</h3>
-//                   <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-6`}>Try a different search term or create a new resume</p>
-//                   <Button
-//                     onClick={() => setSearchQuery("")}
-//                     className="rounded-xl bg-gradient-to-r from-gray-500 to-gray-600 text-white hover:from-gray-600 hover:to-gray-700"
-//                   >
-//                     Clear search
-//                   </Button>
-//                 </motion.div>
-//               ) : (
-//                 <AnimatePresence mode="wait">
-//                   <motion.div
-//                     key={viewMode}
-//                     variants={containerVariants}
-//                     initial="hidden"
-//                     animate="visible"
-//                     exit="exit"
-//                     className={viewMode === "grid" 
-//                       ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" 
-//                       : "flex flex-col space-y-6"
-//                     }
-//                   >
-//                     {/* Only show AddResume when not searching */}
-//                     {!searchQuery && (
-//                       <motion.div variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
-//                         <AddResume viewMode={viewMode} darkMode={darkMode} />
-//                       </motion.div>
-//                     )}
-                    
-//                     {filteredList.map((resume) => (
-//                       <motion.div key={resume._id} variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
-//                         <ResumeCard
-//                           resume={resume}
-//                           refreshData={fetchAllResumeData}
-//                           viewMode={viewMode}
-//                           darkMode={darkMode}
-//                         />
-//                       </motion.div>
-//                     ))}
-//                   </motion.div>
-//                 </AnimatePresence>
-//               )}
-//             </>
-//           )}
-
-//           {/* Empty state with enhanced animation */}
-//           {!isLoading && resumeList.length === 0 && (
-//             <motion.div 
-//               initial={{ opacity: 0, y: 20 }}
-//               animate={{ opacity: 1, y: 0 }}
-//               transition={{ duration: 0.6, delay: 0.3 }}
-//               className={`${darkMode ? 'bg-gray-800/80' : 'bg-white/80'} backdrop-blur-md rounded-2xl shadow-xl p-12 text-center mt-4 max-w-2xl mx-auto border ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}
-//             >
-//               <motion.div 
-//                 animate={floatingAnimation}
-//                 className={`w-32 h-32 ${darkMode ? 'bg-gradient-to-br from-emerald-900/60 to-blue-900/60' : 'bg-gradient-to-br from-emerald-100 to-blue-100'} rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg`}
-//               >
-//                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-16 w-16 ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-//                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-//                 </svg>
-//               </motion.div>
-//               <h3 className={`text-3xl font-bold ${darkMode ? 'text-gray-200' : 'text-gray-800'} mb-4`}>
-//                 Create Your First Resume
-//               </h3>
-//               <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-lg mb-10 max-w-md mx-auto`}>
-//                 Build professional resumes with AI assistance to showcase your skills and experience
-//               </p>
-//               <motion.button 
-//                 onClick={() => document.querySelector('.add-resume-trigger')?.click()}
-//                 className="inline-flex items-center justify-center px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-blue-600 text-white font-medium shadow-lg hover:shadow-xl transition-all hover:from-emerald-600 hover:to-blue-700 transform hover:-translate-y-1"
-//                 whileHover={{ scale: 1.05 }}
-//                 whileTap={{ scale: 0.98 }}
-//               >
-//                 <Plus className="h-5 w-5 mr-2" />
-//                 Create Your First Resume
-//               </motion.button>
-//             </motion.div>
-//           )}
-//         </div>
-        
-//         {/* Footer with support info */}
-//         {!isLoading && resumeList.length > 0 && (
-//           <motion.div 
-//             initial={{ opacity: 0 }}
-//             animate={{ opacity: 1 }}
-//             transition={{ delay: 1, duration: 0.6 }}
-//             className={`mt-16 text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'} text-sm`}
-//           >
-//             <div className="flex items-center justify-center gap-2 mb-2">
-//               <div className={`w-1 h-1 rounded-full ${darkMode ? 'bg-gray-500' : 'bg-gray-400'}`}></div>
-//               <span>Need help with your resume? Contact support</span>
-//               <div className={`w-1 h-1 rounded-full ${darkMode ? 'bg-gray-500' : 'bg-gray-400'}`}></div>
-//             </div>
-//             <div className="flex justify-center gap-4">
-//               <a href="#" className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} transition-colors`}>
-//                 Help Center
-//               </a>
-//               <span>•</span>
-//               <a href="#" className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} transition-colors`}>
-//                 Privacy Policy
-//               </a>
-//               <span>•</span>
-//               <a href="#" className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} transition-colors`}>
-//                 Terms of Service
-//               </a>
-//             </div>
-//           </motion.div>
-//         )}
-//       </div>
-      
-//       {/* Animated corner decoration */}
-//       <div className="fixed bottom-0 right-0 w-40 h-40 pointer-events-none opacity-30 dark:opacity-20">
-//         <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-//           <motion.path
-//             d="M0 100C0 44.7715 44.7715 0 100 0"
-//             stroke="currentColor"
-//             strokeWidth="2"
-//             strokeDasharray="150"
-//             initial={{ strokeDashoffset: 150 }}
-//             animate={{ strokeDashoffset: 0 }}
-//             transition={{ duration: 2, delay: 1 }}
-//           />
-//           <motion.path
-//             d="M0 80C0 35.8172 35.8172 0 80 0"
-//             stroke="currentColor"
-//             strokeWidth="2"
-//             strokeDasharray="130"
-//             initial={{ strokeDashoffset: 130 }}
-//             animate={{ strokeDashoffset: 0 }}
-//             transition={{ duration: 2, delay: 1.2 }}
-//           />
-//           <motion.path
-//             d="M0 60C0 26.8629 26.8629 0 60 0"
-//             stroke="currentColor"
-//             strokeWidth="2"
-//             strokeDasharray="100"
-//             initial={{ strokeDashoffset: 100 }}
-//             animate={{ strokeDashoffset: 0 }}
-//             transition={{ duration: 2, delay: 1.4 }}
-//           />
-//         </svg>
-//       </div>
-      
-//       {/* ATS Score Checker Modal */}
-//       <ATSScoreChecker
-//         isOpen={showATSModal}
-//         onClose={() => setShowATSModal(false)}
-//         resumes={resumeList}
-//         darkMode={darkMode}
-//       />
-//     </div>
-//   );
-// }
-
-// export default Dashboard;
-
 import React, { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import { getAllResumeData } from "@/Services/resumeAPI";
@@ -702,14 +10,42 @@ import {
   Grid, 
   List, 
   Plus, 
-  FileText,
-  AlertCircle,
+  FileText, 
+  PieChart,
   ChevronDown,
-  PieChart
+  Clock,
+  ArrowUpDown,
+  LoaderCircle,
+  Briefcase,
+  GraduationCap,
+  FolderGit,
+  Award,
+  Edit,
+  BadgePlus,
+  PlusCircle,
+  User,
+  Calendar,
+  ChevronRight,
+  Filter,
+  SlidersHorizontal
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+
+// More compact, visually appealing stat card component
+const StatCard = ({ icon, label, count, className = "" }) => (
+  <div className={`flex items-center gap-2 bg-white/60 dark:bg-gray-800/60 px-3 py-2 rounded-lg backdrop-blur-sm border border-white/20 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300 ${className}`}>
+    <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 dark:from-indigo-500/20 dark:to-purple-500/20 p-1.5 rounded-md">
+      {React.cloneElement(icon, { className: "w-4 h-4 text-indigo-600 dark:text-indigo-400" })}
+    </div>
+    <div>
+      <span className="text-base font-bold text-gray-800 dark:text-white leading-none">{count}</span>
+      <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">{label}</span>
+    </div>
+  </div>
+);
 
 function Dashboard() {
   const user = useSelector((state) => state.editUser.userData);
@@ -722,13 +58,16 @@ function Dashboard() {
   const [sortOption, setSortOption] = useState("newest");
   const [showATSModal, setShowATSModal] = useState(false);
   const sortDropdownRef = useRef(null);
+  const navigate = useNavigate();
+  
+  const isDarkMode = document.documentElement.classList.contains('dark');
 
   const fetchAllResumeData = async () => {
     setIsLoading(true);
     try {
       const resumes = await getAllResumeData();
-      setResumeList(resumes.data);
-      setFilteredList(resumes.data);
+      setResumeList(resumes.data || []);
+      setFilteredList(resumes.data || []);
     } catch (error) {
       toast.error("Failed to load resumes", {
         description: "Please try refreshing the page",
@@ -738,26 +77,22 @@ function Dashboard() {
       setIsLoading(false);
     }
   };
-
+  
   const handleOpenATSChecker = () => {
     if (resumeList.length === 0) {
-      toast.error("No resumes available", {
-        description: "Please create a resume first to use the ATS checker"
-      });
+      toast.error("No resumes available", { description: "Please create a resume first to use the ATS checker"});
       return;
     }
     setShowATSModal(true);
   };
   
-  useEffect(() => {
-    fetchAllResumeData();
-  }, [user]);
+  useEffect(() => { fetchAllResumeData(); }, [user]);
   
   useEffect(() => {
     const handleClickOutside = (event) => {
-        if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target)) {
-            setShowSortOptions(false);
-        }
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target)) {
+        setShowSortOptions(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -774,96 +109,352 @@ function Dashboard() {
     setFilteredList(filtered);
   }, [searchQuery, resumeList, sortOption]);
 
-  const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08 } }, exit: { opacity: 0, transition: { staggerChildren: 0.03, staggerDirection: -1 } } };
-  const itemVariants = { hidden: { y: 15, opacity: 0 }, visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 120, damping: 12 } }, exit: { y: -10, opacity: 0, transition: { duration: 0.2 } } };
-  const headerVariants = { hidden: { opacity: 0, y: -20 }, visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, delay: 0.1 } } };
-  const floatingAnimation = { y: [0, -10, 0], transition: { duration: 4, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" } };
-  const shimmerAnimation = { x: [-200, 200], transition: { repeat: Infinity, duration: 1.5, ease: "linear" } };
+  const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08 } } };
+  const itemVariants = { hidden: { y: 15, opacity: 0 }, visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 120, damping: 12 } } };
+
+  // Get time-based greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    const firstName = user.fullName ? user.fullName.split(' ')[0] : 'User';
+    if (hour < 12) return `Good morning, ${firstName}`;
+    if (hour < 18) return `Good afternoon, ${firstName}`;
+    return `Good evening, ${firstName}`;
+  };
+
+  const getLastUpdatedDate = () => {
+    if (resumeList.length > 0) {
+      return new Date(Math.max(...resumeList.map(r => new Date(r.updatedAt)))).toLocaleDateString();
+    }
+    return "-";
+  };
 
   return (
-    <div className="min-h-screen transition-colors duration-500 overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50/30 to-purple-50/20 text-gray-800 dark:from-gray-900 dark:via-indigo-950/30 dark:to-purple-950/30 dark:text-gray-200">
-      <div className="fixed inset-0 z-0 overflow-hidden">
+    <div className={`min-h-screen w-full transition-colors duration-500 overflow-x-hidden ${isDarkMode ? 'dark bg-gradient-to-br from-gray-900 via-indigo-950/30 to-purple-950/30 text-gray-200' : 'bg-gradient-to-br from-blue-50 via-indigo-50/30 to-purple-50/20 text-gray-800'}`}>
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 right-10 w-96 h-96 bg-purple-400/10 dark:bg-purple-600/10 rounded-full blur-3xl"></div>
         <div className="absolute top-40 left-20 w-72 h-72 bg-blue-400/10 dark:bg-blue-600/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-10 left-20 w-80 h-80 bg-emerald-400/10 dark:bg-emerald-600/10 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-20 right-40 w-64 h-64 bg-pink-400/10 dark:bg-pink-600/10 rounded-full blur-3xl"></div>
         <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] dark:opacity-[0.03]"></div>
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(30)].map((_, i) => (<motion.div key={i} className="absolute w-1 h-1 rounded-full bg-indigo-600 dark:bg-white opacity-20" style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }} animate={{ y: [0, -30, 0], opacity: [0.1, 0.3, 0.1], scale: [1, Math.random() * 0.5 + 1, 1] }} transition={{ repeat: Infinity, duration: 3 + Math.random() * 5, delay: Math.random() * 2 }} />))}
-        </div>
-        <motion.div className="absolute top-1/4 -right-24 w-96 h-96 border border-indigo-300/30 dark:border-indigo-600/20 rounded-full opacity-20" animate={{ rotate: 360 }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }} />
-        <motion.div className="absolute bottom-1/4 -left-32 w-96 h-96 border border-emerald-300/30 dark:border-emerald-600/20 rounded-full opacity-20" animate={{ rotate: -360 }} transition={{ duration: 50, repeat: Infinity, ease: "linear" }} />
-        <motion.div className="absolute left-1/3 -top-40 w-[40rem] h-[40rem] border border-purple-300/30 dark:border-purple-600/20 rounded-full opacity-10" animate={{ rotate: 360 }} transition={{ duration: 100, repeat: Infinity, ease: "linear" }} />
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">{[...Array(30)].map((_, i) => <motion.div key={i} className={`absolute w-1 h-1 rounded-full ${isDarkMode ? 'bg-white' : 'bg-indigo-600'} opacity-20`} style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }} animate={{ y: [0, -30, 0], opacity: [0.1, 0.3, 0.1], scale: [1, Math.random() * 0.5 + 1, 1] }} transition={{ repeat: Infinity, duration: 3 + Math.random() * 5, delay: Math.random() * 2 }} />)}</div>
+        <motion.div className={`absolute top-1/4 -right-24 w-96 h-96 border ${isDarkMode ? 'border-indigo-600/20' : 'border-indigo-300/30'} rounded-full opacity-20`} animate={{ rotate: 360 }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }}></motion.div>
+        <motion.div className={`absolute bottom-1/4 -left-32 w-96 h-96 border ${isDarkMode ? 'border-emerald-600/20' : 'border-emerald-300/30'} rounded-full opacity-20`} animate={{ rotate: -360 }} transition={{ duration: 50, repeat: Infinity, ease: "linear" }}></motion.div>
+        <motion.div className={`absolute left-1/3 -top-40 w-[40rem] h-[40rem] border ${isDarkMode ? 'border-purple-600/20' : 'border-purple-300/30'} rounded-full opacity-10`} animate={{ rotate: 360 }} transition={{ duration: 100, repeat: Infinity, ease: "linear" }}></motion.div>
       </div>
-      
-      <div className="container mx-auto px-4 pt-16 pb-16 relative z-10 max-w-7xl">
-        <motion.div variants={headerVariants} initial="hidden" animate="visible" className="mb-8 flex justify-between items-center">
 
-        </motion.div>
+      <div className="container mx-auto px-4 pt-16 relative z-10 max-w-full h-screen flex flex-col">
+        
+        {/* --- Profile Summary Container (Top) --- */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-5 p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-md border border-gray-200 dark:border-gray-700"
+        >
+          <div className="flex flex-col md:flex-row justify-between items-center gap-3">
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-emerald-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-md">
+                {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-800 dark:text-white">
+                  {getGreeting()}
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Welcome to your resume dashboard
+                </p>
+              </div>
+            </div>
             
-        <motion.div className="mb-8 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.4 }}>
-          <div className="p-6 flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="relative w-full md:w-auto"><Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" /><Input placeholder="Search resumes..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 w-full md:w-80 bg-gray-50 dark:bg-gray-700/60 border-gray-200 dark:border-gray-600 rounded-xl" /></div>
-            <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
-              <div ref={sortDropdownRef} className="relative">
-                <Button variant="outline" onClick={() => setShowSortOptions(!showSortOptions)} className="h-10 rounded-xl bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 whitespace-nowrap flex items-center">
-                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" /></svg>
-                  {sortOption === "newest" && "Newest first"} {sortOption === "oldest" && "Oldest first"} {sortOption === "alphabetical" && "A to Z"} <ChevronDown className="h-4 w-4 ml-2" />
+            <div className="flex flex-wrap gap-2 items-center justify-center">
+              <StatCard icon={<Briefcase/>} label="Experience" count={user.experience?.length || 0} />
+              <StatCard icon={<GraduationCap />} label="Education" count={user.education?.length || 0} />
+              <StatCard icon={<FolderGit />} label="Projects" count={user.projects?.length || 0} />
+              <StatCard icon={<Award />} label="Certs" count={user.certifications?.length || 0} />
+              <StatCard icon={<BadgePlus />} label="Skills" count={user.skills?.length || 0} />
+              <StatCard icon={<PlusCircle />} label="Extras" count={user.additionalSections?.length || 0} />
+            </div>
+
+            <Button variant="outline" className="border-indigo-300 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-900/50 flex items-center gap-2 flex-shrink-0" onClick={() => navigate("/profile")}>
+              <Edit className="h-4 w-4"/>
+              Edit Profile
+            </Button>
+          </div>
+        </motion.div>
+        
+        <div className="flex-1 flex flex-col lg:flex-row gap-4 overflow-hidden">
+          
+          {/* Left Column - Stats & Actions (Compact) */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+            className="lg:w-72 flex flex-col gap-4"
+          >
+            {/* Profile Summary - Compact */}
+            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700 p-3 flex items-center">
+                <User className="w-4 h-4 mr-2 text-indigo-500 dark:text-indigo-400" />
+                Profile Summary
+              </h3>
+              
+              <div className="p-3 space-y-3">
+                <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50/80 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-700/80">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/60 flex items-center justify-center">
+                    <FileText className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-lg text-gray-800 dark:text-white">{resumeList.length}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Total Resumes</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50/80 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-700/80">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 flex items-center justify-center">
+                    <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-gray-800 dark:text-white">{getLastUpdatedDate()}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Last Updated</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50/80 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-700/80">
+                  <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/60 flex items-center justify-center">
+                    <PieChart className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div>
+                    <button 
+                      onClick={handleOpenATSChecker}
+                      disabled={isLoading || resumeList.length === 0}
+                      className="font-bold text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
+                    >
+                      Check Score
+                    </button>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">ATS Compatibility</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Quick Actions */}
+            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700 p-3 flex items-center">
+                <SlidersHorizontal className="w-4 h-4 mr-2 text-indigo-500 dark:text-indigo-400" />
+                Quick Actions
+              </h3>
+              
+              <div className="p-3 space-y-2">
+                <Button 
+                  onClick={handleOpenATSChecker} 
+                  disabled={isLoading || resumeList.length === 0} 
+                  className="w-full rounded-lg text-sm py-2 h-auto bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 shadow-sm hover:shadow-md transition-all"
+                >
+                  <PieChart className="h-3.5 w-3.5 mr-1.5" /> 
+                  ATS Checker
                 </Button>
-                {showSortOptions && (
-                  <div className="absolute z-20 mt-1 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
-                    <div className="py-1">
-                      <button onClick={() => { setSortOption("newest"); setShowSortOptions(false); }} className={`w-full text-left px-4 py-2 text-sm ${sortOption === "newest" ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"}`}><div className="flex items-center">{sortOption === "newest" && <svg className="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}<span className={sortOption === "newest" ? "" : "ml-6"}>Newest first</span></div></button>
-                      <button onClick={() => { setSortOption("oldest"); setShowSortOptions(false); }} className={`w-full text-left px-4 py-2 text-sm ${sortOption === "oldest" ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"}`}><div className="flex items-center">{sortOption === "oldest" && <svg className="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}<span className={sortOption === "oldest" ? "" : "ml-6"}>Oldest first</span></div></button>
-                      <button onClick={() => { setSortOption("alphabetical"); setShowSortOptions(false); }} className={`w-full text-left px-4 py-2 text-sm ${sortOption === "alphabetical" ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"}`}><div className="flex items-center">{sortOption === "alphabetical" && <svg className="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}<span className={sortOption === "alphabetical" ? "" : "ml-6"}>A to Z</span></div></button>
+                
+                <Button 
+                  onClick={() => document.querySelector('.add-resume-trigger')?.click()} 
+                  className="w-full rounded-lg text-sm py-2 h-auto bg-gradient-to-r from-emerald-500 to-blue-600 text-white hover:from-emerald-600 hover:to-blue-700 shadow-sm hover:shadow-md transition-all"
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1.5" /> 
+                  New Resume
+                </Button>
+              </div>
+            </div>
+            
+            {/* Recent Activity (Compact) */}
+            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-md border border-gray-200 dark:border-gray-700 h-[200px] flex flex-col">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700 p-3 flex items-center">
+                <Calendar className="w-4 h-4 mr-2 text-indigo-500 dark:text-indigo-400" />
+                Recent Activity
+              </h3>
+              
+              <div className="p-3 space-y-2 overflow-hidden flex-1">
+                {resumeList
+                  .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+                  .slice(0, 2)
+                  .map((resume, idx) => (
+                  <div key={idx} className="flex items-center p-2 rounded-lg bg-gray-50/80 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-700/80">
+                    <div className="w-7 h-7 rounded-md bg-indigo-100 dark:bg-indigo-900/60 flex items-center justify-center mr-2">
+                      <FileText className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-gray-800 dark:text-white truncate">{resume.title}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {new Date(resume.updatedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
+                  </div>
+                ))}
+                
+                {resumeList.length > 2 && (
+                  <div className="text-center mt-1">
+                    <button className="text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300">
+                      View more...
+                    </button>
+                  </div>
+                )}
+                
+                {resumeList.length === 0 && !isLoading && (
+                  <div className="text-center p-3 text-gray-500 dark:text-gray-400 text-sm">
+                    No resume activity yet
+                  </div>
+                )}
+                
+                {isLoading && (
+                  <div className="text-center p-3">
+                    <LoaderCircle className="h-5 w-5 animate-spin text-indigo-500 mx-auto" />
                   </div>
                 )}
               </div>
-              <Button onClick={handleOpenATSChecker} disabled={isLoading || resumeList.length === 0} className="rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all"><PieChart className="h-4 w-4 mr-2" /> ATS Score Checker</Button>
-              <Button onClick={() => document.querySelector('.add-resume-trigger')?.click()} className="rounded-xl bg-gradient-to-r from-emerald-500 to-blue-600 text-white hover:from-emerald-600 hover:to-blue-700 shadow-md hover:shadow-lg transition-all"><Plus className="h-4 w-4 mr-2" /> New Resume</Button>
-              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg flex p-1">
-                <button onClick={() => setViewMode("grid")} className={`p-2 rounded-md transition-colors ${viewMode === "grid" ? "bg-white dark:bg-gray-600 text-emerald-500 shadow-sm" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"}`} aria-label="Grid View"><Grid className="h-5 w-5" /></button>
-                <button onClick={() => setViewMode("list")} className={`p-2 rounded-md transition-colors ${viewMode === "list" ? "bg-white dark:bg-gray-600 text-emerald-500 shadow-sm" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"}`} aria-label="List View"><List className="h-5 w-5" /></button>
-              </div>
-            </div>
-          </div>
-          {resumeList.length > 0 && !isLoading && !searchQuery && (
-            <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
-              <div className="flex flex-wrap gap-6">
-                <div className="flex items-center"><div className="h-8 w-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/60 flex items-center justify-center mr-3"><FileText className="h-4 w-4 text-indigo-600 dark:text-indigo-400" /></div><div><div className="text-xl font-bold">{resumeList.length}</div><div className="text-xs text-gray-500 dark:text-gray-400">Total Resumes</div></div></div>
-                <div className="flex items-center"><div className="h-8 w-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 flex items-center justify-center mr-3"><svg className="h-4 w-4 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div><div><div className="text-xl font-bold">{resumeList.length > 0 ? new Date(Math.max(...resumeList.map(r => new Date(r.updatedAt)))).toLocaleDateString() : "-"}</div><div className="text-xs text-gray-500 dark:text-gray-400">Last Updated</div></div></div>
-                <div className="flex items-center"><div className="h-8 w-8 rounded-lg bg-purple-100 dark:bg-purple-900/60 flex items-center justify-center mr-3"><PieChart className="h-4 w-4 text-purple-600 dark:text-purple-400" /></div><div><button onClick={handleOpenATSChecker} className="text-xl font-bold flex items-center text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300">Check Score <svg className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg></button><div className="text-xs text-gray-500 dark:text-gray-400">ATS Compatibility</div></div></div>
-              </div>
-            </div>
-          )}
-        </motion.div>
-        
-        <div className="relative">
-          {isLoading ? (<div className="flex flex-col justify-center items-center h-64 space-y-8"><div className="relative"><div className="h-28 w-28 rounded-full border-4 border-gray-200 dark:border-gray-700 border-t-emerald-500 dark:border-t-emerald-400 border-r-blue-600/70 dark:border-r-blue-500/70 animate-spin"></div><div className="absolute inset-0 overflow-hidden rounded-full"><motion.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" animate={shimmerAnimation} /></div></div><p className="text-gray-600 dark:text-gray-300 text-lg animate-pulse">Loading your resumes...</p></div>) : (<>{searchQuery && filteredList.length === 0 ? (<motion.div className="text-center py-14 bg-white/60 dark:bg-gray-800/60 backdrop-blur-md rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}><div className="mx-auto h-20 w-20 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-6"><Search className="h-10 w-10 text-gray-500 dark:text-gray-400" /></div><h3 className="text-xl font-medium text-gray-700 dark:text-gray-200 mb-2">No matching resumes found</h3><p className="text-gray-500 dark:text-gray-400 mb-6">Try a different search term or create a new resume</p><Button onClick={() => setSearchQuery("")} className="rounded-xl bg-gradient-to-r from-gray-500 to-gray-600 text-white hover:from-gray-600 hover:to-gray-700">Clear search</Button></motion.div>) : (<AnimatePresence mode="wait"><motion.div key={viewMode} variants={containerVariants} initial="hidden" animate="visible" exit="exit" className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" : "flex flex-col space-y-6"}>{!searchQuery && (<motion.div variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}><AddResume viewMode={viewMode} /></motion.div>)} {filteredList.map((resume) => (<motion.div key={resume._id} variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}><ResumeCard resume={resume} refreshData={fetchAllResumeData} viewMode={viewMode} /></motion.div>))}</motion.div></AnimatePresence>)}</>)}
-          {!isLoading && resumeList.length === 0 && (<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-xl p-12 text-center mt-4 max-w-2xl mx-auto border border-gray-100 dark:border-gray-700"><motion.div animate={floatingAnimation} className="w-32 h-32 bg-gradient-to-br from-emerald-100 to-blue-100 dark:from-emerald-900/60 dark:to-blue-900/60 rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg"><svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg></motion.div><h3 className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-4">Create Your First Resume</h3><p className="text-lg text-gray-600 dark:text-gray-400 mb-10 max-w-md mx-auto">Build professional resumes with AI assistance to showcase your skills and experience</p><motion.button onClick={() => document.querySelector('.add-resume-trigger')?.click()} className="inline-flex items-center justify-center px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-blue-600 text-white font-medium shadow-lg hover:shadow-xl transition-all hover:from-emerald-600 hover:to-blue-700 transform hover:-translate-y-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}><Plus className="h-5 w-5 mr-2" />Create Your First Resume</motion.button></motion.div>)}
-        </div>
-        {!isLoading && resumeList.length > 0 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1, duration: 0.6 }} className="mt-16 text-center text-sm text-gray-500 dark:text-gray-400">
-            <div className="flex items-center justify-center gap-2 mb-2"><div className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-500"></div><span>Need help with your resume? Contact support</span><div className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-500"></div></div>
-            <div className="flex justify-center gap-4">
-              <a href="#" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">Help Center</a>
-              <span>•</span>
-              <a href="#" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">Privacy Policy</a>
-              <span>•</span>
-              <a href="#" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">Terms of Service</a>
             </div>
           </motion.div>
-        )}
+          
+          {/* Right Column - Resume List */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.4 }}
+            className="lg:flex-1 flex flex-col"
+          >
+            {/* Search and filter controls */}
+            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-xl shadow-md border border-gray-100 dark:border-gray-700 p-3 mb-4 relative z-30">
+              <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
+                <div className="relative w-full md:w-auto flex-grow">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  <Input 
+                    placeholder="Search resumes..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 w-full md:w-80 bg-gray-50 dark:bg-gray-700/60 border-gray-200 dark:border-gray-600 rounded-lg h-9" 
+                  />
+                </div>
+                
+                {/* Sort Controls - with higher z-index and better positioning */}
+                <div className="flex items-center gap-2">
+                  <div ref={sortDropdownRef} className="relative z-50">
+                    <Button variant="outline" onClick={() => setShowSortOptions(!showSortOptions)} className="h-8 rounded-lg bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 whitespace-nowrap flex items-center text-sm">
+                      <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5" />
+                      {sortOption === "newest" && "Newest first"}
+                      {sortOption === "oldest" && "Oldest first"}
+                      {sortOption === "alphabetical" && "A to Z"}
+                      <ChevronDown className="h-3.5 w-3.5 ml-1.5" />
+                    </Button>
+                    {showSortOptions && (
+                      <div className="absolute z-[9999] mt-1 right-0 w-44 rounded-md shadow-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 ring-1 ring-black ring-opacity-5">
+                        <div className="py-1">
+                          <button 
+                            onClick={() => { setSortOption("newest"); setShowSortOptions(false); }} 
+                            className={`w-full text-left px-3 py-2 text-sm transition-colors ${sortOption === "newest" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"}`}
+                          >
+                            <div className="flex items-center">
+                              {sortOption === "newest" && <svg className="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+                              <span className={sortOption === "newest" ? "" : "ml-6"}>Newest first</span>
+                            </div>
+                          </button>
+                          <button 
+                            onClick={() => { setSortOption("oldest"); setShowSortOptions(false); }} 
+                            className={`w-full text-left px-3 py-2 text-sm transition-colors ${sortOption === "oldest" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"}`}
+                          >
+                            <div className="flex items-center">
+                              {sortOption === "oldest" && <svg className="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+                              <span className={sortOption === "oldest" ? "" : "ml-6"}>Oldest first</span>
+                            </div>
+                          </button>
+                          <button 
+                            onClick={() => { setSortOption("alphabetical"); setShowSortOptions(false); }} 
+                            className={`w-full text-left px-3 py-2 text-sm transition-colors ${sortOption === "alphabetical" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"}`}
+                          >
+                            <div className="flex items-center">
+                              {sortOption === "alphabetical" && <svg className="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+                              <span className={sortOption === "alphabetical" ? "" : "ml-6"}>A to Z</span>
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="bg-gray-100 dark:bg-gray-700 rounded-lg flex p-1">
+                    <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-white dark:bg-gray-600 text-emerald-500 shadow-sm" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"}`}>
+                      <Grid className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-white dark:bg-gray-600 text-emerald-500 shadow-sm" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"}`}>
+                      <List className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          
+            
+            {/* Resume Cards */}
+            <div className="overflow-y-auto pr-2 custom-scrollbar flex-1 rounded-xl bg-gray-50/50 dark:bg-gray-900/30 backdrop-blur-sm shadow-inner border border-gray-100 dark:border-gray-800 p-3 pb-0">
+              {isLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <LoaderCircle className="h-10 w-10 animate-spin text-indigo-500 mx-auto mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Loading your resumes...</p>
+                  </div>
+                </div>
+              ) : (
+                <AnimatePresence>
+                  <motion.div 
+                    key={viewMode} 
+                    variants={containerVariants}
+                    initial="hidden" 
+                    animate="visible" 
+                    exit="exit"
+                    className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" : "flex flex-col space-y-3"}
+                  >
+                    {!searchQuery && (
+                      <motion.div variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
+                        <AddResume viewMode={viewMode} />
+                      </motion.div>
+                    )}
+                    {filteredList.map((resume) => (
+                      <motion.div key={resume._id} variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
+                        <ResumeCard resume={resume} refreshData={fetchAllResumeData} viewMode={viewMode} />
+                      </motion.div>
+                    ))}
+                    
+                    {filteredList.length === 0 && searchQuery && (
+                      <div className="col-span-full text-center py-10">
+                        <Search className="h-10 w-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                        <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300">No matches found</h3>
+                        <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Try adjusting your search query</p>
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              )}
+            </div>
+          </motion.div>
+        </div>
       </div>
-      <div className="fixed bottom-0 right-0 w-40 h-40 pointer-events-none opacity-20 dark:opacity-30">
-        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <motion.path d="M0 100C0 44.7715 44.7715 0 100 0" stroke="currentColor" strokeWidth="2" strokeDasharray="150" initial={{ strokeDashoffset: 150 }} animate={{ strokeDashoffset: 0 }} transition={{ duration: 2, delay: 1 }} />
-          <motion.path d="M0 80C0 35.8172 35.8172 0 80 0" stroke="currentColor" strokeWidth="2" strokeDasharray="130" initial={{ strokeDashoffset: 130 }} animate={{ strokeDashoffset: 0 }} transition={{ duration: 2, delay: 1.2 }} />
-          <motion.path d="M0 60C0 26.8629 26.8629 0 60 0" stroke="currentColor" strokeWidth="2" strokeDasharray="100" initial={{ strokeDashoffset: 100 }} animate={{ strokeDashoffset: 0 }} transition={{ duration: 2, delay: 1.4 }} />
-        </svg>
-      </div>
+      
+      {/* ATS Score Checker Modal */}
       <ATSScoreChecker isOpen={showATSModal} onClose={() => setShowATSModal(false)} resumes={resumeList} />
+      
+      {/* Custom scrollbar style */}
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.05);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(79, 70, 229, 0.3);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(79, 70, 229, 0.5);
+        }
+      `}</style>
     </div>
   );
 }
