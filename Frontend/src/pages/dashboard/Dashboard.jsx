@@ -1,3 +1,5 @@
+// C:\Users\NxtWave\Downloads\AiResumeBuilder-3\Frontend\src\pages\dashboard\Dashboard.jsx
+
 import React, { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import { getAllResumeData } from "@/Services/resumeAPI";
@@ -27,12 +29,14 @@ import {
   Calendar,
   ChevronRight,
   Filter,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Moon,
+  Sun
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 
 // Animated User Icon Component
 const AnimatedUserIcon = ({ fullName }) => {
@@ -93,6 +97,7 @@ const StatCard = ({ icon, label, count, className = "" }) => (
 );
 
 function Dashboard() {
+  const { darkMode, toggleDarkMode } = useOutletContext();
   const user = useSelector((state) => state.editUser.userData);
   const [resumeList, setResumeList] = useState([]);
   const [filteredList, setFilteredList] = useState([]);
@@ -218,10 +223,21 @@ function Dashboard() {
               <StatCard icon={<PlusCircle />} label="Extras" count={user.additionalSections?.length || 0} />
             </div>
 
-            <Button variant="outline" className="border-indigo-300 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-900/50 flex items-center gap-2 flex-shrink-0" onClick={() => navigate("/profile")}>
-              <Edit className="h-4 w-4"/>
-              Edit Profile
-            </Button>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Button variant="outline" className="border-indigo-300 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-900/50 flex items-center gap-2 flex-shrink-0" onClick={() => navigate("/profile")}>
+                <Edit className="h-4 w-4"/>
+                Edit Profile
+              </Button>
+              <Button 
+                onClick={toggleDarkMode} 
+                variant="outline" 
+                size="icon" 
+                className="border-indigo-300 hover:bg-indigo-50 dark:border-indigo-700 dark:hover:bg-indigo-900/50 flex-shrink-0"
+                aria-label="Toggle dark mode"
+              >
+                {darkMode ? <Sun className="h-5 w-5 text-amber-300" /> : <Moon className="h-5 w-5 text-indigo-600" />}
+              </Button>
+            </div>
           </div>
         </motion.div>
         
