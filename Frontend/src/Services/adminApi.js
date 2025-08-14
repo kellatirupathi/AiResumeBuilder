@@ -2,7 +2,7 @@ import axios from 'axios';
 import { VITE_APP_URL } from '@/config/config';
 
 const adminAxios = axios.create({
-  baseURL: `${VITE_APP_URL.replace(/\/$/, '')}/api/admin/`,
+  baseURL: `${VITE_APP_URL}api/admin/`,
   withCredentials: true,
 });
 
