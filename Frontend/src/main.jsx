@@ -1,3 +1,4 @@
+// C:\Users\NxtWave\Downloads\code\Frontend\src\main.jsx
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
@@ -12,7 +13,9 @@ import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AuthPage from "./pages/auth/customAuth/AuthPage.jsx";
 import { resumeStore } from "./store/store";
 import { Provider } from "react-redux";
-import PublicResumeView from "./pages/public/PublicResumeView.jsx"; // New import
+import PublicResumeView from "./pages/public/PublicResumeView.jsx"; 
+// --- NEW IMPORT ---
+import ProfilePage from "./pages/profile/ProfilePage.jsx";
 
 const router = createBrowserRouter([
   {
@@ -30,6 +33,11 @@ const router = createBrowserRouter([
         path: "/dashboard/view-resume/:resume_id",
         element: <ViewResume />,
       },
+      // --- NEW ROUTE ---
+      {
+        path: "/profile",
+        element: <ProfilePage />
+      }
     ],
   },
   {
@@ -41,7 +49,7 @@ const router = createBrowserRouter([
     element: <AuthPage />,
   },
   {
-    path: "/public/resume/:resume_id", // New public route
+    path: "/public/resume/:resume_id",
     element: <PublicResumeView />,
   },
   {
