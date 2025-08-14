@@ -364,7 +364,25 @@
       <p class="summary">{{summary}}</p>
     {{/if}}
     
-    <!-- Experience Section -->
+    <!-- REARRANGED SECTIONS IN NEW ORDER -->
+    
+    <!-- 1. Skills Section -->
+    {{#if skills.length}}
+      <div class="section skills">
+        <div class="section-header">
+          <h3 class="section-title">Skills</h3>
+          <hr class="section-divider">
+        </div>
+        
+        <div class="skills-list">
+          {{#each skills}}
+            <div class="skill-item">{{this.name}}</div>
+          {{/each}}
+        </div>
+      </div>
+    {{/if}}
+    
+    <!-- 2. Experience Section -->
     {{#if experience.length}}
       <div class="section experience">
         <div class="section-header">
@@ -406,41 +424,7 @@
       </div>
     {{/if}}
     
-    <!-- Projects Section -->
-    {{#if projects.length}}
-      <div class="section projects">
-        <div class="section-header">
-          <h3 class="section-title">Projects</h3>
-          <hr class="section-divider">
-        </div>
-        
-        <div class="section-content">
-          {{#each projects}}
-            <div class="project-item">
-              <div class="item-header">
-                <h4 class="item-title">{{this.projectName}}</h4>
-                <div class="project-links">
-                  {{#if this.githubLink}}
-                    <a href="{{formatUrl this.githubLink}}" target="_blank" rel="noopener noreferrer" class="link-item">Code</a>
-                  {{/if}}
-                  {{#if this.deployedLink}}
-                    <a href="{{formatUrl this.deployedLink}}" target="_blank" rel="noopener noreferrer" class="link-item">Demo</a>
-                  {{/if}}
-                </div>
-              </div>
-              {{#if this.techStack}}
-                <p class="project-tech">
-                  <span>Tech: {{this.techStack}}</span>
-                </p>
-              {{/if}}
-              <div class="item-description">{{{this.projectSummary}}}</div>
-            </div>
-          {{/each}}
-        </div>
-      </div>
-    {{/if}}
-    
-    <!-- Education Section -->
+    <!-- 3. Education Section -->
     {{#if education.length}}
       <div class="section education">
         <div class="section-header">
@@ -495,23 +479,41 @@
       </div>
     {{/if}}
     
-    <!-- Skills Section -->
-    {{#if skills.length}}
-      <div class="section skills">
+    <!-- 4. Projects Section -->
+    {{#if projects.length}}
+      <div class="section projects">
         <div class="section-header">
-          <h3 class="section-title">Skills</h3>
+          <h3 class="section-title">Projects</h3>
           <hr class="section-divider">
         </div>
         
-        <div class="skills-list">
-          {{#each skills}}
-            <div class="skill-item">{{this.name}}</div>
+        <div class="section-content">
+          {{#each projects}}
+            <div class="project-item">
+              <div class="item-header">
+                <h4 class="item-title">{{this.projectName}}</h4>
+                <div class="project-links">
+                  {{#if this.githubLink}}
+                    <a href="{{formatUrl this.githubLink}}" target="_blank" rel="noopener noreferrer" class="link-item">Code</a>
+                  {{/if}}
+                  {{#if this.deployedLink}}
+                    <a href="{{formatUrl this.deployedLink}}" target="_blank" rel="noopener noreferrer" class="link-item">Demo</a>
+                  {{/if}}
+                </div>
+              </div>
+              {{#if this.techStack}}
+                <p class="project-tech">
+                  <span>Tech: {{this.techStack}}</span>
+                </p>
+              {{/if}}
+              <div class="item-description">{{{this.projectSummary}}}</div>
+            </div>
           {{/each}}
         </div>
       </div>
     {{/if}}
     
-    <!-- Certifications Section -->
+    <!-- 5. Certifications Section -->
     {{#if certifications.length}}
       <div class="section certifications">
         <div class="section-header">
@@ -559,7 +561,7 @@
       </div>
     {{/if}}
     
-    <!-- Additional Sections -->
+    <!-- 6. Additional Sections -->
     {{#if additionalSections.length}}
       {{#each additionalSections}}
         <div class="section additional-section">
@@ -574,6 +576,8 @@
         </div>
       {{/each}}
     {{/if}}
+    
+    <!-- Other possible sections that will appear at the end if present -->
     
     <!-- Languages Section -->
     {{#if languages.length}}
@@ -703,7 +707,5 @@
       </div>
     {{/if}}
   </div>
-  
-  <!-- We don't need client-side scripts for a PDF render -->
 </body>
 </html>
