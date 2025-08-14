@@ -25,7 +25,7 @@ export const sendWelcomeEmail = async (userName, userEmail) => {
   const mailOptions = {
     from: `"${process.env.FROM_NAME}" <${process.env.FROM_EMAIL}>`,
     to: userEmail,
-    subject: "Welcome! Let's Create Your Future with AI Resume Builder", // UPDATED SUBJECT LINE
+    subject: "Welcome! Let's Create Your Resume with AI Resume Builder", // UPDATED SUBJECT LINE
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
         <h1 style="color: #4A90E2; text-align: center;">Welcome, ${userName}!</h1>
