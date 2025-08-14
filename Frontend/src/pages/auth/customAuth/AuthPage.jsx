@@ -2,13 +2,17 @@ import React, { useState, useEffect } from "react";
 import {
   FaUser,
   FaLock,
-  FaSignInAlt,
-  FaUserPlus,
   FaEye,
   FaEyeSlash,
   FaEnvelope,
   FaArrowRight,
   FaIdBadge,
+  FaRegFileAlt,
+  FaRegLightbulb,
+  FaShieldAlt,
+  FaCheckCircle,
+  FaExclamationTriangle,
+  FaTimes
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { loginUser, registerUser } from "@/Services/login";
@@ -16,164 +20,428 @@ import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ForgotPasswordModal from "./ForgotPasswordModal";
 
+// Toast component for displaying notifications
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000); // Close after 3 seconds
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -50, x: 20 }}
+      animate={{ opacity: 1, y: 0, x: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className={`fixed top-4 right-4 z-50 flex items-center p-4 rounded-lg shadow-lg ${
+        type === "error" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+      }`}
+      style={{ maxWidth: "calc(100% - 2rem)" }}
+    >
+      <div className="flex-shrink-0 mr-2">
+        {type === "error" ? (
+          <FaExclamationTriangle className="w-5 h-5" />
+        ) : (
+          <FaCheckCircle className="w-5 h-5" />
+        )}
+      </div>
+      <div className="mr-2 text-sm font-medium">{message}</div>
+      <button
+        onClick={onClose}
+        className="ml-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg p-1.5 inline-flex h-8 w-8 items-center justify-center"
+      >
+        <FaTimes className="w-4 h-4" />
+      </button>
+    </motion.div>
+  );
+};
+
 function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [signUpError, setSignUpError] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [niatId, setNiatId] = useState("");
-  const [signInError, setSignInError] = useState("");
   const [loading, setLoading] = useState(false);
   const [isForgotModalOpen, setForgotModalOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Animation for background particles
-  const [particles, setParticles] = useState([]);
+  // Toast notification state
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
-  useEffect(() => {
-    const generateParticles = () => {
-      const newParticles = [];
-      for (let i = 0; i < 30; i++) {
-        newParticles.push({
-          id: i,
-          x: Math.random() * 100,
-          y: Math.random() * 100,
-          size: Math.random() * 20 + 5,
-          duration: Math.random() * 20 + 10,
-        });
-      }
-      setParticles(newParticles);
-    };
-    generateParticles();
-  }, []);
+  const niatIdRegex = /^N24H01[A-Z]\d{4}$/;
+
+  const validateNiatId = (id) => {
+    if (!id) return true;
+    return niatIdRegex.test(id);
+  };
+
+  const handleNiatIdChange = (e) => {
+    const newNiatId = e.target.value.toUpperCase();
+    setNiatId(newNiatId);
+  };
+
+  const showToast = (message, type = "error") => {
+    setToast({ show: true, message, type });
+  };
+
+  const closeToast = () => {
+    setToast({ ...toast, show: false });
+  };
 
   const handleSignInSubmit = async (event) => {
-    setSignInError("");
     event.preventDefault();
+    
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailPattern.test(email)) {
-      setSignInError("Please enter a valid email address.");
+      showToast("Please enter a valid email address.", "error");
       return;
     }
+    
     setLoading(true);
     const data = { email, password };
+    
     try {
       const user = await loginUser(data);
-      if (user?.statusCode === 200) navigate("/dashboard"); // <-- CHANGED
+      if (user?.statusCode === 200) {
+        showToast("Sign in successful!", "success");
+        // Navigate after toast appears
+        setTimeout(() => navigate("/dashboard"), 1000);
+      }
     } catch (error) {
-      setSignInError(error.message || "Failed to sign in. Please try again.");
+      showToast(error.message || "Failed to sign in. Please try again.", "error");
     } finally {
       setLoading(false);
     }
   };
 
   const handleSignUpSubmit = async (event) => {
-    setSignUpError("");
     event.preventDefault();
+    
+    // Validate form fields
+    if (!validateNiatId(niatId)) {
+      showToast("Invalid NIAT ID format. Correct format is N24H01X####.", "error");
+      return;
+    }
+    
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailPattern.test(email)) {
-      setSignUpError("Please enter a valid email address.");
+      showToast("Please enter a valid email address.", "error");
       return;
     }
+    
     if (password.length < 6) {
-      setSignUpError("Password must be at least 6 characters long.");
+      showToast("Password must be at least 6 characters long.", "error");
       return;
     }
-    if (!niatId.trim()) {
-      setSignUpError("Please enter your NIAT ID.");
-      return;
-    }
+    
     setLoading(true);
     const data = { fullName, niatId, email, password };
+    
     try {
       const response = await registerUser(data);
       if (response?.statusCode === 201) {
+        showToast("Account created successfully!", "success");
         const user = await loginUser({ email, password });
-        if (user?.statusCode === 200) navigate("/dashboard"); // <-- CHANGED
+        if (user?.statusCode === 200) {
+          // Navigate after toast appears
+          setTimeout(() => navigate("/dashboard"), 1000);
+        }
       }
     } catch (error) {
-      setSignUpError(error.message || "Registration failed. Please try again.");
+      // This is the specific NIAT ID error we want to show as a toast
+      if (error.message && error.message.includes("NIAT ID")) {
+        showToast("Your NIAT ID is not registered in our system. Please crosscheck and enter the correct NIAT ID.", "error");
+      } else {
+        showToast(error.message || "Registration failed. Please try again.", "error");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <>
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-pink-700 p-4 overflow-hidden">
-        {particles.map((particle) => (
-          <motion.div
-            key={particle.id}
-            className="absolute rounded-full bg-white opacity-10"
-            initial={{ left: `${particle.x}%`, top: `${particle.y}%`, width: `${particle.size}px`, height: `${particle.size}px` }}
-            animate={{
-              left: [`${particle.x}%`, `${(particle.x + 20) % 100}%`, `${(particle.x - 10) % 100}%`],
-              top: [`${particle.y}%`, `${(particle.y - 20) % 100}%`, `${(particle.y + 10) % 100}%`],
-            }}
-            transition={{ duration: particle.duration, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+    <div className="min-h-screen w-full bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 flex items-center justify-center p-4">
+      {/* Background dot pattern */}
+      <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px)", backgroundSize: "25px 25px" }}></div>
+      
+      {/* Toast notification */}
+      <AnimatePresence>
+        {toast.show && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={closeToast} 
           />
-        ))}
-
-        <div className="w-full max-w-4xl flex flex-col md:flex-row shadow-2xl rounded-3xl overflow-hidden relative z-10">
-          <div className="bg-gradient-to-br from-emerald-500 to-indigo-600 p-8 md:p-12 text-white md:w-2/5 relative flex flex-col justify-between">
-            <div className="absolute inset-0 overflow-hidden">
-              <svg className="absolute left-0 top-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
-                <defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1" /></pattern></defs>
-                <rect width="100%" height="100%" fill="url(#grid)" />
-              </svg>
-            </div>
+        )}
+      </AnimatePresence>
+      
+      {/* Main container */}
+      <div className="max-w-5xl w-full rounded-2xl overflow-hidden shadow-2xl relative z-10">
+        <div className="flex flex-row">
+          {/* Left side - Info panel */}
+          <div className="w-5/12 bg-gradient-to-br from-emerald-500 to-blue-600 p-10 text-white relative">
+            {/* Dot pattern overlay */}
+            <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px)", backgroundSize: "20px 20px" }}></div>
+            
             <div className="relative">
-              <h1 className="text-3xl md:text-4xl font-bold mb-4">NxtResume</h1>
-              <p className="text-white/80 mb-8 max-w-xs">Create professional resumes in minutes with our AI-powered platform.</p>
-              <div className="space-y-6">
-                <div className="flex items-center"><div className="bg-white/20 p-2 rounded-full mr-4"><FaUser className="text-white" /></div><div><h3 className="font-semibold">Professional Templates</h3><p className="text-white/70 text-sm">Choose from dozens of ATS-friendly designs</p></div></div>
-                <div className="flex items-center"><div className="bg-white/20 p-2 rounded-full mr-4"><FaArrowRight className="text-white" /></div><div><h3 className="font-semibold">AI Content Suggestions</h3><p className="text-white/70 text-sm">Get intelligent recommendations for your resume</p></div></div>
+              {/* Logo and title */}
+              <div className="flex items-center mb-4">
+                <div className="bg-white rounded-lg p-2 mr-3">
+                  <FaRegFileAlt className="text-emerald-500 text-xl" />
+                </div>
+                <h1 className="text-3xl font-bold">NxtResume</h1>
+              </div>
+              
+              {/* Subtitle */}
+              <p className="text-white/90 mb-10">
+                Build your professional resume with our intuitive AI-powered platform in minutes.
+              </p>
+              
+              {/* Features section */}
+              <div className="space-y-8">
+                <h3 className="uppercase text-white/80 font-medium tracking-wider mb-4">WHY CHOOSE US</h3>
+                
+                <div className="flex items-start">
+                  <div className="bg-white/20 p-2 rounded-lg mr-4">
+                    <FaRegFileAlt className="text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">ATS-Optimized Templates</h4>
+                    <p className="text-white/70 text-sm">Stand out with designs that help you pass applicant tracking systems.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <div className="bg-white/20 p-2 rounded-lg mr-4">
+                    <FaRegLightbulb className="text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">AI-Powered Suggestions</h4>
+                    <p className="text-white/70 text-sm">Get smart content recommendations tailored to your industry and role.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <div className="bg-white/20 p-2 rounded-lg mr-4">
+                    <FaShieldAlt className="text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Privacy-First Approach</h4>
+                    <p className="text-white/70 text-sm">Your data stays secure and private with our advanced encryption.</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Terms and privacy */}
+              <div className="mt-12">
+                <p className="text-sm text-white/60">
+                  By signing up, you agree to our <a href="#" className="underline">Terms of Service</a> and <a href="#" className="underline">Privacy Policy</a>.
+                </p>
               </div>
             </div>
-            <div className="relative mt-8 md:mt-0"><p className="text-sm text-white/60">By signing up, you agree to our Terms of Service and Privacy Policy.</p></div>
           </div>
-          <div className="bg-white p-8 md:p-12 md:w-3/5 flex flex-col">
-            <div className="mb-8">
-              <div className="inline-flex items-center p-1 bg-gray-100 rounded-lg">
-                <button onClick={() => setIsSignUp(false)} className={`flex items-center gap-2 px-6 py-2.5 text-sm font-medium rounded-md transition-all duration-300 ${!isSignUp ? "bg-gradient-to-r from-emerald-500 to-indigo-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-200"}`}><FaSignInAlt className="text-xs" />Sign In</button>
-                <button onClick={() => setIsSignUp(true)} className={`flex items-center gap-2 px-6 py-2.5 text-sm font-medium rounded-md transition-all duration-300 ${isSignUp ? "bg-gradient-to-r from-emerald-500 to-indigo-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-200"}`}><FaUserPlus className="text-xs" />Sign Up</button>
-              </div>
+          
+          {/* Right side - Auth forms */}
+          <div className="w-7/12 bg-white p-10">
+            {/* Tab navigation */}
+            <div className="flex mb-8">
+              <button 
+                onClick={() => setIsSignUp(false)} 
+                className={`py-2 px-4 flex items-center gap-1.5 font-medium ${!isSignUp ? "text-emerald-600 border-b-2 border-emerald-600" : "text-gray-500"}`}
+              >
+                Sign In
+              </button>
+              <button 
+                onClick={() => setIsSignUp(true)} 
+                className={`py-2 px-4 flex items-center gap-1.5 font-medium ${isSignUp ? "text-emerald-600 border-b-2 border-emerald-600" : "text-gray-500"}`}
+              >
+                Sign Up
+              </button>
             </div>
-            <AnimatePresence mode="wait">
-              {isSignUp ? (
-                <motion.div key="signup" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} transition={{ duration: 0.3 }} className="w-full flex-grow flex flex-col">
-                  <h2 className="text-2xl font-bold mb-6 text-gray-800">Create an Account</h2>
-                  <form onSubmit={handleSignUpSubmit} className="space-y-4 flex-grow flex flex-col">
-                      <div className="space-y-2"><label htmlFor="fullname" className="text-sm font-medium text-gray-700">Full Name</label><div className="flex items-center border-2 rounded-lg border-gray-300 p-3 focus-within:border-indigo-500 transition-colors"><FaUser className="text-gray-400 mr-3" /><input id="fullname" type="text" placeholder="Enter your full name" required className="outline-none w-full text-gray-800" value={fullName} onChange={(e) => setFullName(e.target.value)} /></div></div>
-                      <div className="space-y-2"><label htmlFor="niatId" className="text-sm font-medium text-gray-700">NIAT ID</label><div className="flex items-center border-2 rounded-lg border-gray-300 p-3 focus-within:border-indigo-500 transition-colors"><FaIdBadge className="text-gray-400 mr-3" /><input id="niatId" type="text" placeholder="Enter your NIAT ID" required className="outline-none w-full text-gray-800" value={niatId} onChange={(e) => setNiatId(e.target.value)} /></div></div>
-                      <div className="space-y-2"><label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</label><div className="flex items-center border-2 rounded-lg border-gray-300 p-3 focus-within:border-indigo-500 transition-colors"><FaEnvelope className="text-gray-400 mr-3" /><input id="email" type="email" placeholder="Enter your email" required className="outline-none w-full text-gray-800" value={email} onChange={(e) => setEmail(e.target.value)} /></div></div>
-                      <div className="space-y-2"><label htmlFor="password" className="text-sm font-medium text-gray-700">Password</label><div className="flex items-center border-2 rounded-lg border-gray-300 p-3 focus-within:border-indigo-500 transition-colors"><FaLock className="text-gray-400 mr-3" /><input id="password" type={showPassword ? "text" : "password"} placeholder="Create a password" required className="outline-none w-full text-gray-800" value={password} onChange={(e) => setPassword(e.target.value)} /><button type="button" onClick={() => setShowPassword(!showPassword)} className="text-gray-400 hover:text-gray-600 transition-colors">{showPassword ? <FaEyeSlash /> : <FaEye />}</button></div><p className="text-xs text-gray-500">Password must be at least 6 characters long</p></div>
-                      {signUpError && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{signUpError}</div>}
-                      <button type="submit" disabled={loading} className={`w-full mt-4 bg-gradient-to-r from-emerald-500 to-indigo-600 text-white py-3 rounded-lg font-medium flex justify-center items-center gap-2 shadow-md hover:shadow-lg transition-all ${loading ? "opacity-80" : "hover:from-emerald-600 hover:to-indigo-700"}`}>{loading ? <Loader2 className="animate-spin h-5 w-5" /> : <>Create Account <FaArrowRight className="text-xs" /></>}</button>
-                  </form>
-                  <p className="mt-auto pt-4 text-center text-sm text-gray-600">Already have an account? <button onClick={() => setIsSignUp(false)} className="text-indigo-600 font-medium hover:underline focus:outline-none">Sign In</button></p>
-                </motion.div>
-              ) : (
-                <motion.div key="signin" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} transition={{ duration: 0.3 }} className="w-full flex-grow flex flex-col">
-                  <h2 className="text-2xl font-bold mb-6 text-gray-800">Welcome Back</h2>
-                  <form onSubmit={handleSignInSubmit} className="space-y-5">
-                    <div className="space-y-2"><label htmlFor="signin-email" className="text-sm font-medium text-gray-700">Email Address</label><div className="flex items-center border-2 rounded-lg border-gray-300 p-3 focus-within:border-indigo-500 transition-colors"><FaEnvelope className="text-gray-400 mr-3" /><input id="signin-email" type="email" placeholder="Enter your email" required className="outline-none w-full text-gray-800" value={email} onChange={(e) => setEmail(e.target.value)} /></div></div>
-                    <div className="space-y-2"><label htmlFor="signin-password" className="text-sm font-medium text-gray-700">Password</label><div className="flex items-center border-2 rounded-lg border-gray-300 p-3 focus-within:border-indigo-500 transition-colors"><FaLock className="text-gray-400 mr-3" /><input id="signin-password" type={showPassword ? "text" : "password"} placeholder="Enter your password" required className="outline-none w-full text-gray-800" value={password} onChange={(e) => setPassword(e.target.value)} /><button type="button" onClick={() => setShowPassword(!showPassword)} className="text-gray-400 hover:text-gray-600 transition-colors">{showPassword ? <FaEyeSlash /> : <FaEye />}</button></div></div>
-                    <div className="text-right"><button type="button" onClick={() => setForgotModalOpen(true)} className="text-sm text-indigo-600 hover:underline font-medium focus:outline-none">Forgot Password?</button></div>
-                    {signInError && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{signInError}</div>}
-                    <button type="submit" disabled={loading} className={`w-full bg-gradient-to-r from-emerald-500 to-indigo-600 text-white py-3 rounded-lg font-medium flex justify-center items-center gap-2 shadow-md hover:shadow-lg transition-all ${loading ? "opacity-80" : "hover:from-emerald-600 hover:to-indigo-700"}`}>{loading ? <Loader2 className="animate-spin h-5 w-5" /> : <>Sign In <FaArrowRight className="text-xs" /></>}</button>
-                  </form>
-                  <p className="mt-auto pt-8 text-center text-gray-600">Don't have an account? <button onClick={() => setIsSignUp(true)} className="text-indigo-600 font-medium hover:underline focus:outline-none">Sign Up</button></p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            
+            {/* Auth forms */}
+            {isSignUp ? (
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">Create your account</h2>
+                
+                <form onSubmit={handleSignUpSubmit} className="space-y-5">
+                  {/* Full Name */}
+                  <div>
+                    <label htmlFor="fullName" className="block text-gray-700 font-medium mb-1">Full Name</label>
+                    <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
+                      <FaUser className="text-gray-400 mr-2" />
+                      <input
+                        id="fullName"
+                        type="text"
+                        className="w-full outline-none"
+                        placeholder="Enter your full name"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* NIAT ID */}
+                  <div>
+                    <label htmlFor="niatId" className="block text-gray-700 font-medium mb-1">NIAT ID</label>
+                    <div className={`flex items-center border rounded-lg px-3 py-2 border-gray-300 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500`}>
+                      <FaIdBadge className="text-gray-400 mr-2" />
+                      <input
+                        id="niatId"
+                        type="text"
+                        className="w-full outline-none"
+                        placeholder="Format: N24H01X####"
+                        value={niatId}
+                        onChange={handleNiatIdChange}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Email */}
+                  <div>
+                    <label htmlFor="email" className="block text-gray-700 font-medium mb-1">Email Address</label>
+                    <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
+                      <FaEnvelope className="text-gray-400 mr-2" />
+                      <input
+                        id="email"
+                        type="email"
+                        className="w-full outline-none"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Password */}
+                  <div>
+                    <label htmlFor="password" className="block text-gray-700 font-medium mb-1">Password</label>
+                    <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
+                      <FaLock className="text-gray-400 mr-2" />
+                      <input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        className="w-full outline-none"
+                        placeholder="Create a password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="text-gray-400 focus:outline-none"
+                      >
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                    </div>
+                    <p className="text-gray-500 text-xs mt-1">Password must be at least 6 characters long</p>
+                  </div>
+                  
+                  {/* Submit button */}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`w-full bg-gradient-to-r from-emerald-500 to-blue-600 text-white py-3 rounded-lg flex items-center justify-center ${loading ? "opacity-70 cursor-not-allowed" : "hover:from-emerald-600 hover:to-blue-700"}`}
+                  >
+                    {loading ? (
+                      <Loader2 className="animate-spin h-5 w-5" />
+                    ) : (
+                      <>
+                        Create Account <FaArrowRight className="ml-2" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">Welcome Back</h2>
+                
+                <form onSubmit={handleSignInSubmit} className="space-y-5">
+                  {/* Email */}
+                  <div>
+                    <label htmlFor="signin-email" className="block text-gray-700 font-medium mb-1">Email Address</label>
+                    <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
+                      <FaEnvelope className="text-gray-400 mr-2" />
+                      <input
+                        id="signin-email"
+                        type="email"
+                        className="w-full outline-none"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Password */}
+                  <div>
+                    <label htmlFor="signin-password" className="block text-gray-700 font-medium mb-1">Password</label>
+                    <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
+                      <FaLock className="text-gray-400 mr-2" />
+                      <input
+                        id="signin-password"
+                        type={showPassword ? "text" : "password"}
+                        className="w-full outline-none"
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="text-gray-400 focus:outline-none"
+                      >
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Forgot password link */}
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => setForgotModalOpen(true)}
+                      className="text-emerald-600 text-sm hover:underline focus:outline-none"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                  
+                  {/* Submit button */}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`w-full bg-gradient-to-r from-emerald-500 to-blue-600 text-white py-3 rounded-lg flex items-center justify-center ${loading ? "opacity-70 cursor-not-allowed" : "hover:from-emerald-600 hover:to-blue-700"}`}
+                  >
+                    {loading ? (
+                      <Loader2 className="animate-spin h-5 w-5" />
+                    ) : (
+                      <>
+                        Sign In <FaArrowRight className="ml-2" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
         </div>
       </div>
+      
+      {/* Forgot password modal */}
       <ForgotPasswordModal isOpen={isForgotModalOpen} onClose={() => setForgotModalOpen(false)} />
-    </>
+    </div>
   );
 }
 
