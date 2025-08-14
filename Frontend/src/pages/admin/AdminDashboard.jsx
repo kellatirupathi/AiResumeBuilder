@@ -8,7 +8,7 @@ import { VITE_APP_URL } from "@/config/config.js";
 import { toast } from 'sonner';
 import { checkAdminSession, getAllUsers, getAllResumes, logoutAdmin } from "@/Services/adminApi";
 import { format } from 'date-fns';
-import { Search, Download, LogOut, User, FileText } from 'lucide-react';
+import { Search, Download, LogOut, User, FileText, Fingerprint } from 'lucide-react'; // <-- ADDED Fingerprint ICON
 import ResumePreviewModal from "./ResumePreviewModal";
 import UserResumesModal from "./UserResumesModal"; 
 import { cn } from "@/lib/utils";
@@ -129,10 +129,16 @@ function AdminDashboard() {
         <header className="bg-white shadow-sm noPrint">
           <div className="px-4 md:px-8 py-4 flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
-            <Button onClick={handleLogout} variant="outline" size="sm">
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-            </Button>
+            <div className="flex items-center gap-4">
+              <Button onClick={() => navigate('/admin/niat-ids')} variant="outline" size="sm">
+                <Fingerprint className="h-4 w-4 mr-2"/>
+                Niat ID's
+              </Button>
+              <Button onClick={handleLogout} variant="outline" size="sm">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+              </Button>
+            </div>
           </div>
         </header>
         <main className="flex-1 flex flex-col p-4 md:px-8 md:py-4 noPrint">
@@ -364,7 +370,6 @@ const DetailedResumesTable = ({ resumes, allResumes, onViewResume }) => {
                         {headers.map(header => (
                         <td key={`${rowIndex}-${header.key}`} className={cn("px-4 py-3 whitespace-nowrap", getColumnWidth(header.key))}>
                             <div className="truncate" title={String(row[header.key] ?? '')}>
-                                {/* --- MODIFIED: Added conditional rendering to fix the routing error --- */}
                                 {header.key === 'title' ? (
                                     <button onClick={() => onViewResume(resumes[rowIndex])} className="text-indigo-600 hover:underline font-medium text-left truncate">
                                         {String(row[header.key] ?? '')}
@@ -384,7 +389,6 @@ const DetailedResumesTable = ({ resumes, allResumes, onViewResume }) => {
                                     {'font-mono': header.key === 'userNiatId'}
                                   )}>{String(row[header.key] ?? '')}</span>
                                 )}
-                                {/* --- END OF MODIFICATION --- */}
                             </div>
                         </td>
                         ))}
