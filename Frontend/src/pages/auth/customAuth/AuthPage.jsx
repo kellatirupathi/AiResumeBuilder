@@ -125,7 +125,7 @@ function AuthPage() {
               </svg>
             </div>
             <div className="relative">
-              <h1 className="text-3xl md:text-4xl font-bold mb-4">ResumeAI</h1>
+              <h1 className="text-3xl md:text-4xl font-bold mb-4">NxtResume</h1>
               <p className="text-white/80 mb-8 max-w-xs">Create professional resumes in minutes with our AI-powered platform.</p>
               <div className="space-y-6">
                 <div className="flex items-center"><div className="bg-white/20 p-2 rounded-full mr-4"><FaUser className="text-white" /></div><div><h3 className="font-semibold">Professional Templates</h3><p className="text-white/70 text-sm">Choose from dozens of ATS-friendly designs</p></div></div>
