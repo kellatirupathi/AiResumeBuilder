@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "backfill": "node scripts/backfillDriveLinks.js"
   },
   "keywords": [],
   "author": "",
@@ -17,11 +18,12 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "googleapis": "^155.0.1",
     "handlebars": "^4.7.8",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.5.1",
+    "nodemailer": "^7.0.5",
     "pdfkit": "^0.17.1",
-    "puppeteer-core": "^22.15.0",  
-    "@sparticuz/chromium": "127.0.0" 
+    "puppeteer": "^22.15.0"
   }
 }
