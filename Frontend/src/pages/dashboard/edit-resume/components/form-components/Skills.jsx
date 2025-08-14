@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoaderCircle, Plus, Sparkles, XCircle, Code, Database, Server, Cloud, CheckCircle2 } from "lucide-react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addResumeData } from "@/features/resume/resumeFeatures";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -11,7 +11,6 @@ import { AIChatSession } from "@/Services/AiModel";
 
 const MAX_SKILL_LINES = 4;
 
-// Categories for AI suggestions with icons
 const SKILL_CATEGORIES = [
   { key: "Frontend", label: "Frontend", icon: <Code className="h-4 w-4" />, placeholder: "HTML, CSS, JavaScript, React, TypeScript, Redux..." },
   { key: "Backend", label: "Backend", icon: <Server className="h-4 w-4" />, placeholder: "Node.js, Express.js, Python, REST API, GraphQL..." },
@@ -31,28 +30,8 @@ Format the response as a JSON object with these 4 key-value pairs:
 The first line should contain frontend skills, the second line backend skills, the third line database skills, and the fourth line DevOps/other skills. 
 Each line should contain 4-6 related skills, comma-separated.`;
 
-function Skills({ resumeInfo, enanbledNext }) {
-  // Initialize with 4 empty lines or existing skills structured as lines
-  const initializeSkillLines = () => {
-    if (resumeInfo?.skills && resumeInfo.skills.length > 0) {
-      // If skills exist in the resume data
-      const lines = Array(MAX_SKILL_LINES).fill("");
-      
-      // Map existing skills to lines based on their index
-      resumeInfo.skills.forEach((skill, index) => {
-        if (index < MAX_SKILL_LINES && skill.name) {
-          lines[index] = skill.name;
-        }
-      });
-      
-      return lines;
-    }
-    
-    // Default to 4 empty lines
-    return Array(MAX_SKILL_LINES).fill("");
-  };
-
-  const [skillLines, setSkillLines] = useState(initializeSkillLines());
+function Skills({ resumeInfo }) {
+  const [skillLines, setSkillLines] = useState(Array(MAX_SKILL_LINES).fill(""));
   const [activeLineIndex, setActiveLineIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
@@ -61,17 +40,32 @@ function Skills({ resumeInfo, enanbledNext }) {
   const dispatch = useDispatch();
   const { resume_id } = useParams();
 
-  // Update Redux store when skills change
+  // --- START OF THE FIX ---
+  // This useEffect hook synchronizes the local `skillLines` state with the `resumeInfo` from Redux.
+  // It runs whenever `resumeInfo` changes (e.g., after an import or initial load).
+  useEffect(() => {
+    if (resumeInfo?.skills && resumeInfo.skills.length > 0) {
+      const lines = Array(MAX_SKILL_LINES).fill("");
+      resumeInfo.skills.forEach((skill, index) => {
+        if (index < MAX_SKILL_LINES && skill.name) {
+          lines[index] = skill.name;
+        }
+      });
+      setSkillLines(lines);
+    } else {
+      // If the resume has no skills, ensure the form is empty.
+      setSkillLines(Array(MAX_SKILL_LINES).fill(""));
+    }
+  }, [resumeInfo]);
+  // --- END OF THE FIX ---
+
+  // This useEffect now only dispatches updates when the user types in the form.
   useEffect(() => {
     const skillsArray = skillLines
-      .map((line, index) => ({ name: line.trim() }))
+      .map((line) => ({ name: line.trim() }))
       .filter(skill => skill.name !== "");
     
-    try {
-      dispatch(addResumeData({ ...resumeInfo, skills: skillsArray }));
-    } catch (error) {
-      console.log("Error in skills context update", error);
-    }
+    dispatch(addResumeData({ ...resumeInfo, skills: skillsArray }));
   }, [skillLines]);
 
   const handleLineChange = (index, value) => {
@@ -81,42 +75,34 @@ function Skills({ resumeInfo, enanbledNext }) {
   };
 
   const addNewLine = () => {
-    // Find the next empty line or use the last line if all are filled
     for (let i = 0; i < MAX_SKILL_LINES; i++) {
       if (!skillLines[i] || skillLines[i].trim() === "") {
         setActiveLineIndex(i);
         return;
       }
     }
-    
-    // If all lines are filled, focus on the last line
     setActiveLineIndex(MAX_SKILL_LINES - 1);
   };
 
   const onSave = () => {
     setLoading(true);
-    
-    // Filter out empty lines
     const skillsArray = skillLines
-      .map((line, index) => ({ name: line.trim() }))
+      .map((line) => ({ name: line.trim() }))
       .filter(skill => skill.name !== "");
       
     const data = {
-      data: {
-        skills: skillsArray,
-      },
+      data: { skills: skillsArray },
     };
 
     if (resume_id) {
-      console.log("Started Updating Skills");
       updateThisResume(resume_id, data)
         .then(() => {
-          toast("Skills updated successfully", {
+          toast.success("Skills updated successfully", {
             description: "Your resume skills have been saved"
           });
         })
         .catch((error) => {
-          toast("Error updating skills", {
+          toast.error("Error updating skills", {
             description: error.message,
             variant: "destructive"
           });
@@ -176,7 +162,6 @@ function Skills({ resumeInfo, enanbledNext }) {
       newLines[lineIndex] = aiSuggestions[lineKey];
       setSkillLines(newLines);
       
-      // Show success animation for this line
       toast(`Line ${lineIndex + 1} updated`, {
         description: "Skills suggestion applied"
       });
@@ -195,7 +180,7 @@ function Skills({ resumeInfo, enanbledNext }) {
     }
     
     setSkillLines(newLines);
-    setAiSuggestions(null); // Close suggestions after applying all
+    setAiSuggestions(null);
     
     toast("All suggestions applied", {
       description: "All AI suggestions have been applied to your skills"
@@ -204,7 +189,6 @@ function Skills({ resumeInfo, enanbledNext }) {
 
   return (
     <div className="p-8 bg-white rounded-xl shadow-md border-t-4 border-primary mt-10 transition-all duration-300 hover:shadow-lg">
-      {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2 flex items-center">
@@ -229,7 +213,6 @@ function Skills({ resumeInfo, enanbledNext }) {
         </Button>
       </div>
       
-      {/* AI Suggestions Panel */}
       {aiSuggestions && (
         <div className="mb-8 relative">
           <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-xl blur opacity-20 group-hover:opacity-30 transition duration-1000 group-hover:duration-200"></div>
@@ -290,7 +273,6 @@ function Skills({ resumeInfo, enanbledNext }) {
         </div>
       )}
       
-      {/* Skill Lines Input Section */}
       <div className="space-y-5 mb-8 bg-gray-50 p-6 rounded-xl border border-gray-200">
         <div className="grid gap-6">
           {SKILL_CATEGORIES.map((category, index) => (
@@ -330,7 +312,6 @@ function Skills({ resumeInfo, enanbledNext }) {
           ))}
         </div>
         
-        {/* Add Line Button - only show if not all lines are filled */}
         {skillLines.some(line => !line || line.trim() === "") && (
           <Button
             variant="outline"
@@ -342,7 +323,6 @@ function Skills({ resumeInfo, enanbledNext }) {
         )}
       </div>
       
-      {/* Preview Section */}
       <div className="mb-8">
         <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
           <span className="p-1 bg-gray-100 rounded mr-2">
@@ -378,7 +358,6 @@ function Skills({ resumeInfo, enanbledNext }) {
         </div>
       </div>
       
-      {/* Save Button */}
       <div className="flex justify-end pt-2">
         <Button 
           onClick={onSave}
