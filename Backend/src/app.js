@@ -3,7 +3,8 @@ import cookieParser from "cookie-parser";
 import userRouter from "./routes/user.routes.js";
 import resumeRouter from "./routes/resume.routes.js";
 import pdfRouter from "./routes/pdf.routes.js";
-import adminRouter from "./routes/admin.routes.js"; // Import admin routes
+import adminRouter from "./routes/admin.routes.js";
+import niatIdRouter from "./routes/niatId.routes.js"; // <-- ADDED IMPORT
 import cors from "cors";
 import { config } from "dotenv";
 config();
@@ -40,7 +41,8 @@ app.use((req, res, next) => {
 app.use("/api/users", userRouter);
 app.use("/api/resumes", resumeRouter);
 app.use("/api/pdf", pdfRouter);
-app.use("/api/admin", adminRouter); // Add this line for admin routes
+app.use("/api/admin", adminRouter);
+app.use("/api/niat-ids", niatIdRouter); // <-- ADDED ROUTE
 
 // Simple status endpoint
 app.get("/api/status", (req, res) => {
