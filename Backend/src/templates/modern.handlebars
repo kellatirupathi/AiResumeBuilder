@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{firstName}} {{lastName}}</title>
+  <style>
+    /* Base styles */
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      background-color: white;
+    }
+    
+    .resume {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0;
+      padding: 20px 30px;
+      background-color: white;
+      box-sizing: border-box;
+    }
+    
+    /* Personal details section */
+    .personal-details {
+      margin-top: 0;
+      padding-top: 0;
+    }
+    
+    .name {
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 1px;
+      color: {{themeColor}};
+    }
+    
+    .job-title {
+      font-size: 16px;
+      text-align: center;
+      font-weight: 500;
+      margin-top: 0;
+      margin-bottom: 1px;
+    }
+    
+    .address {
+      font-size: 14px;
+      text-align: center;
+      font-weight: normal;
+      color: {{themeColor}};
+      margin-top: 0;
+      margin-bottom: 1px;
+    }
+    
+    .contact-info {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+    
+    .contact-item {
+      color: {{themeColor}};
+      font-weight: normal;
+    }
+    
+    .contact-separator {
+      color: #d1d5db;
+      font-size: 12px;
+    }
+    
+    .main-divider {
+      border: none;
+      border-top: 1.5px solid {{themeColor}};
+      margin: 8px 0;
+    }
+    
+    /* Section styling */
+    .section {
+      margin-top: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .section-header {
+      margin-bottom: 1px;
+    }
+    
+    .section-title {
+      text-align: center;
+      font-weight: bold;
+      font-size: 14px;
+      color: {{themeColor}};
+      text-transform: uppercase;
+      margin: 0 0 4px 0;
+    }
+    
+    .section-divider {
+      border: none;
+      border-top: 1px solid {{themeColor}};
+      margin: 0 0 4px 0;
+    }
+    
+    /* Experience items */
+    .experience-item, .project-item, .education-item, .certification-item, .additional-item {
+      margin-top: 4px;
+      margin-bottom: 8px;
+    }
+    
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 2px;
+    }
+    
+    .item-title {
+      font-weight: bold;
+      font-size: 14px;
+      margin: 0;
+      color: {{themeColor}};
+    }
+    
+    .item-date {
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .item-subtitle {
+      font-size: 12px;
+      margin: 2px 0;
+    }
+    
+    .item-description {
+      font-size: 12px;
+      margin-top: 2px;
+    }
+    
+    /* Skills section */
+    .skills-list {
+      display: flex;
+      flex-direction: column;
+      margin-top: 4px;
+    }
+    
+    .skill-item {
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+    
+    /* Links and URLs */
+    .links-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 8px;
+    }
+    
+    .link-item {
+      color: {{themeColor}};
+      text-decoration: none;
+      font-size: 12px;
+    }
+    
+    /* Summary section */
+    .summary {
+      margin-top: 8px;
+      font-size: 12px;
+    }
+    
+    /* Project specific */
+    .project-tech {
+      font-size: 12px;
+      margin: 2px 0;
+    }
+    
+    .project-links {
+      display: flex;
+      gap: 12px;
+    }
+    
+    /* Education specific */
+    .education-grade {
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      margin: 2px 0;
+      background-color: #f3f4f6;
+      border-radius: 9999px;
+      padding: 2px 8px;
+      display: inline-block;
+    }
+    
+    /* Certifications */
+    .certification-issuer {
+      font-size: 12px;
+      color: #666;
+      margin: 2px 0;
+    }
+    
+    .credential-link {
+      font-size: 12px;
+      color: {{themeColor}};
+      text-decoration: underline;
+    }
+    
+    /* Calendar and award icons */
+    .icon {
+      width: 12px;
+      height: 12px;
+      margin-right: 4px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    
+    .date-display {
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+      font-size: 12px;
+      color: #666;
+    }
+    
+    /* Additional sections */
+    .additional-section {
+      margin-top: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .additional-content {
+      font-size: 12px;
+    }
+    
+    .additional-list {
+      margin-top: 4px;
+      padding-left: 16px;
+    }
+    
+    .additional-list-item {
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+    
+    .hobbies-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    
+    .hobby-item {
+      font-size: 12px;
+      background-color: #f3f4f6;
+      border-radius: 9999px;
+      padding: 2px 8px;
+      display: inline-block;
+    }
+    
+    .publications-list {
+      margin-top: 4px;
+    }
+    
+    .publication-item {
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+    
+    .languages-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    
+    .language-item {
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .language-name {
+      font-weight: bold;
+      margin-right: 4px;
+    }
+    
+    .language-level {
+      color: #666;
+    }
+    
+    .awards-list {
+      margin-top: 4px;
+    }
+    
+    .award-item {
+      margin-bottom: 4px;
+    }
+    
+    .award-title {
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .award-issuer {
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="resume">
+    <!-- Personal Details Section -->
+    <div class="personal-details">
+      <h1 class="name">{{firstName}} {{lastName}}</h1>
+      {{#if jobTitle}}
+        <h2 class="job-title">{{jobTitle}}</h2>
+      {{/if}}
+      {{#if address}}
+        <h2 class="address">{{address}}</h2>
+      {{/if}}
+      
+      <!-- Combined contact info and links in a single row -->
+      <div class="contact-info">
+        {{#if phone}}
+          <span class="contact-item">{{phone}}</span>
+          {{#if email}}<span class="contact-separator">•</span>{{/if}}
+        {{/if}}
+        
+        {{#if email}}
+          <span class="contact-item">{{email}}</span>
+          {{#if githubUrl}}<span class="contact-separator">•</span>{{/if}}
+        {{/if}}
+        
+        {{#if githubUrl}}
+          <a href="{{formatUrl githubUrl}}" target="_blank" rel="noopener noreferrer" class="contact-item">GitHub</a>
+          {{#if linkedinUrl}}<span class="contact-separator">•</span>{{/if}}
+        {{/if}}
+        
+        {{#if linkedinUrl}}
+          <a href="{{formatUrl linkedinUrl}}" target="_blank" rel="noopener noreferrer" class="contact-item">LinkedIn</a>
+          {{#if portfolioUrl}}<span class="contact-separator">•</span>{{/if}}
+        {{/if}}
+        
+        {{#if portfolioUrl}}
+          <a href="{{formatUrl portfolioUrl}}" target="_blank" rel="noopener noreferrer" class="contact-item">Portfolio</a>
+        {{/if}}
+      </div>
+    </div>
+    
+    <hr class="main-divider">
+    
+    <!-- Summary Section -->
+    {{#if summary}}
+      <p class="summary">{{summary}}</p>
+    {{/if}}
+    
+    <!-- Experience Section -->
+    {{#if experience.length}}
+      <div class="section experience">
+        <div class="section-header">
+          <h3 class="section-title">Experience</h3>
+          <hr class="section-divider">
+        </div>
+        
+        <div class="section-content">
+          {{#each experience}}
+            <div class="experience-item">
+              <div class="item-header">
+                <h4 class="item-title">{{this.title}}</h4>
+                <span class="item-date">
+                  {{this.startDate}}
+                  {{#if this.startDate}}
+                    {{#if this.currentlyWorking}}
+                      - Present
+                    {{else if this.endDate}}
+                      - {{this.endDate}}
+                    {{/if}}
+                  {{/if}}
+                </span>
+              </div>
+              <p class="item-subtitle">
+                {{this.companyName}}
+                {{#if this.city}}
+                  {{#if this.companyName}}, {{/if}}
+                  {{this.city}}
+                {{/if}}
+                {{#if this.state}}
+                  {{#if this.city}}, {{/if}}
+                  {{this.state}}
+                {{/if}}
+              </p>
+              <div class="item-description">{{{this.workSummary}}}</div>
+            </div>
+          {{/each}}
+        </div>
+      </div>
+    {{/if}}
+    
+    <!-- Projects Section -->
+    {{#if projects.length}}
+      <div class="section projects">
+        <div class="section-header">
+          <h3 class="section-title">Projects</h3>
+          <hr class="section-divider">
+        </div>
+        
+        <div class="section-content">
+          {{#each projects}}
+            <div class="project-item">
+              <div class="item-header">
+                <h4 class="item-title">{{this.projectName}}</h4>
+                <div class="project-links">
+                  {{#if this.githubLink}}
+                    <a href="{{formatUrl this.githubLink}}" target="_blank" rel="noopener noreferrer" class="link-item">Code</a>
+                  {{/if}}
+                  {{#if this.deployedLink}}
+                    <a href="{{formatUrl this.deployedLink}}" target="_blank" rel="noopener noreferrer" class="link-item">Demo</a>
+                  {{/if}}
+                </div>
+              </div>
+              {{#if this.techStack}}
+                <p class="project-tech">
+                  <span>Tech: {{this.techStack}}</span>
+                </p>
+              {{/if}}
+              <div class="item-description">{{{this.projectSummary}}}</div>
+            </div>
+          {{/each}}
+        </div>
+      </div>
+    {{/if}}
+    
+    <!-- Education Section -->
+    {{#if education.length}}
+      <div class="section education">
+        <div class="section-header">
+          <h3 class="section-title">Education</h3>
+          <hr class="section-divider">
+        </div>
+        
+        <div class="section-content">
+          {{#each education}}
+            <div class="education-item">
+              <div class="item-header">
+                <h4 class="item-title">{{this.universityName}}</h4>
+                <span class="date-display">
+                  <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  {{formatDate this.startDate}}
+                  {{#if this.startDate}}
+                    {{#if this.endDate}}
+                      - {{formatDate this.endDate}}
+                    {{/if}}
+                  {{/if}}
+                </span>
+              </div>
+              <p class="item-subtitle">
+                {{#if this.degree}}{{this.degree}}{{/if}}
+                {{#if this.major}}
+                  {{#if this.degree}} in {{/if}}
+                  {{this.major}}
+                {{/if}}
+              </p>
+              
+              {{#if this.grade}}
+                <div class="education-grade">
+                  <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="8" r="7"></circle>
+                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                  </svg>
+                  {{this.gradeType}}: {{this.grade}}
+                </div>
+              {{/if}}
+              
+              {{#if this.description}}
+                <p class="item-description">{{this.description}}</p>
+              {{/if}}
+            </div>
+          {{/each}}
+        </div>
+      </div>
+    {{/if}}
+    
+    <!-- Skills Section -->
+    {{#if skills.length}}
+      <div class="section skills">
+        <div class="section-header">
+          <h3 class="section-title">Skills</h3>
+          <hr class="section-divider">
+        </div>
+        
+        <div class="skills-list">
+          {{#each skills}}
+            <div class="skill-item">{{this.name}}</div>
+          {{/each}}
+        </div>
+      </div>
+    {{/if}}
+    
+    <!-- Certifications Section -->
+    {{#if certifications.length}}
+      <div class="section certifications">
+        <div class="section-header">
+          <h3 class="section-title">Certifications</h3>
+          <hr class="section-divider">
+        </div>
+        
+        <div class="section-content">
+          {{#each certifications}}
+            <div class="certification-item">
+              <div class="item-header">
+                <h4 class="item-title">{{this.name}}</h4>
+                {{#if this.date}}
+                  <span class="date-display">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    {{this.date}}
+                  </span>
+                {{/if}}
+              </div>
+              
+              <div class="item-subtitle" style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="certification-issuer">{{this.issuer}}</span>
+                {{#if this.credentialLink}}
+                  <a href="{{formatUrl this.credentialLink}}" target="_blank" rel="noopener noreferrer" class="credential-link">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                    </svg>
+                    View
+                  </a>
+                {{/if}}
+              </div>
+              
+              {{#if this.description}}
+                <p class="item-description">{{this.description}}</p>
+              {{/if}}
+            </div>
+          {{/each}}
+        </div>
+      </div>
+    {{/if}}
+    
+    <!-- Additional Sections -->
+    {{#if additionalSections.length}}
+      {{#each additionalSections}}
+        <div class="section additional-section">
+          <div class="section-header">
+            <h3 class="section-title">{{this.title}}</h3>
+            <hr class="section-divider">
+          </div>
+          
+          <div class="additional-content">
+            {{{this.content}}}
+          </div>
+        </div>
+      {{/each}}
+    {{/if}}
+    
+    <!-- Languages Section -->
+    {{#if languages.length}}
+      <div class="section languages">
+        <div class="section-header">
+          <h3 class="section-title">Languages</h3>
+          <hr class="section-divider">
+        </div>
+        
+        <div class="languages-list">
+          {{#each languages}}
+            <div class="language-item">
+              <span class="language-name">{{this.name}}:</span>
+              <span class="language-level">{{this.level}}</span>
+            </div>
+          {{/each}}
+        </div>
+      </div>
+    {{/if}}
+    
+    <!-- Hobbies Section -->
+    {{#if hobbies}}
+      <div class="section hobbies">
+        <div class="section-header">
+          <h3 class="section-title">Hobbies</h3>
+          <hr class="section-divider">
+        </div>
+        
+        <div class="hobbies-list">
+          {{#each hobbies}}
+            <div class="hobby-item">{{this}}</div>
+          {{else}}
+            <div class="hobby-item">{{hobbies}}</div>
+          {{/each}}
+        </div>
+      </div>
+    {{/if}}
+    
+    <!-- Publications Section -->
+    {{#if publications.length}}
+      <div class="section publications">
+        <div class="section-header">
+          <h3 class="section-title">Publications</h3>
+          <hr class="section-divider">
+        </div>
+        
+        <div class="publications-list">
+          {{#each publications}}
+            <div class="publication-item">{{this}}</div>
+          {{/each}}
+        </div>
+      </div>
+    {{/if}}
+    
+    <!-- Awards Section -->
+    {{#if awards.length}}
+      <div class="section awards">
+        <div class="section-header">
+          <h3 class="section-title">Awards</h3>
+          <hr class="section-divider">
+        </div>
+        
+        <div class="awards-list">
+          {{#each awards}}
+            <div class="award-item">
+              <div class="item-header">
+                <div class="award-title">{{this.title}}</div>
+                {{#if this.date}}
+                  <span class="date-display">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    {{this.date}}
+                  </span>
+                {{/if}}
+              </div>
+              {{#if this.issuer}}
+                <div class="award-issuer">{{this.issuer}}</div>
+              {{/if}}
+              {{#if this.description}}
+                <p class="item-description">{{this.description}}</p>
+              {{/if}}
+            </div>
+          {{/each}}
+        </div>
+      </div>
+    {{/if}}
+    
+    <!-- Volunteer Experience Section -->
+    {{#if volunteerExperience.length}}
+      <div class="section volunteer">
+        <div class="section-header">
+          <h3 class="section-title">Volunteer Experience</h3>
+          <hr class="section-divider">
+        </div>
+        
+        <div class="section-content">
+          {{#each volunteerExperience}}
+            <div class="experience-item">
+              <div class="item-header">
+                <h4 class="item-title">{{this.role}}</h4>
+                <span class="item-date">
+                  {{this.startDate}}
+                  {{#if this.startDate}}
+                    {{#if this.current}}
+                      - Present
+                    {{else if this.endDate}}
+                      - {{this.endDate}}
+                    {{/if}}
+                  {{/if}}
+                </span>
+              </div>
+              <p class="item-subtitle">
+                {{this.organization}}
+                {{#if this.location}}
+                  {{#if this.organization}}, {{/if}}
+                  {{this.location}}
+                {{/if}}
+              </p>
+              <div class="item-description">{{{this.description}}}</div>
+            </div>
+          {{/each}}
+        </div>
+      </div>
+    {{/if}}
+  </div>
+  
+  <!-- We don't need client-side scripts for a PDF render -->
+</body>
+</html>
