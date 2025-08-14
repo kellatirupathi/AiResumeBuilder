@@ -97,19 +97,19 @@ function AddResume({ viewMode = "grid" }) {
         >
           <div className="flex items-center flex-1">
             <div className="w-1 h-full self-stretch bg-gradient-to-b from-blue-500 to-purple-500 opacity-40 group-hover:opacity-100 transition-opacity"></div>
-            <div className="p-4 pl-6">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            <div className="p-3 pl-4">
+              <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                 Create New Resume
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+              <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                 Design a professional resume with AI assistance
               </p>
             </div>
           </div>
           
-          <div className="p-4">
-            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center group-hover:bg-blue-500 transition-colors">
-              <Plus className="w-5 h-5 text-blue-600 dark:text-blue-400 group-hover:text-white transition-colors" />
+          <div className="p-3">
+            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center group-hover:bg-blue-500 transition-colors">
+              <Plus className="w-4 h-4 text-blue-600 dark:text-blue-400 group-hover:text-white transition-colors" />
             </div>
           </div>
         </div>
@@ -127,22 +127,22 @@ function AddResume({ viewMode = "grid" }) {
     );
   }
   
-  // Grid View
+  // Grid View - Compact version with fixed height
   return (
     <>
       <motion.div
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={() => setOpenDialog(true)}
-        className="add-resume-trigger flex flex-col items-center justify-center h-[280px] rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 cursor-pointer group transition-all duration-300"
+        className="add-resume-trigger flex flex-col items-center justify-center h-[210px] rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-5 cursor-pointer group transition-all duration-300"
       >
-        <div className="w-16 h-16 mb-5 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 flex items-center justify-center group-hover:from-blue-500 group-hover:to-indigo-600 transition-colors duration-300">
-          <CopyPlus className="w-8 h-8 text-blue-600 dark:text-blue-400 group-hover:text-white transition-colors duration-300" />
+        <div className="w-14 h-14 mb-4 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 flex items-center justify-center group-hover:from-blue-500 group-hover:to-indigo-600 transition-colors duration-300">
+          <CopyPlus className="w-7 h-7 text-blue-600 dark:text-blue-400 group-hover:text-white transition-colors duration-300" />
         </div>
-        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
           Create New Resume
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-3 max-w-[200px]">
+        <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2 max-w-[180px]">
           Design a professional resume with AI assistance
         </p>
       </motion.div>
@@ -173,21 +173,21 @@ function CreateResumeDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
-        <DialogHeader className="bg-gradient-to-r from-emerald-500 to-indigo-600 text-white p-6 rounded-t-xl">
-          <DialogTitle className="text-center text-2xl font-bold">
+        <DialogHeader className="bg-gradient-to-r from-emerald-500 to-indigo-600 text-white p-5 rounded-t-xl">
+          <DialogTitle className="text-center text-xl font-bold">
             Create a New Resume
           </DialogTitle>
-          <DialogDescription className="text-center pt-2 text-indigo-100">
+          <DialogDescription className="text-center pt-1.5 text-indigo-100 text-sm">
             Give your resume a name that reflects the job role you're targeting
           </DialogDescription>
         </DialogHeader>
         
-        <div className="p-8">
-          <div className="space-y-4">
+        <div className="p-6">
+          <div className="space-y-3">
             <div className="relative">
-              <FileText className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                className="pl-12 border-gray-300 dark:border-gray-700 focus:border-indigo-500 focus:ring-indigo-500/30 text-lg py-5 rounded-lg"
+                className="pl-10 border-gray-300 dark:border-gray-700 focus:border-indigo-500 focus:ring-indigo-500/30 text-base py-5 rounded-lg"
                 type="text"
                 placeholder="Ex: Software Engineer Resume"
                 value={title}
@@ -195,7 +195,7 @@ function CreateResumeDialog({
                 autoFocus
               />
             </div>
-            <p className="text-sm text-gray-500 text-center mt-2">
+            <p className="text-xs text-gray-500 text-center mt-1">
               This will help you organize multiple resumes for different
               positions.
             </p>
@@ -203,18 +203,18 @@ function CreateResumeDialog({
         </div>
         
         <DialogFooter className="bg-gray-50 dark:bg-gray-800/50 p-4 flex justify-between rounded-b-xl">
-          <div className="w-full flex justify-between gap-4">
+          <div className="w-full flex justify-between gap-3">
             <Button
               variant="outline"
               onClick={onClose}
-              className="w-full border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700 rounded-lg py-5"
+              className="w-full border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700 rounded-lg py-4 text-sm"
             >
               Cancel
             </Button>
             <Button
               onClick={onCreate}
               disabled={loading || !title.trim()}
-              className="w-full bg-gradient-to-r from-emerald-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 text-white rounded-lg py-5 shadow-md hover:shadow-lg transition-all"
+              className="w-full bg-gradient-to-r from-emerald-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 text-white rounded-lg py-4 text-sm shadow-md hover:shadow-lg transition-all"
             >
               {loading ? (
                 <div className="flex items-center gap-2">
