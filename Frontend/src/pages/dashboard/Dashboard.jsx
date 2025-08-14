@@ -34,6 +34,51 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
+// Animated User Icon Component
+const AnimatedUserIcon = ({ fullName }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [displayLetter, setDisplayLetter] = useState('');
+
+  // Get all letters from the full name (remove spaces and convert to uppercase)
+  const letters = fullName ? fullName.replace(/\s+/g, '').toUpperCase().split('') : ['U'];
+
+  useEffect(() => {
+    if (letters.length === 0) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % letters.length);
+    }, 2000); // Change letter every 2 seconds
+
+    return () => clearInterval(interval);
+  }, [letters.length]);
+
+  useEffect(() => {
+    setDisplayLetter(letters[currentIndex] || 'U');
+  }, [currentIndex, letters]);
+
+  return (
+    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-emerald-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-md overflow-hidden relative">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentIndex}
+          initial={{ x: 30, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: -30, opacity: 0 }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 25,
+            duration: 0.4
+          }}
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          {displayLetter}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+};
+
 // More compact, visually appealing stat card component
 const StatCard = ({ icon, label, count, className = "" }) => (
   <div className={`flex items-center gap-2 bg-white/60 dark:bg-gray-800/60 px-3 py-2 rounded-lg backdrop-blur-sm border border-white/20 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300 ${className}`}>
@@ -153,9 +198,7 @@ function Dashboard() {
         >
           <div className="flex flex-col md:flex-row justify-between items-center gap-3">
             <div className="flex items-center gap-3 flex-shrink-0">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-emerald-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-md">
-                {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
-              </div>
+              <AnimatedUserIcon fullName={user.fullName} />
               <div>
                 <h2 className="text-lg font-bold text-gray-800 dark:text-white">
                   {getGreeting()}
