@@ -6,6 +6,12 @@ const adminAxios = axios.create({
   withCredentials: true,
 });
 
+// Create a separate instance for NIAT ID routes under the new base URL
+const niatAxios = axios.create({
+  baseURL: `${VITE_APP_URL.replace(/\/$/, '')}/api/niat-ids/`,
+  withCredentials: true,
+});
+
 export const loginAdmin = async (credentials) => {
   try {
     const response = await adminAxios.post('/login', credentials);
@@ -48,5 +54,42 @@ export const getAllResumes = async () => {
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to fetch resumes.');
+  }
+};
+
+// --- NEW FUNCTIONS FOR NIAT ID MANAGEMENT ---
+export const getNiatIds = async () => {
+  try {
+    const response = await niatAxios.get('/');
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch NIAT IDs.');
+  }
+};
+
+export const addSingleNiatId = async (niatId) => {
+  try {
+    const response = await niatAxios.post('/add', { niatId });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to add NIAT ID.');
+  }
+};
+
+export const addBulkNiatIds = async (ids) => {
+  try {
+    const response = await niatAxios.post('/add-bulk', { ids });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to add NIAT IDs.');
+  }
+};
+
+export const deleteNiatId = async (id) => {
+  try {
+    const response = await niatAxios.delete(`/${id}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to delete NIAT ID.');
   }
 };
