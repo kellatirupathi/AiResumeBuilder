@@ -48,6 +48,15 @@ const userSchema = new Schema({
     required: true
   },
 
+  // --- START: MODIFICATION FOR SECURE PASSWORD RESET ---
+  forgotPasswordToken: {
+    type: String
+  },
+  forgotPasswordTokenExpiry: {
+    type: Date
+  },
+  // --- END: MODIFICATION FOR SECURE PASSWORD RESET ---
+
   // --- START: MASTER PROFILE DATA ---
   jobTitle: { type: String, default: "" },
   address: { type: String, default: "" },
