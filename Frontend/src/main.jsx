@@ -15,7 +15,8 @@ import { resumeStore } from "./store/store";
 import { Provider } from "react-redux";
 import PublicResumeView from "./pages/public/PublicResumeView.jsx"; 
 import ProfilePage from "./pages/profile/ProfilePage.jsx";
-import NiatManagementPage from "./pages/admin/NiatManagementPage.jsx"; // <-- NEW IMPORT
+import NiatManagementPage from "./pages/admin/NiatManagementPage.jsx";
+import ResetPasswordPage from "./pages/auth/customAuth/ResetPasswordPage.jsx"; // NEW
 
 const router = createBrowserRouter([
   {
@@ -48,6 +49,10 @@ const router = createBrowserRouter([
     element: <AuthPage />,
   },
   {
+    path: "/reset-password", // NEW ROUTE
+    element: <ResetPasswordPage />,
+  },
+  {
     path: "/public/resume/:resume_id",
     element: <PublicResumeView />,
   },
@@ -59,7 +64,6 @@ const router = createBrowserRouter([
     path: "/admin/dashboard",
     element: <AdminDashboard />,
   },
-  // --- NEW ROUTE FOR NIAT MANAGEMENT ---
   {
     path: "/admin/niat-ids",
     element: <NiatManagementPage />,
