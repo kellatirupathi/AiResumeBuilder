@@ -1,11 +1,12 @@
 // C:\Users\NxtWave\Downloads\code\Backend\src\controller\user.controller.js
 import mongoose from "mongoose";
 import User from "../models/user.model.js";
-import NiatId from "../models/niatId.model.js"; // <-- MODIFIED IMPORT
+import NiatId from "../models/niatId.model.js";
 import jwt from "jsonwebtoken";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
-import { sendWelcomeEmail } from "../services/email.service.js";
+import { sendWelcomeEmail, sendPasswordResetEmail } from "../services/email.service.js";
+import crypto from "crypto";
 
 const start = async (req, res) => {
   if (req.user) {
@@ -32,8 +33,6 @@ const registerUser = async (req, res) => {
   }
 
   try {
-    // --- START OF MODIFICATION ---
-    // Validate the NIAT ID by checking if it exists in the database.
     const niatIdRecord = await NiatId.findOne({ niatId: niatId });
     if (!niatIdRecord) {
         console.log(`Registration Failed: NIAT ID not found in the database - ${niatId}`);
@@ -41,7 +40,6 @@ const registerUser = async (req, res) => {
             .status(400)
             .json(new ApiError(400, "Your NIAT ID is not registered in our system. Please crosscheck and enter the correct NIAT ID."));
     }
-    // --- END OF MODIFICATION ---
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -180,35 +178,71 @@ const logoutUser = (req, res) => {
     .json(new ApiResponse(200, null, "User logged out successfully."));
 };
 
-const forgotPassword = async (req, res) => {
-  const { email, newPassword, confirmPassword } = req.body;
-
-  if (!email || !newPassword || !confirmPassword) {
-    return res.status(400).json(new ApiError(400, "All fields are required."));
-  }
-
-  if (newPassword !== confirmPassword) {
-    return res.status(400).json(new ApiError(400, "Passwords do not match."));
-  }
-  
-  if (newPassword.length < 6) {
-    return res.status(400).json(new ApiError(400, "Password must be at least 6 characters long."));
-  }
-
-  try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json(new ApiError(404, "User with this email does not exist."));
+const requestPasswordReset = async (req, res) => {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json(new ApiError(400, "Email address is required."));
     }
-    
-    user.password = newPassword;
-    await user.save(); 
-
-    return res.status(200).json(new ApiResponse(200, null, "Password has been reset successfully."));
-  } catch (err) {
-    console.error("Error during password reset:", err);
-    return res.status(500).json(new ApiError(500, "Internal Server Error during password reset.", [], err.stack));
-  }
+  
+    try {
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(200).json(new ApiResponse(200, null, "If an account with that email exists, a password reset link has been sent."));
+      }
+  
+      const token = crypto.randomBytes(32).toString('hex');
+      user.forgotPasswordToken = crypto.createHash('sha256').update(token).digest('hex');
+      user.forgotPasswordTokenExpiry = Date.now() + 15 * 60 * 1000; // 15 minutes
+  
+      await user.save({ validateBeforeSave: false });
+  
+      const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+      await sendPasswordResetEmail(user.fullName, user.email, resetLink);
+  
+      return res.status(200).json(new ApiResponse(200, null, "If an account with that email exists, a password reset link has been sent."));
+    } catch (err) {
+      console.error("Error requesting password reset:", err);
+      // To avoid revealing if an email exists, send a generic error
+      return res.status(500).json(new ApiError(500, "Could not process the request.", [], err.stack));
+    }
+};
+  
+const resetPassword = async (req, res) => {
+    const { token, newPassword, confirmPassword } = req.body;
+  
+    if (!token || !newPassword || !confirmPassword) {
+      return res.status(400).json(new ApiError(400, "All fields are required."));
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json(new ApiError(400, "Passwords do not match."));
+    }
+    if (newPassword.length < 6) {
+        return res.status(400).json(new ApiError(400, "Password must be at least 6 characters long."));
+    }
+  
+    try {
+      const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+  
+      const user = await User.findOne({
+        forgotPasswordToken: hashedToken,
+        forgotPasswordTokenExpiry: { $gt: Date.now() }
+      });
+  
+      if (!user) {
+        return res.status(400).json(new ApiError(400, "This reset link is invalid or has expired. Please request a new one."));
+      }
+  
+      user.password = newPassword;
+      user.forgotPasswordToken = undefined;
+      user.forgotPasswordTokenExpiry = undefined;
+  
+      await user.save();
+  
+      return res.status(200).json(new ApiResponse(200, null, "Your password has been successfully reset. Please sign in with your new password."));
+    } catch (err) {
+      console.error("Error resetting password:", err);
+      return res.status(500).json(new ApiError(500, "Internal Server Error.", [], err.stack));
+    }
 };
 
 const changePassword = async (req, res) => {
@@ -300,7 +334,8 @@ export {
   loginUser,
   logoutUser,
   registerUser,
-  forgotPassword,
+  requestPasswordReset,
+  resetPassword,
   changePassword,
   getUserProfile,
   updateUserProfile
