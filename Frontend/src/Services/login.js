@@ -54,16 +54,30 @@ const logoutUser = async () => {
   }
 };
 
-const forgotPassword = async (data) => {
+// --- START: MODIFIED PASSWORD RESET FLOW ---
+const requestPasswordReset = async (data) => {
   try {
+    // We only need to send the email
     const response = await axiosInstance.post("users/forgot-password", data);
     return response.data;
   } catch (error) {
     throw new Error(
-      error?.response?.data?.message || error?.message || "Password reset failed"
+      error?.response?.data?.message || "Password reset request failed"
     );
   }
 };
+
+const resetPassword = async (data) => {
+    try {
+      const response = await axiosInstance.post("users/reset-password", data);
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        error?.response?.data?.message || "Password reset failed"
+      );
+    }
+  };
+// --- END: MODIFIED PASSWORD RESET FLOW ---
 
 const changePassword = async (data) => {
   try {
@@ -104,9 +118,9 @@ export {
   registerUser,
   loginUser,
   logoutUser,
-  forgotPassword,
+  requestPasswordReset,
+  resetPassword,
   changePassword,
-  // NEW EXPORTS
   getProfile,
   updateProfile
 };
