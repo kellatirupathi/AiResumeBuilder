@@ -132,3 +132,9 @@
   list-style: decimal;
   padding-left: 2em;
 }
+
+#resume-container,
+#resume-container-modal,
+#fullscreen-resume {
+  min-height: 297mm; /* This will only affect the frontend preview */
+}
