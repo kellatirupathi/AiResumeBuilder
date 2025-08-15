@@ -58,3 +58,40 @@ export const sendWelcomeEmail = async (userName, userEmail) => {
     throw new Error('Could not send the welcome email.');
   }
 };
+
+// --- NEW FUNCTION FOR PASSWORD RESET ---
+export const sendPasswordResetEmail = async (userName, userEmail, resetLink) => {
+    const mailOptions = {
+      from: `"${process.env.FROM_NAME}" <${process.env.FROM_EMAIL}>`,
+      to: userEmail,
+      subject: "Password Reset Request – NxtResume",
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+          <h1 style="color: #4A90E2; text-align: center;">Password Reset Request</h1>
+          <p>Hello ${userName},</p>
+          <p>We received a request to reset the password for your NxtResume account. If you did not make this request, you can safely ignore this email.</p>
+          <p>To reset your password, please click the button below. This link is valid for 15 minutes.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetLink}" style="display: inline-block; padding: 12px 25px; background-color: #4A90E2; color: white; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold;">
+              Reset Your Password
+            </a>
+          </div>
+          <p>If you're having trouble with the button, you can also copy and paste this link into your browser:</p>
+          <p style="word-break: break-all; font-size: 12px; color: #666;">${resetLink}</p>
+          <p style="margin-top: 20px; font-size: 12px; color: #888; text-align: center;">
+            Thank you,<br>
+            &mdash; The ${process.env.FROM_NAME} Team
+          </p>
+        </div>
+      `,
+    };
+  
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      console.log(`Password reset email sent to ${userEmail}: ${info.messageId}`);
+      return info;
+    } catch (error) {
+      console.error(`Failed to send password reset email to ${userEmail}. Error: ${error.message}`);
+      throw new Error('Could not send the password reset email.');
+    }
+  };
