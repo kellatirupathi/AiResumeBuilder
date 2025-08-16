@@ -633,31 +633,7 @@ function HomePage() {
             </motion.div>
           </motion.div>
 
-          {/* Demo Features Tags */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            viewport={{ once: true }}
-            className="flex flex-wrap justify-center gap-4"
-          >
-            {[
-              { text: "Interactive Demo", color: "from-teal-400/70 to-teal-500/70" },
-              { text: "User-friendly Interface", color: "from-emerald-400/70 to-emerald-500/70" },
-              { text: "Real-time AI Assistance", color: "from-indigo-400/70 to-indigo-500/70" }
-            ].map((tag, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
-                viewport={{ once: true }}
-                className={`bg-gradient-to-r ${tag.color} text-white px-4 py-2 rounded-full text-sm font-medium shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 cursor-pointer`}
-              >
-                {tag.text}
-              </motion.div>
-            ))}
-          </motion.div>
+          
         </div>
       </section>
       
