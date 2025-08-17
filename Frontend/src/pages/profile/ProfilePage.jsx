@@ -18,12 +18,16 @@ import {
   ArrowRight,
   ChevronDown,
   Settings,
-  Layers
+  Layers,
+  Github,
+  ExternalLink,
+  Copy
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { getProfile, updateProfile } from "@/Services/login";
+import { getProfile, updateProfile, generatePortfolio } from "@/Services/login";
 import { addUserData } from "@/features/user/userFeatures";
+import SelectPortfolioTemplateModal from './components/SelectPortfolioTemplateModal'; // <-- NEW IMPORT
 
 // Components
 import ProfilePersonalDetails from './components/ProfilePersonalDetails';
@@ -43,8 +47,10 @@ function ProfilePage() {
     
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
     const [expandedSections, setExpandedSections] = useState({});
     const [showMobileNav, setShowMobileNav] = useState(false);
+    const [isTemplateModalOpen, setTemplateModalOpen] = useState(false); // <-- NEW STATE FOR MODAL
 
     const sections = [
       { id: 'details', name: 'Personal Details', icon: User, component: ProfilePersonalDetails },
@@ -94,6 +100,24 @@ function ProfilePage() {
             toast.error("Failed to save profile.", { description: error.message });
         } finally {
             setIsSaving(false);
+        }
+    };
+    
+    const handleGeneratePortfolio = async (templateName) => { // <-- MODIFIED to accept templateName
+        setTemplateModalOpen(false); // Close the modal
+        setIsGenerating(true);
+        const toastId = toast.loading("Generating your portfolio... This might take a moment.");
+        try {
+            const response = await generatePortfolio(templateName); // <-- PASS templateName
+            dispatch(addUserData(response.data));
+            toast.success("Portfolio Generated & Saved!", {
+                id: toastId,
+                description: "Your new portfolio is live. The link has been updated in your profile.",
+            });
+        } catch (error) {
+            toast.error("Generation Failed", { id: toastId, description: error.message });
+        } finally {
+            setIsGenerating(false);
         }
     };
     
@@ -278,6 +302,20 @@ function ProfilePage() {
                 <h1 className="text-xl font-bold text-gray-800 dark:text-white hidden lg:block">My Profile</h1>
                 
                 <div className="flex items-center gap-3">
+                   <Button
+                       onClick={() => setTemplateModalOpen(true)} // <-- MODIFIED onClick
+                       disabled={isSaving || isGenerating}
+                       size="sm"
+                       className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                   >
+                       {isGenerating ? (
+                           <LoaderCircle className="h-4 w-4 mr-2 animate-spin" />
+                       ) : (
+                           <Github className="h-4 w-4 mr-2" />
+                       )}
+                       Generate Portfolio
+                   </Button>
+
                   <Button 
                     onClick={handleSaveProfile} 
                     disabled={isSaving} 
@@ -350,6 +388,13 @@ function ProfilePage() {
               
             </div>
           </div>
+        {/* NEW: Template selection modal */}
+        <SelectPortfolioTemplateModal
+          isOpen={isTemplateModalOpen}
+          onClose={() => setTemplateModalOpen(false)}
+          onSelect={handleGeneratePortfolio}
+          loading={isGenerating}
+        />
         </div>
     );
 }
