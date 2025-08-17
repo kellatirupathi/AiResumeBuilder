@@ -12,33 +12,27 @@ import handlebars from 'handlebars';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { OAuth2Client } from 'google-auth-library';
 
 // --- START: REGISTER ALL HANDLEBARS HELPERS ---
-// This ensures all helpers are available for rendering any template from this file.
-
 handlebars.registerHelper('split', function(string, separator) {
   if (typeof string !== 'string') return [];
   return string.split(separator);
 });
-
 handlebars.registerHelper('trim', function(string) {
   if (typeof string !== 'string') return '';
   return string.trim();
 });
-
 handlebars.registerHelper('substring', function(string, start, end) {
     if (typeof string !== 'string') return '';
     return string.substring(start, end);
 });
-
 handlebars.registerHelper('multiply', function(a, b) {
     return a * b;
 });
-
 handlebars.registerHelper('isEqual', function(arg1, arg2, options) {
   return (arg1 === arg2) ? options.fn(this) : options.inverse(this);
 });
-
 handlebars.registerHelper('formatDate', function(date) {
   if (!date) return '';
   try {
@@ -51,15 +45,12 @@ handlebars.registerHelper('formatDate', function(date) {
     return date;
   }
 });
-
 handlebars.registerHelper('json', function(context) {
   return JSON.stringify(context);
 });
-
 handlebars.registerHelper('or', function(a, b) {
   return a || b;
 });
-
 handlebars.registerHelper('formatUrl', function(url) {
   if (!url) return '';
   if (!/^https?:\/\//i.test(url)) {
@@ -67,17 +58,14 @@ handlebars.registerHelper('formatUrl', function(url) {
   }
   return url;
 });
-
 handlebars.registerHelper('replaceSeparator', function(str, oldSep, newSep) {
   if (!str) return '';
   return str.split(oldSep).join(newSep);
 });
-
 handlebars.registerHelper('firstChar', function(str) {
   if (!str) return '';
   return str.charAt(0);
 });
-
 handlebars.registerHelper('if_even', function(index, options) {
   if ((index % 2) === 0) {
     return options.fn(this);
@@ -85,7 +73,6 @@ handlebars.registerHelper('if_even', function(index, options) {
     return options.inverse(this);
   }
 });
-
 handlebars.registerHelper('if_odd', function(index, options) {
   if ((index % 2) === 1) {
     return options.fn(this);
@@ -93,16 +80,13 @@ handlebars.registerHelper('if_odd', function(index, options) {
     return options.inverse(this);
   }
 });
-
-// FIXED: Correct the 'contains' helper to return a boolean for subexpressions
 handlebars.registerHelper('contains', function(str, searchTerms) {
     if (!str || typeof str !== 'string' || !searchTerms || typeof searchTerms !== 'string') {
-        return false; // Return false if inputs are invalid
+        return false;
     }
     const terms = searchTerms.split(',');
-    // Check if any of the search terms are present in the string
     const found = terms.some(term => str.toLowerCase().includes(term.trim().toLowerCase()));
-    return found; // Return true or false
+    return found;
 });
 // --- END: REGISTER HANDLEBARS HELPERS ---
 
@@ -161,6 +145,7 @@ const registerUser = async (req, res) => {
       niatId,
       email,
       password,
+      niatIdVerified: true, 
     });
 
     sendWelcomeEmail(newUser.fullName, newUser.email).catch(err => {
@@ -248,6 +233,7 @@ const loginUser = async (req, res) => {
             email: user.email,
             fullName: user.fullName,
             niatId: user.niatId,
+            niatIdVerified: user.niatIdVerified,
           },
           "User logged in successfully."
         )
@@ -260,6 +246,79 @@ const loginUser = async (req, res) => {
       .json(new ApiError(500, "Internal Server Error", [], err.stack));
   }
 };
+
+const googleLogin = async (req, res) => {
+  const { credential } = req.body;
+  if (!credential) {
+    return res.status(400).json(new ApiError(400, "Google credential is required."));
+  }
+
+  const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+
+    const { email, name: fullName } = payload;
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      const password = crypto.randomBytes(16).toString('hex');
+      user = await User.create({
+        fullName,
+        email,
+        password,
+        niatId: null,
+        niatIdVerified: false
+      });
+
+      sendWelcomeEmail(user.fullName, user.email).catch(err => {
+        console.error(`[Non-blocking Error] Failed to send Google welcome email to ${user.email}:`, err.message);
+      });
+    }
+
+    const jwtToken = jwt.sign(
+      { id: user.id },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: process.env.JWT_SECRET_EXPIRES_IN }
+    );
+    
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== "Dev",
+      sameSite: process.env.NODE_ENV !== "Dev" ? "none" : "lax",
+      path: "/",
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000)
+    };
+
+    return res
+      .cookie("token", jwtToken, cookieOptions)
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          {
+            id: user._id,
+            email: user.email,
+            fullName: user.fullName,
+            niatId: user.niatId,
+            niatIdVerified: user.niatIdVerified
+          },
+          "User authenticated successfully with Google."
+        )
+      );
+
+  } catch (err) {
+    console.error("Error during Google authentication:", err);
+    return res
+      .status(500)
+      .json(new ApiError(500, "Google authentication failed.", [], err.stack));
+  }
+};
+
 
 const logoutUser = (req, res) => {
   console.log("Logout attempt");
@@ -291,17 +350,16 @@ const requestPasswordReset = async (req, res) => {
   
       const token = crypto.randomBytes(32).toString('hex');
       user.forgotPasswordToken = crypto.createHash('sha256').update(token).digest('hex');
-      user.forgotPasswordTokenExpiry = Date.now() + 15 * 60 * 1000; // 15 minutes
+      user.forgotPasswordTokenExpiry = Date.now() + 15 * 60 * 1000;
   
       await user.save({ validateBeforeSave: false });
   
-      const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+      const resetLink = `${process.env.ALLOWED_SITE}/reset-password?token=${token}`;
       await sendPasswordResetEmail(user.fullName, user.email, resetLink);
   
       return res.status(200).json(new ApiResponse(200, null, "If an account with that email exists, a password reset link has been sent."));
     } catch (err) {
       console.error("Error requesting password reset:", err);
-      // To avoid revealing if an email exists, send a generic error
       return res.status(500).json(new ApiError(500, "Could not process the request.", [], err.stack));
     }
 };
@@ -346,33 +404,22 @@ const resetPassword = async (req, res) => {
 
 const changePassword = async (req, res) => {
   const { currentPassword, newPassword, confirmNewPassword } = req.body;
-
   if (!currentPassword || !newPassword || !confirmNewPassword) {
     return res.status(400).json(new ApiError(400, "All fields are required."));
   }
-  
   if (newPassword !== confirmNewPassword) {
     return res.status(400).json(new ApiError(400, "New passwords do not match."));
   }
-  
   if (newPassword.length < 6) {
     return res.status(400).json(new ApiError(400, "New password must be at least 6 characters long."));
   }
-
   try {
     const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json(new ApiError(404, "User not found."));
-    }
-
+    if (!user) return res.status(404).json(new ApiError(404, "User not found."));
     const isPasswordCorrect = await user.comparePassword(currentPassword);
-    if (!isPasswordCorrect) {
-      return res.status(401).json(new ApiError(401, "Incorrect current password."));
-    }
-
+    if (!isPasswordCorrect) return res.status(401).json(new ApiError(401, "Incorrect current password."));
     user.password = newPassword;
     await user.save();
-
     return res.status(200).json(new ApiResponse(200, null, "Password changed successfully."));
   } catch (err) {
     console.error("Error changing password:", err);
@@ -386,13 +433,10 @@ const getUserProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json(new ApiError(404, "User profile not found."));
     }
-
     const userObject = user.toObject();
-
     const nameParts = userObject.fullName ? userObject.fullName.split(' ') : [''];
     userObject.firstName = nameParts[0] || '';
     userObject.lastName = nameParts.slice(1).join(' ') || '';
-
     return res.status(200).json(new ApiResponse(200, userObject, "Profile fetched successfully."));
   } catch (err) {
     return res.status(500).json(new ApiError(500, "Internal Server Error", [], err.stack));
@@ -402,26 +446,17 @@ const getUserProfile = async (req, res) => {
 const updateUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json(new ApiError(404, "User not found."));
-    }
-    
+    if (!user) return res.status(404).json(new ApiError(404, "User not found."));
     const { firstName, lastName, ...otherData } = req.body;
-
     const fullName = [firstName, lastName].filter(Boolean).join(' ').trim();
-
     Object.assign(user, otherData); 
     user.fullName = fullName; 
-
     const updatedUser = await user.save();
-    
     const userObject = updatedUser.toObject();
     delete userObject.password;
-    
     const nameParts = userObject.fullName.split(' ');
     userObject.firstName = nameParts[0] || '';
     userObject.lastName = nameParts.slice(1).join(' ') || '';
-
     return res.status(200).json(new ApiResponse(200, userObject, "Profile updated successfully."));
   } catch (err) {
     return res.status(500).json(new ApiError(500, "Failed to update profile", [], err.stack));
@@ -431,58 +466,94 @@ const updateUserProfile = async (req, res) => {
 const generatePortfolio = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json(new ApiError(404, "User not found."));
-    }
-    
+    if (!user) return res.status(404).json(new ApiError(404, "User not found."));
     const { templateName = 'portfolio-classic' } = req.body;
-
     const allowedTemplates = ['portfolio-classic', 'portfolio-modern'];
     if (!allowedTemplates.includes(templateName)) {
         return res.status(400).json(new ApiError(400, "Invalid template name."));
     }
-    
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
-    
     const templatePath = path.join(__dirname, '..', 'templates', `${templateName}.handlebars`);
-
     if (!fs.existsSync(templatePath)) {
         return res.status(404).json(new ApiError(404, "Template not found on server."));
     }
-    
     const templateContent = fs.readFileSync(templatePath, 'utf8');
     const compiledTemplate = handlebars.compile(templateContent);
-    
     const htmlContent = compiledTemplate(user.toObject());
-    
     const portfolioUrl = await createOrUpdatePortfolio(user, htmlContent);
-    
     user.portfolioUrl = portfolioUrl;
     await user.save();
-    
     const updatedUser = user.toObject();
     delete updatedUser.password;
     delete updatedUser.forgotPasswordToken;
     delete updatedUser.forgotPasswordTokenExpiry;
-
     return res.status(200).json(new ApiResponse(200, updatedUser, "Portfolio generated successfully!"));
-    
   } catch (err) {
     console.error("Error generating portfolio:", err);
     return res.status(500).json(new ApiError(500, "Failed to generate portfolio.", [], err.stack));
   }
 };
 
+const completeProfile = async (req, res) => {
+  const { niatId } = req.body;
+  const userId = req.user._id;
+
+  if (!niatId) {
+    return res.status(400).json(new ApiError(400, "NIAT ID is required."));
+  }
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json(new ApiError(404, "User not found."));
+    }
+
+    if (user.niatIdVerified) {
+      return res.status(400).json(new ApiError(400, "Profile is already complete."));
+    }
+
+    // Validate the NIAT ID
+    const niatIdRecord = await NiatId.findOne({ niatId });
+    if (!niatIdRecord) {
+      return res.status(400).json(new ApiError(400, "This NIAT ID is not registered in our system."));
+    }
+    
+    // Check if another user has already taken this NIAT ID
+    const existingNiatUser = await User.findOne({ niatId });
+    if (existingNiatUser && existingNiatUser._id.toString() !== userId.toString()) {
+      return res.status(409).json(new ApiError(409, "This NIAT ID is already associated with another account."));
+    }
+    
+    // Update the user
+    user.niatId = niatId;
+    user.niatIdVerified = true;
+    await user.save();
+    
+    const updatedUser = user.toObject();
+    delete updatedUser.password;
+    
+    return res.status(200).json(new ApiResponse(200, updatedUser, "Profile completed successfully."));
+
+  } catch (error) {
+    console.error("Error completing profile:", error);
+    return res.status(500).json(new ApiError(500, "Internal Server Error.", [], error.stack));
+  }
+};
+
+
+// <-- FIX: ADD completeProfile TO THIS EXPORT LIST -->
 export {
   start,
   loginUser,
   logoutUser,
   registerUser,
+  googleLogin,
   requestPasswordReset,
   resetPassword,
   changePassword,
   getUserProfile,
   updateUserProfile,
-  generatePortfolio
+  generatePortfolio,
+  completeProfile
 };
