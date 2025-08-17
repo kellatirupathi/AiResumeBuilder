@@ -16,7 +16,10 @@ import { Provider } from "react-redux";
 import PublicResumeView from "./pages/public/PublicResumeView.jsx"; 
 import ProfilePage from "./pages/profile/ProfilePage.jsx";
 import NiatManagementPage from "./pages/admin/NiatManagementPage.jsx";
-import ResetPasswordPage from "./pages/auth/customAuth/ResetPasswordPage.jsx"; // NEW
+import ResetPasswordPage from "./pages/auth/customAuth/ResetPasswordPage.jsx";
+import CompleteProfilePage from "./pages/onboarding/CompleteProfilePage.jsx"; // <-- MODIFIED: IMPORTED NEW PAGE
+import { GoogleOAuthProvider } from '@react-oauth/google';
+import { VITE_GOOGLE_CLIENT_ID } from './config/config.js';
 
 const router = createBrowserRouter([
   {
@@ -49,12 +52,17 @@ const router = createBrowserRouter([
     element: <AuthPage />,
   },
   {
-    path: "/reset-password", // NEW ROUTE
+    path: "/reset-password",
     element: <ResetPasswordPage />,
   },
   {
     path: "/public/resume/:resume_id",
     element: <PublicResumeView />,
+  },
+  // <-- MODIFIED: ADDED NEW ROUTE -->
+  {
+    path: "/complete-profile",
+    element: <CompleteProfilePage />,
   },
   {
     path: "/admin/login",
@@ -71,9 +79,11 @@ const router = createBrowserRouter([
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <Provider store={resumeStore}>
-    <React.StrictMode>
-      <RouterProvider router={router} />
-    </React.StrictMode>
-  </Provider>
+  <GoogleOAuthProvider clientId={VITE_GOOGLE_CLIENT_ID}>
+    <Provider store={resumeStore}>
+      <React.StrictMode>
+        <RouterProvider router={router} />
+      </React.StrictMode>
+    </Provider>
+  </GoogleOAuthProvider>
 );
