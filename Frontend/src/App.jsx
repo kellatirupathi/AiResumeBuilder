@@ -25,7 +25,16 @@ function App() {
       try {
         const response = await startUser();
         if (response.statusCode === 200) {
-          dispatch(addUserData(response.data));
+          const userData = response.data;
+          dispatch(addUserData(userData));
+          
+          // --- MODIFIED: ADDED ONBOARDING REDIRECT LOGIC ---
+          // If the user's NIAT ID is not verified and they are not on the completion page, redirect them.
+          if (userData.niatIdVerified === false && location.pathname !== '/complete-profile') {
+            navigate('/complete-profile');
+          }
+          // --- END MODIFICATION ---
+
         } else {
           dispatch(addUserData(""));
           navigate("/");
@@ -39,7 +48,7 @@ function App() {
       }
     };
     fetchResponse();
-  }, [dispatch, navigate]);
+  }, [dispatch, navigate, location.pathname]); // Added location.pathname to re-run on route change
 
   // Dark mode logic
   useEffect(() => {
@@ -63,12 +72,9 @@ function App() {
     }
   };
   
-  // --- MODIFIED LOGIC START ---
   const isEditResumePage = location.pathname.includes('/dashboard/edit-resume');
   const isProfilePage = location.pathname === '/profile';
-  // Combine conditions to hide header on both edit and profile pages
   const shouldHideHeader = isEditResumePage || isProfilePage;
-  // --- MODIFIED LOGIC END ---
 
   if (loading) {
     return (
@@ -78,12 +84,9 @@ function App() {
     );
   }
 
-  // user must be available for these routes. If not, this component will return null 
-  // and the auth check useEffect above will handle redirection.
   if (user) {
     return (
       <Provider store={resumeStore}>
-        {/* --- MODIFIED RENDER CONDITION --- */}
         {!shouldHideHeader && <Header user={user} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}
         <Outlet context={{ darkMode, toggleDarkMode }} />
         <Toaster />
