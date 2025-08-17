@@ -113,6 +113,18 @@ const updateProfile = async (profileData) => {
   }
 };
 
+export const generatePortfolio = async (templateName) => { // <-- MODIFIED to accept templateName
+    try {
+        // <-- MODIFIED to send templateName in the body
+        const response = await axiosInstance.post("users/profile/generate-portfolio", { templateName });
+        return response.data;
+    } catch (error) {
+        throw new Error(
+            error?.response?.data?.message || "Portfolio generation failed"
+        );
+    }
+};
+
 export {
   startUser,
   registerUser,
