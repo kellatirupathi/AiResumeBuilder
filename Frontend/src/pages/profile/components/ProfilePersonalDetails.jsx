@@ -2,7 +2,9 @@ import React from 'react';
 import { useSelector, useDispatch } from "react-redux";
 import { addUserData } from '@/features/user/userFeatures';
 import { Input } from "@/components/ui/input";
-import { User, Mail, Phone, MapPin, Linkedin, Github, Globe } from "lucide-react";
+import { User, Mail, Phone, MapPin, Linkedin, Github, Globe, ExternalLink, Copy } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 function ProfilePersonalDetails() {
   const dispatch = useDispatch();
@@ -56,7 +58,34 @@ function ProfilePersonalDetails() {
             </div>
             <div className="md:col-span-2">
               <label className="text-sm font-medium text-gray-700 flex items-center gap-2"><Globe className="h-4 w-4"/>Portfolio URL</label>
-              <Input name="portfolioUrl" value={profileData?.portfolioUrl || ''} onChange={handleChange} className="mt-1" />
+              <div className="flex items-center gap-2 mt-1">
+                  <Input name="portfolioUrl" value={profileData?.portfolioUrl || ''} onChange={handleChange} placeholder="Generate or add your link"/>
+                  {profileData?.portfolioUrl && (
+                  <>
+                      <Button
+                         type="button"
+                         variant="outline"
+                         size="sm"
+                         onClick={() => window.open(profileData.portfolioUrl, '_blank')}
+                      >
+                          <ExternalLink className="h-4 w-4 md:mr-2" />
+                          <span className="hidden md:inline">View</span>
+                      </Button>
+                      <Button
+                         type="button"
+                         variant="outline"
+                         size="sm"
+                         onClick={() => {
+                           navigator.clipboard.writeText(profileData.portfolioUrl);
+                           toast.success("Portfolio link copied!");
+                         }}
+                       >
+                          <Copy className="h-4 w-4 md:mr-2" />
+                          <span className="hidden md:inline">Copy</span>
+                      </Button>
+                  </>
+                  )}
+              </div>
             </div>
           </div>
         </div>
