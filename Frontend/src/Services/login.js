@@ -43,6 +43,17 @@ const loginUser = async (data) => {
   }
 };
 
+const googleLogin = async (credential) => {
+    try {
+        const response = await axiosInstance.post("users/google-login", { credential });
+        return response.data;
+    } catch (error) {
+        throw new Error(
+            error?.response?.data?.message || "Google sign-in failed."
+        );
+    }
+};
+
 const logoutUser = async () => {
   try {
     const response = await axiosInstance.get("users/logout");
@@ -54,10 +65,8 @@ const logoutUser = async () => {
   }
 };
 
-// --- START: MODIFIED PASSWORD RESET FLOW ---
 const requestPasswordReset = async (data) => {
   try {
-    // We only need to send the email
     const response = await axiosInstance.post("users/forgot-password", data);
     return response.data;
   } catch (error) {
@@ -77,7 +86,6 @@ const resetPassword = async (data) => {
       );
     }
   };
-// --- END: MODIFIED PASSWORD RESET FLOW ---
 
 const changePassword = async (data) => {
   try {
@@ -90,7 +98,6 @@ const changePassword = async (data) => {
   }
 };
 
-// --- NEW PROFILE API FUNCTIONS ---
 const getProfile = async () => {
   try {
     const response = await axiosInstance.get("users/profile");
@@ -113,9 +120,8 @@ const updateProfile = async (profileData) => {
   }
 };
 
-export const generatePortfolio = async (templateName) => { // <-- MODIFIED to accept templateName
+export const generatePortfolio = async (templateName) => {
     try {
-        // <-- MODIFIED to send templateName in the body
         const response = await axiosInstance.post("users/profile/generate-portfolio", { templateName });
         return response.data;
     } catch (error) {
@@ -125,14 +131,28 @@ export const generatePortfolio = async (templateName) => { // <-- MODIFIED to ac
     }
 };
 
+// <-- MODIFIED: ADDED NEW FUNCTION -->
+const completeProfile = async (data) => {
+  try {
+    const response = await axiosInstance.post("users/complete-profile", data);
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error?.response?.data?.message || "Failed to complete profile."
+    );
+  }
+};
+
 export {
   startUser,
   registerUser,
   loginUser,
+  googleLogin,
   logoutUser,
   requestPasswordReset,
   resetPassword,
   changePassword,
   getProfile,
-  updateProfile
+  updateProfile,
+  completeProfile, // <-- MODIFIED: EXPORTED NEW FUNCTION
 };
