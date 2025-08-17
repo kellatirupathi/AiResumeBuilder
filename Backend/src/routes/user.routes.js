@@ -4,11 +4,12 @@ import {
   loginUser,
   logoutUser,
   registerUser,
-  requestPasswordReset, // MODIFIED
-  resetPassword,        // MODIFIED
+  requestPasswordReset,
+  resetPassword,
   changePassword,
   getUserProfile,
   updateUserProfile,
+  generatePortfolio,
 } from "../controller/user.controller.js";
 import { Router } from "express";
 import { isUserAvailable } from "../middleware/auth.js";
@@ -19,12 +20,13 @@ router.get("/", isUserAvailable, start);
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.get("/logout", isUserAvailable, logoutUser);
-router.post("/forgot-password", requestPasswordReset); // MODIFIED: Renamed for clarity, now points to request function
-router.post("/reset-password", resetPassword);       // ADDED: Handles token-based password reset
+router.post("/forgot-password", requestPasswordReset);
+router.post("/reset-password", resetPassword);
 router.post("/change-password", isUserAvailable, changePassword);
 
 // --- NEW PROFILE ROUTES ---
 router.get("/profile", isUserAvailable, getUserProfile);
 router.put("/profile", isUserAvailable, updateUserProfile);
+router.post("/profile/generate-portfolio", isUserAvailable, generatePortfolio);
 
 export default router;
