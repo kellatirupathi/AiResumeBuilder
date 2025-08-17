@@ -1,6 +1,4 @@
 // C:\Users\NxtWave\Downloads\code\Backend\src\models\user.model.js
-// This schema is correct. It uses `fullName` to store the complete name in the database.
-// The controller will handle splitting this into firstName/lastName for the frontend.
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import educationSchema from "./education.model.js";
@@ -27,16 +25,15 @@ const additionalSectionSchema = new mongoose.Schema({
   content: { type: String, default: "" },
 }, { _id: false });
 
-
 const userSchema = new Schema({
   fullName: {
     type: String,
     required: true
   },
-  niatId: { // Keep niatId if it's important for your user management
+  niatId: { 
     type: String,
     unique: true,
-    sparse: true // Allows multiple null values if not provided, but unique if it is
+    sparse: true 
   },
   email: {
     type: String,
@@ -47,22 +44,24 @@ const userSchema = new Schema({
     type: String,
     required: true
   },
+  // <-- MODIFIED: ADDED niatIdVerified FIELD -->
+  niatIdVerified: {
+    type: Boolean,
+    default: false
+  },
+  // <-- END MODIFICATION -->
 
-  // --- START: MODIFICATION FOR SECURE PASSWORD RESET ---
   forgotPasswordToken: {
     type: String
   },
   forgotPasswordTokenExpiry: {
     type: Date
   },
-  // --- END: MODIFICATION FOR SECURE PASSWORD RESET ---
 
-  // --- START: MASTER PROFILE DATA ---
   jobTitle: { type: String, default: "" },
   address: { type: String, default: "" },
   phone: { type: String, default: "" },
   summary: { type: String, default: "" },
-
   githubUrl: { type: String, default: "" },
   linkedinUrl: { type: String, default: "" },
   portfolioUrl: { type: String, default: "" },
@@ -97,8 +96,6 @@ const userSchema = new Schema({
   ],
   certifications: [certificationSchema],
   additionalSections: [additionalSectionSchema]
-  // --- END: MASTER PROFILE DATA ---
-
 }, { timestamps: true });
 
 // Pre-save middleware to hash password
