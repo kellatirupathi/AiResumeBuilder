@@ -7,6 +7,105 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { sendWelcomeEmail, sendPasswordResetEmail } from "../services/email.service.js";
 import crypto from "crypto";
+import { createOrUpdatePortfolio } from '../services/github.service.js';
+import handlebars from 'handlebars';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// --- START: REGISTER ALL HANDLEBARS HELPERS ---
+// This ensures all helpers are available for rendering any template from this file.
+
+handlebars.registerHelper('split', function(string, separator) {
+  if (typeof string !== 'string') return [];
+  return string.split(separator);
+});
+
+handlebars.registerHelper('trim', function(string) {
+  if (typeof string !== 'string') return '';
+  return string.trim();
+});
+
+handlebars.registerHelper('substring', function(string, start, end) {
+    if (typeof string !== 'string') return '';
+    return string.substring(start, end);
+});
+
+handlebars.registerHelper('multiply', function(a, b) {
+    return a * b;
+});
+
+handlebars.registerHelper('isEqual', function(arg1, arg2, options) {
+  return (arg1 === arg2) ? options.fn(this) : options.inverse(this);
+});
+
+handlebars.registerHelper('formatDate', function(date) {
+  if (!date) return '';
+  try {
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) return date;
+    const month = dateObj.toLocaleString('default', { month: 'short' });
+    const year = dateObj.getFullYear();
+    return `${month} ${year}`;
+  } catch (e) {
+    return date;
+  }
+});
+
+handlebars.registerHelper('json', function(context) {
+  return JSON.stringify(context);
+});
+
+handlebars.registerHelper('or', function(a, b) {
+  return a || b;
+});
+
+handlebars.registerHelper('formatUrl', function(url) {
+  if (!url) return '';
+  if (!/^https?:\/\//i.test(url)) {
+    return 'https://' + url;
+  }
+  return url;
+});
+
+handlebars.registerHelper('replaceSeparator', function(str, oldSep, newSep) {
+  if (!str) return '';
+  return str.split(oldSep).join(newSep);
+});
+
+handlebars.registerHelper('firstChar', function(str) {
+  if (!str) return '';
+  return str.charAt(0);
+});
+
+handlebars.registerHelper('if_even', function(index, options) {
+  if ((index % 2) === 0) {
+    return options.fn(this);
+  } else {
+    return options.inverse(this);
+  }
+});
+
+handlebars.registerHelper('if_odd', function(index, options) {
+  if ((index % 2) === 1) {
+    return options.fn(this);
+  } else {
+    return options.inverse(this);
+  }
+});
+
+// FIXED: Correct the 'contains' helper to return a boolean for subexpressions
+handlebars.registerHelper('contains', function(str, searchTerms) {
+    if (!str || typeof str !== 'string' || !searchTerms || typeof searchTerms !== 'string') {
+        return false; // Return false if inputs are invalid
+    }
+    const terms = searchTerms.split(',');
+    // Check if any of the search terms are present in the string
+    const found = terms.some(term => str.toLowerCase().includes(term.trim().toLowerCase()));
+    return found; // Return true or false
+});
+// --- END: REGISTER HANDLEBARS HELPERS ---
+
 
 const start = async (req, res) => {
   if (req.user) {
@@ -329,6 +428,52 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
+const generatePortfolio = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json(new ApiError(404, "User not found."));
+    }
+    
+    const { templateName = 'portfolio-classic' } = req.body;
+
+    const allowedTemplates = ['portfolio-classic', 'portfolio-modern'];
+    if (!allowedTemplates.includes(templateName)) {
+        return res.status(400).json(new ApiError(400, "Invalid template name."));
+    }
+    
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    
+    const templatePath = path.join(__dirname, '..', 'templates', `${templateName}.handlebars`);
+
+    if (!fs.existsSync(templatePath)) {
+        return res.status(404).json(new ApiError(404, "Template not found on server."));
+    }
+    
+    const templateContent = fs.readFileSync(templatePath, 'utf8');
+    const compiledTemplate = handlebars.compile(templateContent);
+    
+    const htmlContent = compiledTemplate(user.toObject());
+    
+    const portfolioUrl = await createOrUpdatePortfolio(user, htmlContent);
+    
+    user.portfolioUrl = portfolioUrl;
+    await user.save();
+    
+    const updatedUser = user.toObject();
+    delete updatedUser.password;
+    delete updatedUser.forgotPasswordToken;
+    delete updatedUser.forgotPasswordTokenExpiry;
+
+    return res.status(200).json(new ApiResponse(200, updatedUser, "Portfolio generated successfully!"));
+    
+  } catch (err) {
+    console.error("Error generating portfolio:", err);
+    return res.status(500).json(new ApiError(500, "Failed to generate portfolio.", [], err.stack));
+  }
+};
+
 export {
   start,
   loginUser,
@@ -338,5 +483,6 @@ export {
   resetPassword,
   changePassword,
   getUserProfile,
-  updateUserProfile
+  updateUserProfile,
+  generatePortfolio
 };
