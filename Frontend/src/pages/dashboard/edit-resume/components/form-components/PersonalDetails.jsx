@@ -74,7 +74,6 @@ function PersonalDetails({ resumeInfo, enanbledNext }) {
   return (
     <div className="p-5 shadow-lg rounded-lg border-t-primary border-t-4 mt-10">
       <h2 className="font-bold text-lg">Personal Details</h2>
-      <p>Get started with your basic information</p>
 
       <form className="mt-7" onSubmit={onSave}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
