@@ -273,7 +273,6 @@ function CertificationsForm({ resumeInfo, enanbledNext, enanbledPrev }) {
             </Button>
           )}
         </div>
-        <p className="text-gray-500 mb-6">Add your professional certifications to enhance your resume</p>
         
         {certificatesList.length === 0 ? (
           <div className="text-center py-10 border border-dashed border-gray-300 rounded-lg mb-6 hover:border-primary transition-all duration-300">
