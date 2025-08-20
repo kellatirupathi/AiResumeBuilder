@@ -340,7 +340,6 @@ function Education({ resumeInfo, enanbledNext, enanbledPrev }) {
                 </Button>
             )}
         </div>
-        <p className="text-gray-500 mb-6">Add your educational background to highlight your academic qualifications</p>
 
         {!educationalList.length ? (
             <div className="text-center py-10 border border-dashed border-gray-300 rounded-lg mb-6 hover:border-primary transition-all duration-300">
