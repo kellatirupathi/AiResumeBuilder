@@ -271,8 +271,6 @@ const googleLogin = async (req, res) => {
         fullName,
         email,
         password,
-        niatId: null,
-        niatIdVerified: false
       });
 
       sendWelcomeEmail(user.fullName, user.email).catch(err => {
