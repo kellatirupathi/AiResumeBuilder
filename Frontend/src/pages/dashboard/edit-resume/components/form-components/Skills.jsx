@@ -57,16 +57,16 @@ function Skills({ resumeInfo }) {
       setSkillLines(Array(MAX_SKILL_LINES).fill(""));
     }
   }, [resumeInfo]);
-  // --- END OF THE FIX ---
-
+  
   // This useEffect now only dispatches updates when the user types in the form.
   useEffect(() => {
     const skillsArray = skillLines
-      .map((line) => ({ name: line.trim() }))
-      .filter(skill => skill.name !== "");
+      .map((line) => ({ name: line }))
+      .filter(skill => skill.name && skill.name.trim() !== "");
     
     dispatch(addResumeData({ ...resumeInfo, skills: skillsArray }));
   }, [skillLines]);
+  // --- END OF THE FIX ---
 
   const handleLineChange = (index, value) => {
     const newLines = [...skillLines];
@@ -87,8 +87,8 @@ function Skills({ resumeInfo }) {
   const onSave = () => {
     setLoading(true);
     const skillsArray = skillLines
-      .map((line) => ({ name: line.trim() }))
-      .filter(skill => skill.name !== "");
+      .map((line) => ({ name: line }))
+      .filter(skill => skill.name && skill.name.trim() !== "");
       
     const data = {
       data: { skills: skillsArray },
@@ -197,7 +197,6 @@ function Skills({ resumeInfo }) {
             </span>
             Skills
           </h2>
-          <p className="text-gray-600">Add your professional skills in four organized categories</p>
         </div>
         
         <Button
@@ -208,7 +207,7 @@ function Skills({ resumeInfo }) {
           {aiLoading ? (
             <><LoaderCircle className="h-4 w-4 animate-spin" /> Generating...</>
           ) : (
-            <><Sparkles className="h-4 w-4" /> Generate Skills with AI</>
+            <><Sparkles className="h-4 w-4" /> Generate Skills</>
           )}
         </Button>
       </div>
