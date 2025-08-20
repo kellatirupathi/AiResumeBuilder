@@ -142,7 +142,6 @@ function Project({ resumeInfo, setEnabledNext, setEnabledPrev }) {
           <Code className="h-6 w-6 text-primary" />
           <h2 className="text-2xl font-bold text-gray-800">Projects</h2>
         </div>
-        <p className="text-gray-500 mb-6">Showcase your hands-on projects to demonstrate your practical skills</p>
         
         {projectList.length === 0 && (
           <div className="text-center py-10 border border-dashed border-gray-300 rounded-lg mb-6 hover:border-primary transition-all duration-300">
