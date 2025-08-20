@@ -41,57 +41,35 @@ Original summary:
 "{projectSummary}"
 `;
 
-// UPDATED: Now accepts `defaultValue` to properly display existing content.
 function SimpeRichTextEditor({ index, onRichTextEditorChange, resumeInfo, defaultValue }) {
   const [value, setValue] = useState(defaultValue || "");
   const [loading, setLoading] = useState(false);
   const [enhanceLoading, setEnhanceLoading] = useState(false);
 
-  // When the parent component passes a new defaultValue, update the internal state
   useEffect(() => {
-    setValue(defaultValue || "");
+    if (value !== defaultValue) {
+      setValue(defaultValue || "");
+    }
   }, [defaultValue]);
-  
-  useEffect(() => {
-    onRichTextEditorChange(value);
-  }, [value]);
 
   const GenerateSummaryFromAI = async () => {
-    if (
-      !resumeInfo?.projects[index]?.projectName ||
-      !resumeInfo?.projects[index]?.techStack
-    ) {
+    if (!resumeInfo?.projects[index]?.projectName || !resumeInfo?.projects[index]?.techStack) {
       toast("Add Project Name and Tech Stack to generate summary");
       return;
     }
     setLoading(true);
 
     try {
-      const prompt = PROMPT_GENERATE.replace(
-        "{projectName}",
-        resumeInfo?.projects[index]?.projectName
-      ).replace("{techStack}", resumeInfo?.projects[index]?.techStack);
-      
+      const prompt = PROMPT_GENERATE.replace("{projectName}", resumeInfo?.projects[index]?.projectName).replace("{techStack}", resumeInfo?.projects[index]?.techStack);
       const result = await AIChatSession.sendMessage(prompt);
       
       let response;
       try {
         response = JSON.parse(result.response.text());
       } catch (error) {
-        console.error("Error parsing AI response:", error);
-        toast.error("Could not parse AI response properly. Trying to fix formatting...");
-        
         const text = result.response.text();
         const listItems = text.match(/<li>(.*?)<\/li>/g);
-        
-        if (listItems && listItems.length > 0) {
-          response = { projectSummary: listItems };
-        } else {
-          const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
-          response = { 
-            projectSummary: lines.map(line => `<li>${line.replace(/^[•\-\*\d\.\s]+/, "").trim()}</li>`) 
-          };
-        }
+        if (listItems && listItems.length > 0) { response = { projectSummary: listItems }; } else { const lines = text.split(/\r?\n/).filter(line => line.trim() !== ""); response = { projectSummary: lines.map(line => `<li>${line.replace(/^[•\-\*\d\.\s]+/, "").trim()}</li>`) }; }
       }
       
       let summaryContent;
@@ -100,7 +78,7 @@ function SimpeRichTextEditor({ index, onRichTextEditorChange, resumeInfo, defaul
       } else if (typeof response.projectSummary === 'string') {
         summaryContent = response.projectSummary;
       } else {
-        toast.warning("AI response format was unexpected. Creating list format manually.");
+        toast.warning("AI response format was unexpected.");
         summaryContent = "<li>Project created using " + resumeInfo?.projects[index]?.techStack + "</li>";
       }
       
@@ -108,7 +86,8 @@ function SimpeRichTextEditor({ index, onRichTextEditorChange, resumeInfo, defaul
         summaryContent = `<ul>${summaryContent}</ul>`;
       }
       
-      await setValue(summaryContent);
+      setValue(summaryContent);
+      onRichTextEditorChange(summaryContent); // FIX: Immediately propagate the change
     } catch (error) {
       console.error("Error during AI summary generation:", error);
       toast.error("Failed to generate summary. Please try again.");
@@ -119,32 +98,17 @@ function SimpeRichTextEditor({ index, onRichTextEditorChange, resumeInfo, defaul
 
   const EnhanceFromAI = async () => {
     const currentSummary = value.replace(/<[^>]*>?/gm, ' ').trim();
-    if (
-      !resumeInfo?.projects[index]?.projectName ||
-      !resumeInfo?.projects[index]?.techStack
-    ) {
-      toast("Please add a Project Name and Tech Stack for better suggestions.");
-      return;
-    }
-    if (!currentSummary) {
-      toast("Please write a summary before enhancing.");
-      return;
-    }
+    if (!resumeInfo?.projects[index]?.projectName || !resumeInfo?.projects[index]?.techStack) { toast("Please add a Project Name and Tech Stack for better suggestions."); return; }
+    if (!currentSummary) { toast("Please write a summary before enhancing."); return; }
     setEnhanceLoading(true);
 
     try {
-        const prompt = PROMPT_ENHANCE
-          .replace("{projectName}", resumeInfo.projects[index].projectName)
-          .replace("{techStack}", resumeInfo.projects[index].techStack)
-          .replace("{projectSummary}", currentSummary);
-
+        const prompt = PROMPT_ENHANCE.replace("{projectName}", resumeInfo.projects[index].projectName).replace("{techStack}", resumeInfo.projects[index].techStack).replace("{projectSummary}", currentSummary);
         const result = await AIChatSession.sendMessage(prompt);
         const resp = JSON.parse(result.response.text());
-        const enhancedSummary = Array.isArray(resp.projectSummary) 
-          ? `<ul>${resp.projectSummary.join("")}</ul>` 
-          : resp.projectSummary;
-
+        const enhancedSummary = Array.isArray(resp.projectSummary) ? `<ul>${resp.projectSummary.join("")}</ul>` : resp.projectSummary;
         setValue(enhancedSummary);
+        onRichTextEditorChange(enhancedSummary); // FIX: Immediately propagate the change
         toast.success("Project summary enhanced by AI!");
     } catch(error) {
         console.error("Enhance error:", error);
@@ -154,58 +118,32 @@ function SimpeRichTextEditor({ index, onRichTextEditorChange, resumeInfo, defaul
     }
   }
 
+  const handleEditorChange = (e) => {
+    const newValue = e.target.value;
+    setValue(newValue);
+    onRichTextEditorChange(newValue);
+  };
+  
   return (
     <div>
       <div className="flex justify-between my-2">
         <label className="text-xs">Summary</label>
         <div className="flex gap-2">
-          <Button
-              variant="outline"
-              size="sm"
-              onClick={EnhanceFromAI}
-              disabled={loading || enhanceLoading || !value.trim()}
-              className="flex gap-2 border-blue-500 text-blue-600 hover:bg-blue-50"
-            >
-              {enhanceLoading ? (
-                <LoaderCircle className="animate-spin h-4 w-4" />
-              ) : (
-                <><Wand2 className="h-4 w-4" /> Enhance</>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={GenerateSummaryFromAI}
-              disabled={loading || enhanceLoading}
-              className="flex gap-2 border-primary text-primary"
-            >
-              {loading ? (
-                <LoaderCircle className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4" /> Generate
-                </>
-              )}
-            </Button>
+          <Button variant="outline" size="sm" onClick={EnhanceFromAI} disabled={loading || enhanceLoading || !value.trim()} className="flex gap-2 border-blue-500 text-blue-600 hover:bg-blue-50">
+            {enhanceLoading ? (<LoaderCircle className="animate-spin h-4 w-4" />) : (<><Wand2 className="h-4 w-4" /> Enhance</>)}
+          </Button>
+          <Button variant="outline" size="sm" onClick={GenerateSummaryFromAI} disabled={loading || enhanceLoading} className="flex gap-2 border-primary text-primary">
+            {loading ? (<LoaderCircle className="h-4 w-4 animate-spin" />) : (<><Sparkles className="h-4 w-4" /> Generate</>)}
+          </Button>
         </div>
       </div>
       <EditorProvider>
         <Editor
           value={value}
-          onChange={(e) => {
-            setValue(e.target.value);
-          }}
+          onChange={handleEditorChange}
         >
           <Toolbar>
-            <BtnBold />
-            <BtnItalic />
-            <BtnUnderline />
-            <BtnStrikeThrough />
-            <Separator />
-            <BtnNumberedList />
-            <BtnBulletList />
-            <Separator />
-            <BtnLink />
+            <BtnBold /><BtnItalic /><BtnUnderline /><BtnStrikeThrough /><Separator /><BtnNumberedList /><BtnBulletList /><Separator /><BtnLink />
           </Toolbar>
         </Editor>
       </EditorProvider>
