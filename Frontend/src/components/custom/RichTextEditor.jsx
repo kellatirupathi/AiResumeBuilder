@@ -101,7 +101,6 @@
 
 // export default RichTextEditor;
 
-
 import React, { useEffect, useState } from "react";
 import {
   BtnBold,
@@ -131,6 +130,7 @@ const PROMPT_ENHANCE = `You are a professional resume writer. Rephrase the follo
 Original summary: 
 "{workSummary}"
 `;
+
 function RichTextEditor({ onRichTextEditorChange, index, resumeInfo }) {
   const [value, setValue] = useState(
     resumeInfo?.experience[index]?.workSummary || ""
@@ -138,9 +138,13 @@ function RichTextEditor({ onRichTextEditorChange, index, resumeInfo }) {
   const [loading, setLoading] = useState(false);
   const [enhanceLoading, setEnhanceLoading] = useState(false);
 
+  // Sync state if the prop changes
   useEffect(() => {
-    onRichTextEditorChange(value);
-  }, [value]);
+    const newSummary = resumeInfo?.experience[index]?.workSummary || "";
+    if (value !== newSummary) {
+      setValue(newSummary);
+    }
+  }, [resumeInfo?.experience[index]?.workSummary]);
 
   const GenerateSummaryFromAI = async () => {
     if (!resumeInfo?.experience[index]?.title) {
@@ -153,14 +157,21 @@ function RichTextEditor({ onRichTextEditorChange, index, resumeInfo }) {
       "{positionTitle}",
       resumeInfo.experience[index].title
     );
-    const result = await AIChatSession.sendMessage(prompt);
-    const resp = JSON.parse(result.response.text());
-    await setValue(
-      resp.experience
-        ? resp.experience?.join("")
-        : resp.experience_bullets?.join("")
-    );
-    setLoading(false);
+    try {
+      const result = await AIChatSession.sendMessage(prompt);
+      const resp = JSON.parse(result.response.text());
+      const aiText =
+        resp.experience
+          ? `<ul>${resp.experience?.join("")}</ul>`
+          : `<ul>${resp.experience_bullets?.join("")}</ul>`;
+
+      setValue(aiText);
+      onRichTextEditorChange(aiText); // FIX: Immediately propagate the change
+    } catch (error) {
+      toast.error("Failed to generate summary from AI.");
+    } finally {
+      setLoading(false);
+    }
   };
   
   const EnhanceFromAI = async () => {
@@ -187,6 +198,7 @@ function RichTextEditor({ onRichTextEditorChange, index, resumeInfo }) {
         : resp.experience;
 
       setValue(enhancedSummary);
+      onRichTextEditorChange(enhancedSummary); // FIX: Immediately propagate the change
       toast.success("Experience summary enhanced by AI!");
     } catch (error) {
       console.error("Enhance error:", error);
@@ -196,6 +208,12 @@ function RichTextEditor({ onRichTextEditorChange, index, resumeInfo }) {
     }
   };
 
+  const handleEditorChange = (e) => {
+    const newValue = e.target.value;
+    setValue(newValue);
+    onRichTextEditorChange(newValue);
+  };
+  
   return (
     <div>
       <div className="flex justify-between my-2">
@@ -234,10 +252,7 @@ function RichTextEditor({ onRichTextEditorChange, index, resumeInfo }) {
       <EditorProvider>
         <Editor
           value={value}
-          onChange={(e) => {
-            setValue(e.target.value);
-            onRichTextEditorChange(value);
-          }}
+          onChange={handleEditorChange}
         >
           <Toolbar>
             <BtnBold />
