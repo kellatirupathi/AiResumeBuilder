@@ -461,7 +461,6 @@ function Experience({ resumeInfo, enanbledNext, enanbledPrev }) {
           <Briefcase className="h-6 w-6 text-primary" />
           <h2 className="text-2xl font-bold text-gray-800">Work Experience</h2>
         </div>
-        <p className="text-gray-500 mb-6">Add your relevant work history to showcase your professional journey</p>
         
         {experienceList?.length === 0 && (
           <div className="text-center py-10 border border-dashed border-gray-300 rounded-lg mb-6 hover:border-primary transition-all duration-300">
