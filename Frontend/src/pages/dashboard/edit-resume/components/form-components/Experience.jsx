@@ -2,12 +2,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoaderCircle, Trash2, Briefcase, Building, MapPin, Calendar, Plus, Check, ChevronDown, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import RichTextEditor from "@/components/custom/RichTextEditor";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addResumeData } from "@/features/resume/resumeFeatures";
 import { useParams } from "react-router-dom";
 import { updateThisResume } from "@/Services/resumeAPI";
 import { toast } from "sonner";
+import { debounce } from "lodash-es"; // Ensure you have installed lodash: npm install lodash
 
 // Template for a new experience entry
 const createEmptyFormFields = () => ({
@@ -292,84 +293,127 @@ function Experience({ resumeInfo, enanbledNext, enanbledPrev }) {
   const dispatch = useDispatch();
   const { resume_id } = useParams();
 
-  // Read the experience list directly from the Redux store
-  const experienceList = useSelector(state => state.editResume.resumeData?.experience) || [];
+  // Read from Redux store as the source of truth
+  const reduxExperienceList = useSelector(state => state.editResume.resumeData?.experience) || [];
   
+  // Local state for fast UI updates
+  const [localExperienceList, setLocalExperienceList] = useState(reduxExperienceList);
   const [loading, setLoading] = useState(false);
   const [activeExperience, setActiveExperience] = useState(0);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Helper function to update Redux store
-  const setExperienceList = (newList) => {
-    dispatch(addResumeData({ ...resumeInfo, experience: newList }));
-  };
+  // Sync local state when Redux changes (initial load, external changes)
+  useEffect(() => {
+    setLocalExperienceList(reduxExperienceList);
+  }, [reduxExperienceList]);
+
+  // Debounced function to update Redux store
+  const debouncedReduxUpdate = useMemo(
+    () => debounce((newList) => {
+      dispatch(addResumeData({ ...resumeInfo, experience: newList }));
+      setHasUnsavedChanges(true);
+    }, 500),
+    [dispatch, resumeInfo]
+  );
+
+  useEffect(() => {
+    // Cleanup debounce on component unmount
+    return () => debouncedReduxUpdate.cancel();
+  }, [debouncedReduxUpdate]);
 
   const addExperience = () => {
-    const newList = [...experienceList, createEmptyFormFields()];
-    setExperienceList(newList);
+    const newList = [...localExperienceList, createEmptyFormFields()];
+    setLocalExperienceList(newList);
     setActiveExperience(newList.length - 1);
+    debouncedReduxUpdate(newList); // Update Redux after a delay
   };
   
-  // This is the updated, correct function
   const removeExperience = async (index) => {
-    // 1. Create a new list without the deleted item
-    const newList = experienceList.filter((_, i) => i !== index);
+    const newList = localExperienceList.filter((_, i) => i !== index);
     
-    // 2. Immediately update the Redux store to reflect the change in UI
-    setExperienceList(newList);
-    
-    // 3. Adjust the active tab if necessary
+    setLocalExperienceList(newList);
     if (activeExperience >= newList.length) {
       setActiveExperience(Math.max(0, newList.length - 1));
     }
     
-    // 4. Create the payload for the backend
-    const data = {
-      data: {
-        experience: newList,
-      },
-    };
-
-    // 5. Save the updated list to the backend
+    dispatch(addResumeData({ ...resumeInfo, experience: newList }));
+    
     try {
-      await updateThisResume(resume_id, data);
+      await updateThisResume(resume_id, { data: { experience: newList } });
       toast("Experience removed successfully.", {
         description: "Your work history has been updated.",
         icon: <Trash2 className="h-4 w-4 text-green-500" />,
       });
+      setHasUnsavedChanges(false);
     } catch (error) {
       toast("Error removing experience", {
-        description: "Could not save the change. Please try again.",
+        description: "Could not save. Please try again.",
         variant: "destructive",
       });
-      // Optional: Revert to the previous state if the API call fails
-      setExperienceList(experienceList);
+      setLocalExperienceList(reduxExperienceList); // Revert on failure
     }
   };
 
   const handleChange = (e, index) => {
     enanbledNext(false);
     enanbledPrev(false);
+    
     const { name, value } = e.target;
-    const list = [...experienceList];
-    const newListData = { ...list[index], [name]: value };
-    list[index] = newListData;
-    setExperienceList(list);
+    const newList = [...localExperienceList];
+    newList[index] = { ...newList[index], [name]: value };
+    
+    setLocalExperienceList(newList);
+    debouncedReduxUpdate(newList);
   };
 
   const handleCheckboxChange = (e, index) => {
     enanbledNext(false);
     enanbledPrev(false);
+    
     const { checked } = e.target;
-    const list = [...experienceList];
-    const newListData = {
-      ...list[index],
+    const newList = [...localExperienceList];
+    newList[index] = {
+      ...newList[index],
       currentlyWorking: checked,
-      endDate: checked ? "" : list[index].endDate,
+      endDate: checked ? "" : newList[index].endDate,
     };
-    list[index] = newListData;
-    setExperienceList(list);
+    
+    setLocalExperienceList(newList);
+    debouncedReduxUpdate(newList);
   };
   
+  const handleRichTextEditor = (value, name, index) => {
+    const newList = [...localExperienceList];
+    newList[index] = { ...newList[index], [name]: value };
+    
+    setLocalExperienceList(newList);
+    debouncedReduxUpdate(newList);
+  };
+
+  const onSave = async () => {
+    setLoading(true);
+    debouncedReduxUpdate.cancel(); // Cancel any pending updates
+    
+    // Ensure Redux has the latest local data
+    dispatch(addResumeData({ ...resumeInfo, experience: localExperienceList }));
+    
+    const data = { data: { experience: localExperienceList } };
+    
+    try {
+      await updateThisResume(resume_id, data);
+      toast("Experience details updated successfully!", {
+        description: "Your work history has been saved.",
+      });
+      setHasUnsavedChanges(false);
+      enanbledNext(true);
+      enanbledPrev(true);
+    } catch (error) {
+      toast("Error updating resume", { description: `${error.message}`, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatFullDate = (dateString) => {
     if (!dateString) return "";
     try {
@@ -396,39 +440,6 @@ function Experience({ resumeInfo, enanbledNext, enanbledPrev }) {
     }
   };
 
-  const handleRichTextEditor = (value, name, index) => {
-    const list = [...experienceList];
-    const newListData = { ...list[index], [name]: value };
-    list[index] = newListData;
-    setExperienceList(list);
-  };
-
-  const onSave = () => {
-    setLoading(true);
-    const data = {
-      data: { experience: experienceList },
-    };
-    if (resume_id) {
-      updateThisResume(resume_id, data)
-        .then(() => {
-          toast("Experience details updated successfully!", {
-            description: "Your work history has been saved.",
-          });
-        })
-        .catch((error) => {
-          toast("Error updating resume", {
-            description: `${error.message}`,
-            variant: "destructive"
-          });
-        })
-        .finally(() => {
-          enanbledNext(true);
-          enanbledPrev(true);
-          setLoading(false);
-        });
-    }
-  };
-  
   const calculateDuration = (startDate, endDate, currentlyWorking) => {
     if (!startDate) return "";
     
@@ -459,10 +470,17 @@ function Experience({ resumeInfo, enanbledNext, enanbledPrev }) {
       <div className="p-8 bg-white rounded-xl shadow-md border-t-4 border-t-primary mt-10 transition-all duration-300 hover:shadow-lg">
         <div className="flex items-center gap-2 mb-2">
           <Briefcase className="h-6 w-6 text-primary" />
-          <h2 className="text-2xl font-bold text-gray-800">Work Experience</h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            Work Experience
+            {hasUnsavedChanges && (
+              <span className="ml-2 text-sm text-orange-500 font-normal">
+                (Unsaved changes)
+              </span>
+            )}
+          </h2>
         </div>
         
-        {experienceList?.length === 0 && (
+        {localExperienceList?.length === 0 && (
           <div className="text-center py-10 border border-dashed border-gray-300 rounded-lg mb-6 hover:border-primary transition-all duration-300">
             <Briefcase className="h-10 w-10 text-gray-400 mx-auto mb-3" />
             <h3 className="text-gray-500 font-medium mb-2">No experience added yet</h3>
@@ -476,10 +494,10 @@ function Experience({ resumeInfo, enanbledNext, enanbledPrev }) {
           </div>
         )}
         
-        {experienceList?.length > 0 && (
+        {localExperienceList?.length > 0 && (
           <div className="space-y-8">
             <div className="flex space-x-2 overflow-x-auto pb-2 mb-4">
-              {experienceList.map((experience, index) => (
+              {localExperienceList.map((experience, index) => (
                 <Button
                   key={`tab-${index}`}
                   variant={activeExperience === index ? "default" : "outline"}
@@ -503,7 +521,7 @@ function Experience({ resumeInfo, enanbledNext, enanbledPrev }) {
               </Button>
             </div>
             
-            {experienceList.map((experience, index) => (
+            {localExperienceList.map((experience, index) => (
               <div
                 key={`content-${index}`}
                 className={`border border-gray-200 rounded-lg overflow-hidden transition-all duration-300 ${activeExperience === index ? "block" : "hidden"}`}
@@ -672,18 +690,18 @@ function Experience({ resumeInfo, enanbledNext, enanbledPrev }) {
         )}
         
         <div className="flex justify-between mt-8">
-          {experienceList?.length > 0 && (
+          {localExperienceList?.length > 0 && (
             <Button
               onClick={addExperience}
               variant="outline"
               className="border-primary text-primary hover:bg-primary hover:text-white transition-colors duration-300 flex items-center gap-2"
             >
               <Plus className="h-4 w-4" /> 
-              Add {experienceList?.length > 0 ? "Another" : ""} Experience
+              Add {localExperienceList?.length > 0 ? "Another Experience" : " Experience"}
             </Button>
           )}
           
-          {experienceList?.length > 0 && (
+          {localExperienceList?.length > 0 && (
             <Button 
               onClick={onSave}
               disabled={loading}
