@@ -189,7 +189,7 @@ export function EditResume() {
         onMouseDown={handleMouseDown}
       >
         <div className="absolute top-1/2 -translate-y-1/2 left-0 flex flex-col gap-2 -translate-x-[110%] z-10">
-            <Button
+{/*             <Button
               variant="outline"
               size="sm"
               className="h-10 w-10 p-0 flex flex-col items-center justify-center bg-white shadow-md hover:bg-gray-50"
@@ -210,7 +210,7 @@ export function EditResume() {
             >
               <History className="h-4 w-4"/>
               <span className="text-[10px] -mt-0.5">History</span>
-            </Button>
+            </Button> */}
         </div>
         <div className="h-12 w-1 bg-gray-400 rounded-full"></div>
       </div>
