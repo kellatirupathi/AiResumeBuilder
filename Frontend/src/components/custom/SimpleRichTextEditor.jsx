@@ -54,7 +54,7 @@ function SimpeRichTextEditor({ index, onRichTextEditorChange, resumeInfo, defaul
 
   const GenerateSummaryFromAI = async () => {
     if (!resumeInfo?.projects[index]?.projectName || !resumeInfo?.projects[index]?.techStack) {
-      toast("Add Project Name and Tech Stack to generate summary");
+      toast("First Click Save the Section and then Next Click on Generate");
       return;
     }
     setLoading(true);
@@ -98,7 +98,7 @@ function SimpeRichTextEditor({ index, onRichTextEditorChange, resumeInfo, defaul
 
   const EnhanceFromAI = async () => {
     const currentSummary = value.replace(/<[^>]*>?/gm, ' ').trim();
-    if (!resumeInfo?.projects[index]?.projectName || !resumeInfo?.projects[index]?.techStack) { toast("Please add a Project Name and Tech Stack for better suggestions."); return; }
+    if (!resumeInfo?.projects[index]?.projectName || !resumeInfo?.projects[index]?.techStack) { toast("First Click Save the Section and then Next Click on Enhance."); return; }
     if (!currentSummary) { toast("Please write a summary before enhancing."); return; }
     setEnhanceLoading(true);
 
