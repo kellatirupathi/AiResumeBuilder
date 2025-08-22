@@ -1,4 +1,3 @@
-// C:\Users\NxtWave\Downloads\code\Frontend\src\pages\admin\AdminDashboard.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,7 +7,7 @@ import { VITE_APP_URL } from "@/config/config.js";
 import { toast } from 'sonner';
 import { checkAdminSession, getAllUsers, getAllResumes, logoutAdmin } from "@/Services/adminApi";
 import { format } from 'date-fns';
-import { Search, Download, LogOut, User, FileText, Fingerprint } from 'lucide-react'; // <-- ADDED Fingerprint ICON
+import { Search, Download, LogOut, User, FileText, Fingerprint, BarChart, RefreshCw } from 'lucide-react';
 import ResumePreviewModal from "./ResumePreviewModal";
 import UserResumesModal from "./UserResumesModal"; 
 import { cn } from "@/lib/utils";
@@ -18,6 +17,7 @@ function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [resumeSearchQuery, setResumeSearchQuery] = useState("");
   const [selectedResume, setSelectedResume] = useState(null);
@@ -118,8 +118,56 @@ function AdminDashboard() {
       exportToCsv('users_export.csv', headers, data);
     }
     if (activeTab === 'resumes') {
-        const {headers, flattenedData} = getFlattenedResumeData(filteredResumes);
-        exportToCsv('resumes_export.csv', headers, flattenedData);
+      const {headers, flattenedData} = getFlattenedResumeData(filteredResumes);
+      exportToCsv('resumes_export.csv', headers, flattenedData);
+    }
+  };
+
+  // Dashboard statistics
+  const dashboardStats = useMemo(() => {
+    const newUsersToday = users.filter(user => {
+      const userDate = new Date(user.createdAt).toDateString();
+      const today = new Date().toDateString();
+      return userDate === today;
+    }).length;
+
+    const newResumesToday = resumes.filter(resume => {
+      const resumeDate = new Date(resume.createdAt).toDateString();
+      const today = new Date().toDateString();
+      return resumeDate === today;
+    }).length;
+
+    const usersWithResumes = users.filter(user => {
+      const userResumes = resumes.filter(resume => resume.user?._id === user._id);
+      return userResumes.length > 0;
+    }).length;
+
+    const averageResumesPerUser = users.length ? (resumes.length / users.length).toFixed(1) : 0;
+
+    return {
+      totalUsers: users.length,
+      totalResumes: resumes.length,
+      newUsersToday,
+      newResumesToday,
+      usersWithResumes,
+      averageResumesPerUser
+    };
+  }, [users, resumes]);
+
+  const refreshData = async () => {
+    setRefreshing(true);
+    try {
+      const [usersRes, resumesRes] = await Promise.all([
+        getAllUsers(),
+        getAllResumes()
+      ]);
+      setUsers(usersRes.data || []);
+      setResumes(resumesRes.data || []);
+      toast.success("Data refreshed successfully");
+    } catch (error) {
+      toast.error("Failed to refresh data", { description: error.message });
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -128,52 +176,143 @@ function AdminDashboard() {
       <div className="min-h-screen bg-gray-50 flex flex-col">
         <header className="bg-white shadow-sm noPrint">
           <div className="px-4 md:px-8 py-4 flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+            <div className="flex items-center">
+              <h1 className="text-2xl font-bold text-gray-800 bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent">Admin Dashboard</h1>
+            </div>
             <div className="flex items-center gap-4">
-              <Button onClick={() => navigate('/admin/niat-ids')} variant="outline" size="sm">
-                <Fingerprint className="h-4 w-4 mr-2"/>
+              <Button onClick={() => navigate('/admin/niat-ids')} variant="outline" size="sm" className="border-indigo-200 hover:bg-indigo-50 transition-all">
+                <Fingerprint className="h-4 w-4 mr-2 text-indigo-600"/>
                 Niat ID's
               </Button>
-              <Button onClick={handleLogout} variant="outline" size="sm">
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Logout
+              <Button onClick={handleLogout} variant="outline" size="sm" className="border-red-200 hover:bg-red-50 transition-all">
+                <LogOut className="h-4 w-4 mr-2 text-red-500" />
+                Logout
               </Button>
             </div>
           </div>
         </header>
+
+        {/* Dashboard Stats Section */}
+        <div className="bg-white border-b shadow-sm py-4 px-4 md:px-8 noPrint">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-medium text-gray-700 flex items-center">
+              <BarChart className="h-5 w-5 mr-2 text-indigo-500" />
+              Dashboard Overview
+            </h2>
+            <Button 
+              onClick={refreshData} 
+              variant="ghost" 
+              size="sm" 
+              className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50"
+              disabled={refreshing}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh Data'}
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <StatCard 
+              title="Total Users" 
+              value={dashboardStats.totalUsers} 
+              icon={<User className="h-5 w-5 text-indigo-400" />} 
+              color="indigo"
+            />
+            <StatCard 
+              title="Total Resumes" 
+              value={dashboardStats.totalResumes} 
+              icon={<FileText className="h-5 w-5 text-blue-400" />} 
+              color="blue"
+            />
+            <StatCard 
+              title="New Users Today" 
+              value={dashboardStats.newUsersToday} 
+              icon={<User className="h-5 w-5 text-green-400" />} 
+              color="green"
+            />
+            <StatCard 
+              title="New Resumes Today" 
+              value={dashboardStats.newResumesToday} 
+              icon={<FileText className="h-5 w-5 text-amber-400" />} 
+              color="amber"
+            />
+            <StatCard 
+              title="Users with Resumes" 
+              value={dashboardStats.usersWithResumes} 
+              icon={<User className="h-5 w-5 text-purple-400" />} 
+              color="purple"
+            />
+            <StatCard 
+              title="Avg. Resumes/User" 
+              value={dashboardStats.averageResumesPerUser} 
+              icon={<FileText className="h-5 w-5 text-cyan-400" />} 
+              color="cyan"
+            />
+          </div>
+        </div>
+
         <main className="flex-1 flex flex-col p-4 md:px-8 md:py-4 noPrint">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
             <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
-                <TabsList>
-                  <TabsTrigger value="users">
-                    <User className="h-4 w-4 mr-2" /> Users ({filteredUsers.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="resumes">
-                    <FileText className="h-4 w-4 mr-2" /> Resumes ({filteredResumes.length})
-                  </TabsTrigger>
-                </TabsList>
-                <div className="flex items-center gap-4 w-full sm:w-auto">
-                    <div className="relative flex-grow sm:flex-grow-0">
-                      <Input 
-                          placeholder={activeTab === 'users' ? 'Search by name, email, NIAT...' : 'Search resumes...'}
-                          value={activeTab === 'users' ? userSearchQuery : resumeSearchQuery}
-                          onChange={(e) => activeTab === 'users' ? setUserSearchQuery(e.target.value) : setResumeSearchQuery(e.target.value)}
-                          className="pl-10"
-                      />
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    </div>
-                    <Button variant="outline" onClick={handleExport}>
-                        <Download className="h-4 w-4 mr-2"/>
-                        Export CSV
-                    </Button>
+              <TabsList className="bg-indigo-50 p-1">
+                <TabsTrigger 
+                  value="users" 
+                  className={`transition-all ${activeTab === "users" ? "bg-white text-indigo-700 shadow-sm" : "text-indigo-600 hover:bg-indigo-100"}`}
+                >
+                  <User className="h-4 w-4 mr-2" /> 
+                  <span>Users</span>
+                  <span className="ml-2 bg-indigo-100 text-indigo-700 rounded-full px-2 py-0.5 text-xs font-medium">
+                    {filteredUsers.length}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="resumes" 
+                  className={`transition-all ${activeTab === "resumes" ? "bg-white text-indigo-700 shadow-sm" : "text-indigo-600 hover:bg-indigo-100"}`}
+                >
+                  <FileText className="h-4 w-4 mr-2" /> 
+                  <span>Resumes</span>
+                  <span className="ml-2 bg-indigo-100 text-indigo-700 rounded-full px-2 py-0.5 text-xs font-medium">
+                    {filteredResumes.length}
+                  </span>
+                </TabsTrigger>
+              </TabsList>
+              <div className="flex items-center gap-4 w-full sm:w-auto">
+                <div className="relative flex-grow sm:flex-grow-0">
+                  <Input 
+                    placeholder={activeTab === 'users' ? 'Search by name, email, NIAT...' : 'Search resumes...'}
+                    value={activeTab === 'users' ? userSearchQuery : resumeSearchQuery}
+                    onChange={(e) => activeTab === 'users' ? setUserSearchQuery(e.target.value) : setResumeSearchQuery(e.target.value)}
+                    className="pl-10 w-full sm:w-80 border-indigo-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md transition-all"
+                  />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-400" />
                 </div>
+                <Button 
+                  variant="outline" 
+                  onClick={handleExport}
+                  className="bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 transition-all"
+                >
+                  <Download className="h-4 w-4 mr-2 text-indigo-500"/>
+                  Export CSV
+                </Button>
+              </div>
             </div>
 
             <TabsContent value="users" className="flex-1 overflow-auto">
-              {loading ? <p>Loading users...</p> : <UsersTable users={filteredUsers} onViewResumes={handleViewUserResumes} />}
+              {loading ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+                </div>
+              ) : (
+                <UsersTable users={filteredUsers} onViewResumes={handleViewUserResumes} />
+              )}
             </TabsContent>
             <TabsContent value="resumes" className="flex-1 overflow-auto">
-              {loading ? <p>Loading resumes...</p> : <DetailedResumesTable resumes={filteredResumes} allResumes={resumes} onViewResume={handleViewResume} />}
+              {loading ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+                </div>
+              ) : (
+                <DetailedResumesTable resumes={filteredResumes} allResumes={resumes} onViewResume={handleViewResume} />
+              )}
             </TabsContent>
           </Tabs>
         </main>
@@ -192,6 +331,46 @@ function AdminDashboard() {
     </>
   );
 }
+
+const StatCard = ({ title, value, icon, color }) => {
+  const getGradient = (baseColor) => {
+    const colorMap = {
+      indigo: "from-indigo-50 to-indigo-100",
+      blue: "from-blue-50 to-blue-100",
+      green: "from-green-50 to-green-100",
+      amber: "from-amber-50 to-amber-100",
+      purple: "from-purple-50 to-purple-100",
+      cyan: "from-cyan-50 to-cyan-100"
+    };
+    return colorMap[baseColor] || colorMap.indigo;
+  };
+
+  const getTextColor = (baseColor) => {
+    const colorMap = {
+      indigo: "text-indigo-800",
+      blue: "text-blue-800",
+      green: "text-green-800",
+      amber: "text-amber-800",
+      purple: "text-purple-800",
+      cyan: "text-cyan-800"
+    };
+    return colorMap[baseColor] || colorMap.indigo;
+  };
+
+  return (
+    <div className={`p-4 rounded-lg shadow-sm border bg-gradient-to-br ${getGradient(color)} hover:shadow-md transition-all duration-300 transform hover:-translate-y-1`}>
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="text-xs font-medium text-gray-500">{title}</p>
+          <h3 className={`text-2xl font-bold mt-1 ${getTextColor(color)}`}>{value}</h3>
+        </div>
+        <div className={`p-2 rounded-full bg-white/70 shadow-inner`}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const exportToCsv = (filename, headers, data) => {
     if(!headers || headers.length === 0 || !data || data.length === 0){
@@ -288,37 +467,73 @@ const getFlattenedResumeData = (resumes) => {
 
 const UsersTable = ({ users, onViewResumes }) => {
     return (
-        <div className="overflow-auto mt-4 border rounded-lg h-full">
-          <table className="min-w-full bg-white shadow-md">
-            <thead className="bg-gray-100">
+        <div className="overflow-auto mt-4 border rounded-lg h-full shadow-md">
+          <table className="min-w-full bg-white">
+            <thead className="bg-gradient-to-r from-indigo-50 to-blue-50 sticky top-0 z-10">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIAT ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resumes Count</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated At</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Full Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">NIAT ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Resumes Count</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Created At</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Updated At</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {users.map(user => (
-                <tr key={user._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.fullName}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">{user.niatId}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
+              {users.map((user, index) => (
+                <tr 
+                  key={user._id} 
+                  className={`hover:bg-indigo-50/30 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-medium text-indigo-700">
+                          {(user.fullName || '').charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-gray-900">{user.fullName}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-md font-mono">
+                      {user.niatId}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.email}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {user.resumeCount > 0 ? (
-                        <Button variant="link" className="p-0 h-auto" onClick={() => onViewResumes(user)}>
-                            {user.resumeCount}
-                        </Button>
+                      <Button 
+                        variant="link" 
+                        className="p-0 h-auto text-indigo-600 hover:text-indigo-800 font-medium" 
+                        onClick={() => onViewResumes(user)}
+                      >
+                        <span className="flex items-center">
+                          {user.resumeCount}
+                          <FileText className="h-3.5 w-3.5 ml-1 text-indigo-400" />
+                        </span>
+                      </Button>
                     ) : (
-                        <span className="text-gray-400">0</span>
+                      <span className="text-gray-400">0</span>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{format(new Date(user.createdAt), 'PPpp')}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{format(new Date(user.updatedAt), 'PPpp')}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{format(new Date(user.createdAt), 'PPpp')}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{format(new Date(user.updatedAt), 'PPpp')}</td>
                 </tr>
               ))}
+              {users.length === 0 && (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                    <div className="flex flex-col items-center">
+                      <User className="h-10 w-10 text-gray-300 mb-2" />
+                      <p className="text-lg font-medium">No users found</p>
+                      <p className="text-sm text-gray-400">Try adjusting your search criteria</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -329,7 +544,15 @@ const DetailedResumesTable = ({ resumes, allResumes, onViewResume }) => {
     const { headers, flattenedData } = useMemo(() => getFlattenedResumeData(resumes, allResumes), [resumes, allResumes]);
   
     if (resumes.length === 0) {
-      return <p className="mt-4 text-center text-gray-500">No matching resumes found.</p>;
+      return (
+        <div className="mt-4 text-center text-gray-500 border rounded-lg py-12 bg-white shadow-sm">
+          <div className="flex flex-col items-center">
+            <FileText className="h-10 w-10 text-gray-300 mb-2" />
+            <p className="text-lg font-medium">No matching resumes found</p>
+            <p className="text-sm text-gray-400">Try adjusting your search criteria</p>
+          </div>
+          </div>
+      );
     }
   
     const getColumnWidth = (key) => {
@@ -349,14 +572,15 @@ const DetailedResumesTable = ({ resumes, allResumes, onViewResume }) => {
                 return 'w-40 max-w-40';
         }
     };
+    
     return (
-        <div className="overflow-auto mt-4 border rounded-lg shadow-sm h-full">
+        <div className="overflow-auto mt-4 border rounded-lg shadow-md h-full">
             <table className="min-w-full bg-white text-sm">
-                <thead className="bg-gray-100">
+                <thead className="bg-gradient-to-r from-indigo-50 to-blue-50 sticky top-0 z-10">
                     <tr>
                     {headers.map(header => (
                         <th key={header.key} className={cn(
-                          "px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky top-0 bg-gray-100 z-10",
+                          "px-4 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider sticky top-0 z-10",
                           getColumnWidth(header.key)
                         )}>
                         {header.label}
@@ -366,28 +590,52 @@ const DetailedResumesTable = ({ resumes, allResumes, onViewResume }) => {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                     {flattenedData.map((row, rowIndex) => (
-                    <tr key={resumes[rowIndex]._id} className="hover:bg-gray-50">
+                    <tr 
+                      key={resumes[rowIndex]._id} 
+                      className={`hover:bg-indigo-50/30 transition-colors ${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}
+                    >
                         {headers.map(header => (
                         <td key={`${rowIndex}-${header.key}`} className={cn("px-4 py-3 whitespace-nowrap", getColumnWidth(header.key))}>
                             <div className="truncate" title={String(row[header.key] ?? '')}>
                                 {header.key === 'title' ? (
-                                    <button onClick={() => onViewResume(resumes[rowIndex])} className="text-indigo-600 hover:underline font-medium text-left truncate">
-                                        {String(row[header.key] ?? '')}
+                                    <button 
+                                      onClick={() => onViewResume(resumes[rowIndex])} 
+                                      className="text-indigo-600 hover:text-indigo-800 hover:underline font-medium text-left truncate flex items-center"
+                                    >
+                                        <FileText className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
+                                        <span>{String(row[header.key] ?? '')}</span>
                                     </button>
                                 ) : header.key === 'googleDriveLink' && row[header.key] !== 'Processing...' ? (
                                     <a
                                         href={String(row[header.key] ?? '')}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-blue-600 hover:underline truncate"
+                                        className="text-blue-600 hover:text-blue-800 hover:underline truncate flex items-center"
                                     >
-                                      {String(row[header.key] ?? '')}
+                                      <Download className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
+                                      <span>View PDF</span>
                                     </a>
+                                ) : header.key === 'userNiatId' ? (
+                                    <span className="font-mono text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded truncate">
+                                        {String(row[header.key] ?? '')}
+                                    </span>
+                                ) : header.key === 'userName' ? (
+                                    <div className="flex items-center">
+                                        <div className="flex-shrink-0 h-6 w-6 bg-indigo-100 rounded-full flex items-center justify-center mr-2">
+                                            <span className="text-xs font-medium text-indigo-700">
+                                                {(String(row[header.key] ?? '')).charAt(0).toUpperCase()}
+                                            </span>
+                                        </div>
+                                        <span className="text-gray-700 truncate">{String(row[header.key] ?? '')}</span>
+                                    </div>
+                                ) : header.key === 'updatedAt' || header.key === 'createdAt' ? (
+                                    <span className="text-gray-600 truncate text-xs">
+                                        {String(row[header.key] ?? '')}
+                                    </span>
                                 ) : (
-                                <span className={cn(
-                                    "text-gray-600 truncate",
-                                    {'font-mono': header.key === 'userNiatId'}
-                                  )}>{String(row[header.key] ?? '')}</span>
+                                    <span className="text-gray-600 truncate">
+                                        {String(row[header.key] ?? '')}
+                                    </span>
                                 )}
                             </div>
                         </td>
