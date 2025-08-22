@@ -148,7 +148,7 @@ function RichTextEditor({ onRichTextEditorChange, index, resumeInfo }) {
 
   const GenerateSummaryFromAI = async () => {
     if (!resumeInfo?.experience[index]?.title) {
-      toast("Please Add Position Title");
+      toast("First Click Save the Section and then Next Click on Generate");
       return;
     }
     setLoading(true);
@@ -177,7 +177,7 @@ function RichTextEditor({ onRichTextEditorChange, index, resumeInfo }) {
   const EnhanceFromAI = async () => {
     const currentSummary = value.replace(/<[^>]*>?/gm, ' ').trim();
     if (!resumeInfo?.experience[index]?.title) {
-      toast("Please add a Position Title for better context.");
+      toast("First Click Save the Section and then Next Click on Enhance.");
       return;
     }
     if (!currentSummary) {
