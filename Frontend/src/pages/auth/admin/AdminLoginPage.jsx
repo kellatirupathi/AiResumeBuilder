@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { loginAdmin } from '@/Services/adminApi';
-import { Eye, EyeOff, LoaderCircle } from 'lucide-react';
+import { Eye, EyeOff, LoaderCircle, Lock, Mail, ArrowRight } from 'lucide-react';
 
 function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -18,7 +18,9 @@ function AdminLoginPage() {
     setLoading(true);
     try {
       await loginAdmin({ email, password });
-      toast.success('Admin login successful!');
+      toast.success('Admin login successful!', {
+        description: 'Redirecting to dashboard...'
+      });
       navigate('/admin/dashboard');
     } catch (error) {
       toast.error('Login Failed', { description: error.message });
@@ -28,39 +30,85 @@ function AdminLoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
-      <div className="p-8 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl w-full max-w-sm">
-        <h2 className="text-3xl font-bold text-center mb-6 text-indigo-400">Admin Portal</h2>
-        <form onSubmit={handleLogin} className="space-y-6">
-          <Input 
-            type="email" 
-            placeholder="Admin Email" 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            required 
-            className="bg-gray-700 border-gray-600 text-white"
-          />
-          <div className="relative">
-            <Input 
-              type={showPassword ? 'text' : 'password'} 
-              placeholder="Password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              required 
-              className="bg-gray-700 border-gray-600 text-white"
-            />
-            <button
-              type="button"
-              className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-indigo-400"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-gray-900 flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
+      {/* Login card */}
+      <div className="w-full max-w-md">
+        <div className="relative backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-8">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-blue-600/20 rounded-2xl -z-10"></div>
+          
+          {/* Form header */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold text-white mb-2">Sign In</h2>
+            <p className="text-indigo-200 text-sm">Enter your credentials to access the admin dashboard</p>
           </div>
-          <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-lg py-3" disabled={loading}>
-            {loading ? <LoaderCircle className="animate-spin" /> : "Login"}
-          </Button>
-        </form>
+          
+          <form onSubmit={handleLogin} className="space-y-6">
+            {/* Email input */}
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-sm font-medium text-indigo-200">
+                Email Address
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-indigo-300" />
+                </div>
+                <Input 
+                  id="email"
+                  type="email" 
+                  placeholder="admin@example.com" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  required 
+                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-indigo-300/70 focus:border-indigo-400 focus:ring focus:ring-indigo-400/20"
+                />
+              </div>
+            </div>
+            
+            {/* Password input */}
+            <div className="space-y-2">
+              <label htmlFor="password" className="block text-sm font-medium text-indigo-200">
+                Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-indigo-300" />
+                </div>
+                <Input 
+                  id="password"
+                  type={showPassword ? 'text' : 'password'} 
+                  placeholder="••••••••" 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)} 
+                  required 
+                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-indigo-300/70 focus:border-indigo-400 focus:ring focus:ring-indigo-400/20"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-indigo-300 hover:text-white transition-colors"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+            
+            {/* Submit button */}
+            <Button 
+              type="submit" 
+              className="w-full h-12 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/20"
+              disabled={loading}
+            >
+              {loading ? (
+                <LoaderCircle className="animate-spin h-5 w-5" />
+              ) : (
+                <>
+                  <span>Sign In</span>
+                  <ArrowRight className="h-5 w-5" />
+                </>
+              )}
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );
