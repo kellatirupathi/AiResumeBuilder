@@ -1,137 +1,113 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Trash2, Code, LoaderCircle, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import SimpleRichTextEditor from "@/components/custom/SimpleRichTextEditor";
 import { useDispatch, useSelector } from "react-redux";
-import { addResumeData } from "@/features/resume/resumeFeatures";
+import { addResumeData } from "@/features/resume/resumeFeatures"; // Correct import
 import { toast } from "sonner";
 import { useParams } from "react-router-dom";
 import { updateThisResume } from "@/Services/resumeAPI";
+import { debounce } from "lodash-es";
 
-const formFields = {
-  projectName: "",
-  techStack: "",
-  projectSummary: "",
-  githubLink: "",
-  deployedLink: "",
-};
+const emptyProject = { projectName: "", techStack: "", projectSummary: "", githubLink: "", deployedLink: "" };
 
 function Project({ resumeInfo, setEnabledNext, setEnabledPrev }) {
-  // Directly read the projects list from the Redux store
-  const projectList = useSelector(state => state.editResume.resumeData?.projects) || [];
-  const [loading, setLoading] = useState(false);
-  const { resume_id } = useParams();
-  const [activeProject, setActiveProject] = useState(0);
   const dispatch = useDispatch();
+  const { resume_id } = useParams();
+  
+  const reduxProjectList = useSelector(state => state.editResume.resumeData?.projects) || [];
+  const [localProjectList, setLocalProjectList] = useState(reduxProjectList);
+  const [loading, setLoading] = useState(false);
+  const [activeProject, setActiveProject] = useState(0);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Helper function to update Redux store
-  const setProjectList = (newList) => {
-    dispatch(addResumeData({ ...resumeInfo, projects: newList }));
-  };
+  useEffect(() => {
+    setLocalProjectList(reduxProjectList);
+  }, [reduxProjectList]);
+  
+  const debouncedReduxUpdate = useMemo(
+    () => debounce((newList) => {
+        // THIS IS THE CORRECTED LINE:
+        dispatch(addResumeData({ ...resumeInfo, projects: newList }));
+        setHasUnsavedChanges(true);
+    }, 500),
+    [dispatch, resumeInfo]
+  );
+  
+  useEffect(() => {
+    return () => debouncedReduxUpdate.cancel();
+  }, [debouncedReduxUpdate]);
 
   const addProject = () => {
-    const newList = [...projectList, { ...formFields }];
-    setProjectList(newList);
+    const newList = [...localProjectList, emptyProject];
+    setLocalProjectList(newList);
     setActiveProject(newList.length - 1);
+    debouncedReduxUpdate(newList);
   };
   
-  // *** START: MODIFIED AND CORRECTED CODE ***
-  // Corrected function to persist deletion to the backend
   const removeProject = async (index) => {
-    const currentProjectList = resumeInfo?.projects || [];
-    // 1. Create a new list without the deleted item
-    const newList = currentProjectList.filter((_, i) => i !== index);
+    const newList = localProjectList.filter((_, i) => i !== index);
+    
+    setLocalProjectList(newList);
+    dispatch(addResumeData({ ...resumeInfo, projects: newList }));
 
-    // 2. Immediately update the Redux store and local UI state
-    setProjectList(newList);
-
-    // 3. Adjust the active tab if necessary
     if (activeProject >= newList.length) {
       setActiveProject(Math.max(0, newList.length - 1));
     }
-
-    // 4. Create the data payload for the backend
-    const data = {
-      data: {
-        projects: newList,
-      },
-    };
-
-    // 5. Save the updated list to the backend
+    
     try {
-      await updateThisResume(resume_id, data);
-      toast("Project removed successfully.", {
-        description: "Your projects section has been updated.",
-        icon: <Trash2 className="h-4 w-4 text-green-500" />,
-      });
+      await updateThisResume(resume_id, { data: { projects: newList } });
+      toast.success("Project removed successfully.");
+      setHasUnsavedChanges(false);
     } catch (error) {
-      toast("Error removing project", {
-        description: "Could not save the change. Please try again.",
-        variant: "destructive",
-      });
-      // Optional: Revert the UI state if the API call fails
-      setProjectList(currentProjectList);
+      toast.error("Error removing project", { description: "Reverting change." });
+      setLocalProjectList(reduxProjectList); 
+      dispatch(addResumeData({ ...resumeInfo, projects: reduxProjectList }));
     }
   };
-  // *** END: MODIFIED CODE ***
 
   const handleChange = (e, index) => {
     setEnabledNext(false);
     setEnabledPrev(false);
+    
     const { name, value } = e.target;
-    const list = [...projectList];
-    const newListData = {
-      ...list[index],
-      [name]: value,
-    };
-    list[index] = newListData;
-    setProjectList(list);
+    const newList = [...localProjectList];
+    newList[index] = { ...newList[index], [name]: value };
+    
+    setLocalProjectList(newList);
+    debouncedReduxUpdate(newList);
   };
 
   const handleRichTextEditor = (value, name, index) => {
-    const list = [...projectList];
-    const newListData = {
-      ...list[index],
-      [name]: value,
-    };
-    list[index] = newListData;
-    setProjectList(list);
+    setEnabledNext(false);
+    setEnabledPrev(false);
+
+    const newList = [...localProjectList];
+    newList[index] = { ...newList[index], [name]: value };
+    
+    setLocalProjectList(newList);
+    debouncedReduxUpdate(newList);
   };
 
-  const onSave = () => {
+  const onSave = async () => {
     setLoading(true);
-    const data = {
-      data: {
-        projects: projectList,
-      },
-    };
-    if (resume_id) {
-      console.log("Started Updating Project");
-      updateThisResume(resume_id, data)
-        .then(() => {
-          toast("Project details updated successfully!", {
-            description: "Your projects have been saved.",
-            action: {
-              label: "OK",
-              onClick: () => console.log("Notification closed")
-            },
-          });
-        })
-        .catch((error) => {
-          toast("Error updating resume", {
-            description: `${error.message}`,
-            action: {
-              label: "Try Again",
-              onClick: () => onSave()
-            },
-          });
-        })
-        .finally(() => {
-          setEnabledNext(true);
-          setEnabledPrev(true);
-          setLoading(false);
-        });
+    debouncedReduxUpdate.cancel();
+
+    dispatch(addResumeData({ ...resumeInfo, projects: localProjectList }));
+    
+    const data = { data: { projects: localProjectList } };
+    
+    try {
+      await updateThisResume(resume_id, data);
+      toast.success("Project details updated successfully!");
+      setHasUnsavedChanges(false);
+      setEnabledNext(true);
+      setEnabledPrev(true);
+    } catch (error) {
+      toast.error("Error updating projects", { description: error.message });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -140,10 +116,17 @@ function Project({ resumeInfo, setEnabledNext, setEnabledPrev }) {
       <div className="p-8 bg-white rounded-xl shadow-md border-t-4 border-t-primary mt-10 transition-all duration-300 hover:shadow-lg">
         <div className="flex items-center gap-2 mb-2">
           <Code className="h-6 w-6 text-primary" />
-          <h2 className="text-2xl font-bold text-gray-800">Projects</h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            Projects
+            {hasUnsavedChanges && (
+              <span className="ml-2 text-sm text-orange-500 font-normal">
+                (Unsaved changes)
+              </span>
+            )}
+          </h2>
         </div>
         
-        {projectList.length === 0 && (
+        {localProjectList.length === 0 && (
           <div className="text-center py-10 border border-dashed border-gray-300 rounded-lg mb-6 hover:border-primary transition-all duration-300">
             <Code className="h-10 w-10 text-gray-400 mx-auto mb-3" />
             <h3 className="text-gray-500 font-medium mb-2">No projects added yet</h3>
@@ -157,10 +140,10 @@ function Project({ resumeInfo, setEnabledNext, setEnabledPrev }) {
           </div>
         )}
         
-        {projectList.length > 0 && (
+        {localProjectList.length > 0 && (
           <div className="space-y-8">
             <div className="flex space-x-2 overflow-x-auto pb-2 mb-4">
-              {projectList.map((project, index) => (
+              {localProjectList.map((project, index) => (
                 <Button
                   key={`tab-${index}`}
                   variant={activeProject === index ? "default" : "outline"}
@@ -184,7 +167,7 @@ function Project({ resumeInfo, setEnabledNext, setEnabledPrev }) {
               </Button>
             </div>
             
-            {projectList.map((project, index) => (
+            {localProjectList.map((project, index) => (
               <div
                 key={`content-${index}`}
                 className={`border border-gray-200 rounded-lg overflow-hidden transition-all duration-300 ${activeProject === index ? "block" : "hidden"}`}
@@ -273,18 +256,18 @@ function Project({ resumeInfo, setEnabledNext, setEnabledPrev }) {
         )}
         
         <div className="flex justify-between mt-8">
-          {projectList.length > 0 && (
+          {localProjectList.length > 0 && (
             <Button
               onClick={addProject}
               variant="outline"
               className="border-primary text-primary hover:bg-primary hover:text-white transition-colors duration-300 flex items-center gap-2"
             >
               <Plus className="h-4 w-4" /> 
-              Add {projectList.length > 0 ? "Another" : ""} Project
+              Add {localProjectList.length > 0 ? "Another Project" : " Project"}
             </Button>
           )}
           
-          {projectList.length > 0 && (
+          {localProjectList.length > 0 && (
             <Button 
               onClick={onSave}
               disabled={loading}
