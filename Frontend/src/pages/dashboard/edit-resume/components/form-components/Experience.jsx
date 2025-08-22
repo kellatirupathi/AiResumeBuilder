@@ -4,7 +4,12 @@ import { LoaderCircle, Trash2, Briefcase, Building, MapPin, Calendar, Plus, Chec
 import RichTextEditor from "@/components/custom/RichTextEditor";
 import React, { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { addResumeData } from "@/features/resume/resumeFeatures";
+import { 
+  addResumeData, 
+  updateExperienceField,
+  addExperienceItem,
+  removeExperienceItem
+} from "@/features/resume/resumeFeatures";
 import { useParams } from "react-router-dom";
 import { updateThisResume } from "@/Services/resumeAPI";
 import { toast } from "sonner";
@@ -30,7 +35,6 @@ const getDaysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
 
 // The DatePicker component can remain the same, it is self-contained.
 function DatePicker({ name, value, onChange, min, isDisabled, label }) {
-    // ... DatePicker code remains unchanged ...
   const [showDropdown, setShowDropdown] = useState(false);
   const containerRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -62,185 +66,226 @@ function DatePicker({ name, value, onChange, min, isDisabled, label }) {
     }
   };
   
-  const initialValue = parseInitialValue();
-  const [selectedDay, setSelectedDay] = useState(initialValue.day);
-  const [selectedMonth, setSelectedMonth] = useState(initialValue.month);
-  const [selectedYear, setSelectedYear] = useState(initialValue.year);
-  const [currentView, setCurrentView] = useState("day"); // 'day', 'month', or 'year'
+  const [selectedDate, setSelectedDate] = useState(parseInitialValue);
+  const [currentView, setCurrentView] = useState("month");
   
-  // Calculate days in the selected month
-  const daysInMonth = selectedMonth !== "" && selectedYear 
-    ? getDaysInMonth(selectedMonth, selectedYear) 
-    : 31;
-  
-  const DAYS = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-  
-  const handleDayChange = (day) => {
-    setSelectedDay(day);
-    updateDate(day, selectedMonth + 1, selectedYear);
-    setShowDropdown(false);
-  };
-  
-  const handleMonthChange = (monthIndex) => {
-    setSelectedMonth(monthIndex);
-    
-    // Adjust selected day if it exceeds days in the new month
-    const maxDaysInNewMonth = getDaysInMonth(monthIndex, selectedYear);
-    if (selectedDay > maxDaysInNewMonth) {
-      setSelectedDay(maxDaysInNewMonth);
-      updateDate(maxDaysInNewMonth, monthIndex + 1, selectedYear);
-    } else {
-      updateDate(selectedDay, monthIndex + 1, selectedYear);
+  useEffect(() => {
+    // Only update if value changes from outside this component
+    if (value !== formatDateOutput()) {
+      setSelectedDate(parseInitialValue());
     }
-    
-    setCurrentView("day");
-  };
+  }, [value]);
   
-  const handleYearChange = (year) => {
-    setSelectedYear(year);
-    
-    // Check if Feb 29 in leap year
-    if (selectedMonth === 1) {
-      const maxDaysInNewMonth = getDaysInMonth(selectedMonth, year);
-      if (selectedDay > maxDaysInNewMonth) {
-        setSelectedDay(maxDaysInNewMonth);
-        updateDate(maxDaysInNewMonth, selectedMonth + 1, year);
-        return;
-      }
-    }
-    
-    updateDate(selectedDay, selectedMonth + 1, year);
-    setCurrentView("month");
-  };
-  
-  const updateDate = (day, month, year) => {
-    if (day && month && year) {
-      const formattedDay = day.toString().padStart(2, '0');
-      const formattedMonth = month.toString().padStart(2, '0');
-      onChange({ target: { name, value: `${year}-${formattedMonth}-${formattedDay}` } });
-    }
-  };
-
-  // Calculate dropdown position when showing
-  const calculateDropdownPosition = () => {
-    if (containerRef.current) {
+  useEffect(() => {
+    if (showDropdown && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
       
-      // If there's more space above than below, or if space below is less than 300px
-      if (spaceAbove > spaceBelow || spaceBelow < 300) {
+      if (spaceBelow < 250 && spaceAbove > spaceBelow) {
         setDropdownPosition('top');
       } else {
         setDropdownPosition('bottom');
       }
     }
+  }, [showDropdown]);
+  
+  const formatDateOutput = () => {
+    if (!selectedDate.year || selectedDate.month === "") return "";
+    
+    const year = selectedDate.year;
+    const month = (selectedDate.month + 1).toString().padStart(2, '0');
+    const day = selectedDate.day ? selectedDate.day.toString().padStart(2, '0') : "01";
+    
+    return `${year}-${month}-${day}`;
   };
-
-  // Toggle dropdown and calculate position
+  
+  const handleDayChange = (day) => {
+    setSelectedDate(prev => ({ ...prev, day: day.toString() }));
+    setCurrentView("month");
+    
+    const newDate = {
+      ...selectedDate,
+      day: day.toString()
+    };
+    
+    const formattedDate = formatDateWithNewValue(newDate);
+    onChange({ target: { name, value: formattedDate } });
+    setShowDropdown(false);
+  };
+  
+  const handleMonthChange = (monthIndex) => {
+    setSelectedDate(prev => ({ ...prev, month: monthIndex }));
+    setCurrentView("day");
+  };
+  
+  const handleYearChange = (year) => {
+    setSelectedDate(prev => ({ ...prev, year }));
+    setCurrentView("month");
+  };
+  
+  const formatDateWithNewValue = (dateObj) => {
+    const { year, month, day } = dateObj;
+    if (!year || month === "") return "";
+    
+    const monthStr = (month + 1).toString().padStart(2, '0');
+    const dayStr = day ? day.toString().padStart(2, '0') : "01";
+    
+    return `${year}-${monthStr}-${dayStr}`;
+  };
+  
   const toggleDropdown = () => {
     if (!isDisabled) {
-      if (!showDropdown) {
-        calculateDropdownPosition();
-      }
       setShowDropdown(!showDropdown);
+      if (!showDropdown) {
+        // If opening the dropdown, reset to month view
+        setCurrentView("month");
+      }
     }
   };
-
+  
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        containerRef.current && 
+        showDropdown &&
+        containerRef.current &&
         !containerRef.current.contains(event.target) &&
-        dropdownRef.current && 
+        dropdownRef.current &&
         !dropdownRef.current.contains(event.target)
       ) {
         setShowDropdown(false);
       }
     };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showDropdown]);
+  
+  const handlePrevMonth = () => {
+    if (selectedDate.month === 0) {
+      setSelectedDate(prev => ({
+        ...prev,
+        month: 11,
+        year: (parseInt(prev.year) - 1).toString()
+      }));
+    } else {
+      setSelectedDate(prev => ({
+        ...prev,
+        month: prev.month - 1
+      }));
+    }
+  };
+  
+  const handleNextMonth = () => {
+    if (selectedDate.month === 11) {
+      setSelectedDate(prev => ({
+        ...prev,
+        month: 0,
+        year: (parseInt(prev.year) + 1).toString()
+      }));
+    } else {
+      setSelectedDate(prev => ({
+        ...prev,
+        month: prev.month + 1
+      }));
+    }
+  };
   
   return (
     <div className="relative" ref={containerRef}>
       <div 
-        className={`flex items-center justify-between p-3 border rounded-md ${isDisabled ? 'bg-gray-50' : 'bg-white'} ${showDropdown ? 'border-primary ring-2 ring-primary/20' : 'border-gray-300'} cursor-pointer transition-all duration-200`}
+        className={`flex items-center w-full justify-between p-3 border rounded-md ${isDisabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white cursor-pointer'} ${showDropdown ? 'border-primary ring-2 ring-primary/20' : 'border-gray-300'}`}
         onClick={toggleDropdown}
       >
-        <div className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-primary" />
-          {selectedDay && selectedMonth !== "" && selectedYear ? (
-            <span className="text-gray-800">{selectedDay} {MONTHS[selectedMonth]}, {selectedYear}</span>
-          ) : (
-            <span className="text-gray-400">{label}</span>
-          )}
-        </div>
-        {!isDisabled && <ChevronDown className={`h-5 w-5 text-gray-500 transition-transform duration-300 ${showDropdown ? 'rotate-180' : ''}`} />}
+        <span className={value ? 'text-gray-800' : 'text-gray-400'}>
+          {value ? new Date(value).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : label || "Select date"}
+        </span>
+        <Calendar className="h-4 w-4 text-gray-500 ml-auto" />
       </div>
       
-      {showDropdown && !isDisabled && (
+      {showDropdown && (
         <div 
           ref={dropdownRef}
-          className={`absolute z-50 ${dropdownPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'} w-full bg-white border border-gray-200 rounded-md shadow-lg p-4 animate-fadeIn`}
+          className={`absolute z-50 ${dropdownPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'} left-0 w-full bg-white border border-gray-200 rounded-md shadow-lg p-3`}
         >
-          <div className="flex justify-between items-center mb-2 border-b pb-2">
+          <div className="mb-3 flex justify-between items-center">
             <button 
-              type="button" 
-              className="text-sm font-medium text-primary hover:text-primary-dark"
-              onClick={() => setCurrentView("day")}
-            >
-              Day
-            </button>
-            <button 
-              type="button" 
-              className="text-sm font-medium text-primary hover:text-primary-dark"
-              onClick={() => setCurrentView("month")}
-            >
-              Month
-            </button>
-            <button 
-              type="button" 
-              className="text-sm font-medium text-primary hover:text-primary-dark"
+              type="button"
+              className="text-xs font-medium p-1 hover:bg-gray-100 rounded"
               onClick={() => setCurrentView("year")}
             >
-              Year
+              {selectedDate.year || "Year"}
             </button>
+            
+            {currentView === "day" && (
+              <div className="flex items-center">
+                <button 
+                  type="button"
+                  className="p-1 hover:bg-gray-100 rounded mr-1"
+                  onClick={handlePrevMonth}
+                >
+                  <ChevronDown className="h-4 w-4 rotate-90" />
+                </button>
+                <button 
+                  type="button"
+                  className="text-xs font-medium p-1 hover:bg-gray-100 rounded"
+                  onClick={() => setCurrentView("month")}
+                >
+                  {selectedDate.month !== "" ? MONTHS[selectedDate.month] : "Month"}
+                </button>
+                <button 
+                  type="button"
+                  className="p-1 hover:bg-gray-100 rounded ml-1"
+                  onClick={handleNextMonth}
+                >
+                  <ChevronDown className="h-4 w-4 -rotate-90" />
+                </button>
+              </div>
+            )}
+            
+            {currentView !== "day" && (
+              <button 
+                type="button"
+                className="text-xs font-medium p-1 hover:bg-gray-100 rounded"
+                onClick={() => currentView === "month" ? setCurrentView("day") : setCurrentView("month")}
+              >
+                {selectedDate.month !== "" ? MONTHS[selectedDate.month] : "Month"}
+              </button>
+            )}
           </div>
           
-          {currentView === "day" && selectedMonth !== "" && selectedYear && (
+          {currentView === "day" && (
             <div>
-              <div className="flex justify-between items-center mb-2">
-                <h4 className="text-sm font-medium text-gray-700">
-                  Select Day - {MONTHS[selectedMonth]} {selectedYear}
-                </h4>
-              </div>
+              <h4 className="text-sm font-medium text-gray-700 mb-2">
+                {MONTHS[selectedDate.month]} {selectedDate.year}
+              </h4>
               <div className="grid grid-cols-7 gap-1">
                 {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(day => (
-                  <div key={day} className="text-xs font-medium text-gray-500 text-center py-1">
+                  <div key={day} className="text-center text-xs font-medium text-gray-500 p-1">
                     {day}
                   </div>
                 ))}
                 
-                {Array.from({ length: new Date(selectedYear, selectedMonth, 1).getDay() }, (_, i) => (
-                  <div key={`empty-${i}`} className="h-8 w-8"></div>
-                ))}
-                
-                {DAYS.map(day => (
-                  <button
-                    key={day}
-                    type="button"
-                    onClick={() => handleDayChange(day)}
-                    className={`h-8 w-8 rounded-full flex items-center justify-center text-sm transition-colors duration-200 
-                      ${selectedDay == day ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}
-                  >
-                    {day}
-                  </button>
-                ))}
+                {selectedDate.month !== "" && selectedDate.year && Array.from({ length: getDaysInMonth(selectedDate.month, selectedDate.year) }, (_, i) => i + 1).map(day => {
+                  // Get the day of the week (0 = Sunday, 6 = Saturday)
+                  const firstDayOfMonth = new Date(selectedDate.year, selectedDate.month, 1).getDay();
+                  
+                  // Calculate grid column position for the first week
+                  const gridColumnStart = day === 1 ? firstDayOfMonth + 1 : null;
+                  
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      style={day === 1 ? { gridColumnStart } : {}}
+                      onClick={() => handleDayChange(day)}
+                      className={`p-1 text-center text-sm rounded-md transition-colors duration-200 ${selectedDate.day === day.toString() ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}
+                    >
+                      {day}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -248,7 +293,7 @@ function DatePicker({ name, value, onChange, min, isDisabled, label }) {
           {currentView === "month" && (
             <div>
               <h4 className="text-sm font-medium text-gray-700 mb-2">
-                Select Month {selectedYear ? `- ${selectedYear}` : ''}
+                Select Month {selectedDate.year ? `- ${selectedDate.year}` : ''}
               </h4>
               <div className="grid grid-cols-3 gap-2">
                 {MONTHS.map((month, index) => (
@@ -256,7 +301,7 @@ function DatePicker({ name, value, onChange, min, isDisabled, label }) {
                     key={month}
                     type="button"
                     onClick={() => handleMonthChange(index)}
-                    className={`px-2 py-2 text-sm rounded-md transition-colors duration-200 ${selectedMonth === index ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}
+                    className={`px-2 py-2 text-sm rounded-md transition-colors duration-200 ${selectedDate.month === index ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}
                   >
                     {month.substring(0, 3)}
                   </button>
@@ -273,8 +318,8 @@ function DatePicker({ name, value, onChange, min, isDisabled, label }) {
                   <button
                     key={year}
                     type="button"
-                    onClick={() => handleYearChange(year)}
-                    className={`px-2 py-2 text-sm rounded-md transition-colors duration-200 ${selectedYear === year.toString() ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}
+                    onClick={() => handleYearChange(year.toString())}
+                    className={`px-2 py-2 text-sm rounded-md transition-colors duration-200 ${selectedDate.year === year.toString() ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}
                   >
                     {year}
                   </button>
@@ -298,405 +343,316 @@ function Experience({ resumeInfo, enanbledNext, enanbledPrev }) {
   const [loading, setLoading] = useState(false);
   const [activeExperience, setActiveExperience] = useState(0);
 
-  // Helper function to update Redux store
-  const setExperienceList = (newList) => {
-    dispatch(addResumeData({ ...resumeInfo, experience: newList }));
-  };
-
+  // Add a new experience entry
   const addExperience = () => {
-    const newList = [...experienceList, createEmptyFormFields()];
-    setExperienceList(newList);
-    setActiveExperience(newList.length - 1);
+    const newExperience = createEmptyFormFields();
+    dispatch(addExperienceItem(newExperience));
+    setActiveExperience(experienceList.length); // Set to the index of the new item
   };
   
-  // This is the updated, correct function
+  // Remove an experience entry with backend sync
   const removeExperience = async (index) => {
-    // 1. Create a new list without the deleted item
-    const newList = experienceList.filter((_, i) => i !== index);
+    // First, update the Redux store for immediate UI response
+    dispatch(removeExperienceItem(index));
     
-    // 2. Immediately update the Redux store to reflect the change in UI
-    setExperienceList(newList);
-    
-    // 3. Adjust the active tab if necessary
-    if (activeExperience >= newList.length) {
-      setActiveExperience(Math.max(0, newList.length - 1));
+    // Adjust the active experience index if needed
+    if (activeExperience >= experienceList.length - 1) {
+      setActiveExperience(Math.max(0, experienceList.length - 2));
     }
     
-    // 4. Create the payload for the backend
+    // Create the data payload for the backend
     const data = {
       data: {
-        experience: newList,
+        experience: experienceList.filter((_, i) => i !== index),
       },
     };
 
-    // 5. Save the updated list to the backend
+    // Save the updated list to the backend
     try {
       await updateThisResume(resume_id, data);
       toast("Experience removed successfully.", {
-        description: "Your work history has been updated.",
+        description: "Your experience section has been updated.",
         icon: <Trash2 className="h-4 w-4 text-green-500" />,
       });
     } catch (error) {
-      toast("Error removing experience", {
-        description: "Could not save the change. Please try again.",
+      toast("Failed to save changes", {
+        description: "There was an error updating your resume.",
         variant: "destructive",
       });
-      // Optional: Revert to the previous state if the API call fails
-      setExperienceList(experienceList);
+      // Note: We don't restore the deleted item because it would complicate the code
+      // and the backend error is rare. The user can refresh to get the latest state.
     }
   };
 
+  // Handle input field changes with granular Redux updates
   const handleChange = (e, index) => {
-    enanbledNext(false);
-    enanbledPrev(false);
-    const { name, value } = e.target;
-    const list = [...experienceList];
-    const newListData = { ...list[index], [name]: value };
-    list[index] = newListData;
-    setExperienceList(list);
+    const { name, value, type, checked } = e.target;
+    const finalValue = type === "checkbox" ? checked : value;
+    
+    // Use the new granular update action
+    dispatch(updateExperienceField({ 
+      index,
+      field: name,
+      value: finalValue
+    }));
   };
 
-  const handleCheckboxChange = (e, index) => {
-    enanbledNext(false);
-    enanbledPrev(false);
-    const { checked } = e.target;
-    const list = [...experienceList];
-    const newListData = {
-      ...list[index],
-      currentlyWorking: checked,
-      endDate: checked ? "" : list[index].endDate,
-    };
-    list[index] = newListData;
-    setExperienceList(list);
-  };
-  
-  const formatFullDate = (dateString) => {
-    if (!dateString) return "";
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date)) return "";
-
-      const day = date.getDate();
-      const month = date.getMonth();
-      const year = date.getFullYear();
-
-      const getOrdinalSuffix = (d) => {
-        if (d > 3 && d < 21) return 'th';
-        switch (d % 10) {
-          case 1:  return "st";
-          case 2:  return "nd";
-          case 3:  return "rd";
-          default: return "th";
-        }
-      };
-      
-      return `${day}${getOrdinalSuffix(day)} ${MONTHS[month]}, ${year}`;
-    } catch(e) {
-      return dateString;
-    }
+  // Handle rich text editor changes
+  const handleWorkSummaryChange = (value, index) => {
+    dispatch(updateExperienceField({
+      index,
+      field: 'workSummary',
+      value
+    }));
   };
 
-  const handleRichTextEditor = (value, name, index) => {
-    const list = [...experienceList];
-    const newListData = { ...list[index], [name]: value };
-    list[index] = newListData;
-    setExperienceList(list);
-  };
-
-  const onSave = () => {
+  // Save changes to the backend
+  const onSave = async () => {
     setLoading(true);
-    const data = {
-      data: { experience: experienceList },
-    };
-    if (resume_id) {
-      updateThisResume(resume_id, data)
-        .then(() => {
-          toast("Experience details updated successfully!", {
-            description: "Your work history has been saved.",
-          });
-        })
-        .catch((error) => {
-          toast("Error updating resume", {
-            description: `${error.message}`,
-            variant: "destructive"
-          });
-        })
-        .finally(() => {
-          enanbledNext(true);
-          enanbledPrev(true);
-          setLoading(false);
-        });
+    try {
+      const data = {
+        data: {
+          experience: experienceList,
+        },
+      };
+      await updateThisResume(resume_id, data);
+      toast("Changes saved successfully.", {
+        description: "Your experience section has been updated.",
+        icon: <Check className="h-4 w-4 text-green-500" />,
+      });
+    } catch (error) {
+      toast("Failed to save changes", {
+        description: "There was an error updating your resume.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
-  
-  const calculateDuration = (startDate, endDate, currentlyWorking) => {
-    if (!startDate) return "";
+
+  // Set currently working and clear end date
+  const handleCurrentlyWorkingChange = (e, index) => {
+    const isCurrentlyWorking = e.target.checked;
     
-    const start = new Date(startDate);
-    const end = currentlyWorking ? new Date() : new Date(endDate);
+    // Update the currently working field
+    dispatch(updateExperienceField({
+      index,
+      field: 'currentlyWorking',
+      value: isCurrentlyWorking
+    }));
     
-    const years = end.getFullYear() - start.getFullYear();
-    const months = end.getMonth() - start.getMonth();
-    
-    let duration = "";
-    if (years > 0) {
-      duration += `${years} ${years === 1 ? 'year' : 'years'}`;
+    // If currently working is checked, clear the end date
+    if (isCurrentlyWorking) {
+      dispatch(updateExperienceField({
+        index,
+        field: 'endDate',
+        value: ''
+      }));
     }
-    
-    if (months > 0 || (months < 0 && years > 0)) {
-      const adjustedMonths = months < 0 ? 12 + months : months;
-      if (duration) duration += " ";
-      duration += `${adjustedMonths} ${adjustedMonths === 1 ? 'month' : 'months'}`;
-    }
-    
-    if (!duration) duration = "Less than a month";
-    
-    return `(${duration})`;
   };
 
   return (
-    <div className="animate-fadeIn">
-      <div className="p-8 bg-white rounded-xl shadow-md border-t-4 border-t-primary mt-10 transition-all duration-300 hover:shadow-lg">
-        <div className="flex items-center gap-2 mb-2">
-          <Briefcase className="h-6 w-6 text-primary" />
-          <h2 className="text-2xl font-bold text-gray-800">Work Experience</h2>
+    <div className="w-full">
+      <div className="flex flex-col p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+            <Briefcase className="h-5 w-5 text-primary" />
+            Professional Experience
+          </h2>
+          {experienceList.length > 0 && (
+            <Button variant="outline" onClick={addExperience} className="bg-primary/5 border-primary/20 text-primary hover:bg-primary hover:text-white transition-colors duration-300 flex items-center gap-2">
+              <Plus className="h-4 w-4" /> Add {experienceList.length > 0 ? "Another" : ""} Experience
+            </Button>
+          )}
         </div>
         
-        {experienceList?.length === 0 && (
-          <div className="text-center py-10 border border-dashed border-gray-300 rounded-lg mb-6 hover:border-primary transition-all duration-300">
-            <Briefcase className="h-10 w-10 text-gray-400 mx-auto mb-3" />
-            <h3 className="text-gray-500 font-medium mb-2">No experience added yet</h3>
-            <p className="text-gray-400 mb-4">Add your work history to make your resume stand out</p>
-            <Button 
-              onClick={addExperience}
-              className="bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all duration-300"
-            >
-              <Plus className="h-4 w-4 mr-2" /> Add Work Experience
+        {experienceList.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 px-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+            <Briefcase className="h-10 w-10 text-gray-400 mb-3" />
+            <h3 className="text-lg font-medium text-gray-900 mb-1">No Experience Added</h3>
+            <p className="text-sm text-gray-500 text-center mb-5">
+              Add your professional experience to make your resume stand out.
+            </p>
+            <Button onClick={addExperience} className="bg-primary hover:bg-primary/90 text-white transition-colors duration-300 flex items-center gap-2">
+              <Plus className="h-4 w-4" /> Add Experience
             </Button>
           </div>
-        )}
-        
-        {experienceList?.length > 0 && (
-          <div className="space-y-8">
-            <div className="flex space-x-2 overflow-x-auto pb-2 mb-4">
-              {experienceList.map((experience, index) => (
-                <Button
-                  key={`tab-${index}`}
-                  variant={activeExperience === index ? "default" : "outline"}
-                  className={`flex items-center gap-2 whitespace-nowrap ${
-                    activeExperience === index ? "bg-primary" : "border-primary text-primary"
-                  }`}
-                  onClick={() => setActiveExperience(index)}
-                >
-                  <span className={`flex items-center justify-center ${activeExperience === index ? "bg-white/20 text-white" : "bg-primary/10 text-primary"} h-5 w-5 rounded-full text-xs font-bold`}>
-                    {index + 1}
-                  </span>
-                  {experience.title || experience.companyName || `Experience ${index + 1}`}
-                </Button>
-              ))}
-              <Button
-                variant="ghost"
-                className="border border-dashed border-gray-300 text-gray-500 hover:bg-gray-100 hover:text-gray-700 whitespace-nowrap"
-                onClick={addExperience}
-              >
-                <Plus className="h-4 w-4 mr-2" /> Add More
-              </Button>
-            </div>
-            
-            {experienceList.map((experience, index) => (
-              <div
-                key={`content-${index}`}
-                className={`border border-gray-200 rounded-lg overflow-hidden transition-all duration-300 ${activeExperience === index ? "block" : "hidden"}`}
-              >
-                <div className="bg-gray-50 px-5 py-3 flex justify-between items-center">
-                  <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                    <span className="flex items-center justify-center bg-primary/10 text-primary h-6 w-6 rounded-full text-xs font-bold">
-                      {index + 1}
-                    </span>
-                    <span>{experience.title || experience.companyName || `Experience ${index + 1}`}</span>
-                  </h3>
+        ) : (
+          <div className="grid grid-cols-1 gap-8">
+            <div className="grid grid-cols-1 gap-6">
+              <div className="flex flex-col sm:flex-row gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-gray-100">
+                {experienceList.map((experience, index) => (
                   <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-500 hover:text-white hover:bg-red-500 transition-colors duration-300"
-                    onClick={() => removeExperience(index)}
+                    key={index}
+                    variant={index === activeExperience ? "default" : "outline"}
+                    onClick={() => setActiveExperience(index)}
+                    className={`px-4 py-2 ${index === activeExperience ? 'bg-primary text-white' : 'border-gray-300 text-gray-700 hover:border-primary'} transition-colors duration-300 whitespace-nowrap`}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    {experience.companyName || experience.title || `Experience ${index + 1}`}
                   </Button>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 p-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-primary" />
-                      Position Title
-                    </label>
-                    <Input
-                      type="text"
-                      name="title"
-                      value={experience?.title || ""}
-                      onChange={(e) => handleChange(e, index)}
-                      className="border-gray-300 focus:border-primary focus:ring focus:ring-primary/20 transition-all"
-                      placeholder="e.g. Software Engineer"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                      <Building className="h-4 w-4 text-primary" />
-                      Company Name
-                    </label>
-                    <Input
-                      type="text"
-                      name="companyName"
-                      value={experience?.companyName || ""}
-                      onChange={(e) => handleChange(e, index)}
-                      className="border-gray-300 focus:border-primary focus:ring focus:ring-primary/20 transition-all"
-                      placeholder="e.g. Acme Corporation"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-primary" />
-                      City
-                    </label>
-                    <Input
-                      type="text"
-                      name="city"
-                      value={experience?.city || ""}
-                      onChange={(e) => handleChange(e, index)}
-                      className="border-gray-300 focus:border-primary focus:ring focus:ring-primary/20 transition-all"
-                      placeholder="e.g. San Francisco"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-primary" />
-                      State/Country
-                    </label>
-                    <Input
-                      type="text"
-                      name="state"
-                      value={experience?.state || ""}
-                      onChange={(e) => handleChange(e, index)}
-                      className="border-gray-300 focus:border-primary focus:ring focus:ring-primary/20 transition-all"
-                      placeholder="e.g. California"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-primary" />
-                      Start Date
-                    </label>
-                    <DatePicker
-                      name="startDate"
-                      value={experience?.startDate ? experience.startDate.substring(0, 10) : ""}
-                      onChange={(e) => handleChange(e, index)}
-                      label="Select start date"
-                    />
-                    {experience?.startDate && (
-                      <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                        <Calendar className="h-3 w-3 text-primary/70" />
-                        {formatFullDate(experience.startDate)}
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-primary" />
-                        End Date
-                      </label>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={`currently-working-${index}`}
-                          checked={!!experience?.currentlyWorking}
-                          onChange={(e) => handleCheckboxChange(e, index)}
-                          className="rounded text-primary focus:ring-primary"
-                        />
-                        <label
-                          htmlFor={`currently-working-${index}`}
-                          className="text-sm text-gray-600 cursor-pointer hover:text-primary transition-colors"
-                        >
-                          Present (Current job)
-                        </label>
-                      </div>
-                    </div>
-                    
-                    {experience?.currentlyWorking ? (
-                      <div className="p-3 border rounded-md bg-gradient-to-r from-primary/10 to-transparent border-primary/20 text-gray-700 flex items-center">
-                        <Calendar className="h-5 w-5 text-primary mr-2" />
-                        Present
-                      </div>
-                    ) : (
-                      <DatePicker
-                        name="endDate"
-                        value={experience?.endDate ? experience.endDate.substring(0, 10) : ""}
-                        onChange={(e) => handleChange(e, index)}
-                        min={experience?.startDate ? experience.startDate.substring(0, 10) : ""}
-                        isDisabled={!!experience?.currentlyWorking}
-                        label="Select end date"
-                      />
-                    )}
-                    
-                    {(experience?.startDate && (experience?.endDate || experience?.currentlyWorking)) && (
-                      <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                        <span className="text-primary/70 font-medium">Duration:</span> 
-                        {calculateDuration(
-                          experience.startDate, 
-                          experience.endDate, 
-                          experience.currentlyWorking
-                        )}
-                      </p>
+                ))}
+              </div>
+              
+              {experienceList[activeExperience] && (
+                <div className="border border-gray-200 rounded-lg p-6 bg-white/70">
+                  <div className="flex justify-between items-start mb-5">
+                    <h3 className="text-lg font-medium text-gray-800">
+                      Experience Details
+                    </h3>
+                    {experienceList.length > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeExperience(activeExperience)}
+                        className="text-red-500 hover:text-white hover:bg-red-500 transition-colors duration-300"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     )}
                   </div>
                   
-                  <div className="col-span-full mt-4">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-2">
-                      <Check className="h-4 w-4 text-primary" />
-                      Work Description
-                    </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                        <Briefcase className="h-4 w-4 text-primary" /> Job Title*
+                      </label>
+                      <Input
+                        name="title"
+                        onChange={e => handleChange(e, activeExperience)}
+                        value={experienceList[activeExperience]?.title || ""}
+                        className="border-gray-300 focus:border-primary"
+                        placeholder="e.g. Software Engineer"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                        <Building className="h-4 w-4 text-primary" /> Company*
+                      </label>
+                      <Input
+                        name="companyName"
+                        onChange={e => handleChange(e, activeExperience)}
+                        value={experienceList[activeExperience]?.companyName || ""}
+                        className="border-gray-300 focus:border-primary"
+                        placeholder="e.g. Acme Corporation"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-primary" /> City
+                      </label>
+                      <Input
+                        name="city"
+                        onChange={e => handleChange(e, activeExperience)}
+                        value={experienceList[activeExperience]?.city || ""}
+                        className="border-gray-300 focus:border-primary"
+                        placeholder="e.g. San Francisco"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-primary" /> State/Province
+                      </label>
+                      <Input
+                        name="state"
+                        onChange={e => handleChange(e, activeExperience)}
+                        value={experienceList[activeExperience]?.state || ""}
+                        className="border-gray-300 focus:border-primary"
+                        placeholder="e.g. California"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-primary" /> Start Date
+                      </label>
+                      <DatePicker
+                        name="startDate"
+                        value={experienceList[activeExperience]?.startDate || ""}
+                        onChange={e => handleChange(e, activeExperience)}
+                        label="Select start date"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-primary" /> End Date
+                        </label>
+                        <label className="inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            name="currentlyWorking"
+                            checked={experienceList[activeExperience]?.currentlyWorking || false}
+                            onChange={e => handleCurrentlyWorkingChange(e, activeExperience)}
+                            className="sr-only peer"
+                          />
+                          <div className="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                          <span className="ml-2 text-xs font-medium text-gray-500">
+                            Currently Working
+                          </span>
+                        </label>
+                      </div>
+                      <DatePicker
+                        name="endDate"
+                        value={experienceList[activeExperience]?.endDate || ""}
+                        onChange={e => handleChange(e, activeExperience)}
+                        label="Select end date"
+                        isDisabled={experienceList[activeExperience]?.currentlyWorking || false}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6 space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Job Description</label>
                     <RichTextEditor
-                      index={index}
-                      defaultValue={experience?.workSummary}
-                      onRichTextEditorChange={(event) =>
-                        handleRichTextEditor(event, "workSummary", index)
-                      }
-                      resumeInfo={resumeInfo}
+                      value={experienceList[activeExperience]?.workSummary || ""}
+                      onChange={content => handleWorkSummaryChange(content, activeExperience)}
+                      placeholder="Describe your responsibilities and achievements..."
                     />
                   </div>
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
+            
+            <div className="flex justify-between mt-4">
+              {experienceList.length === 0 && (
+                <Button
+                  onClick={addExperience}
+                  className="bg-primary hover:bg-primary/90 text-white transition-colors duration-300 flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" /> Add Experience
+                </Button>
+              )}
+              
+              {experienceList.length > 0 && (
+                <Button
+                  onClick={addExperience}
+                  className="border-primary text-primary hover:bg-primary hover:text-white transition-colors duration-300 flex items-center gap-2"
+                  variant="outline"
+                >
+                  <Plus className="h-4 w-4" /> Add {experienceList.length > 0 ? "Another" : ""} Experience
+                </Button>
+              )}
+              
+              {experienceList.length > 0 && (
+                <Button
+                  onClick={onSave}
+                  disabled={loading}
+                  className="px-6 py-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary transition-all duration-300 flex items-center gap-2"
+                >
+                  {loading ? (
+                    <><LoaderCircle className="h-4 w-4 animate-spin" /> Saving...</>
+                  ) : (
+                    "Save Experience"
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
         )}
-        
-        <div className="flex justify-between mt-8">
-          {experienceList?.length > 0 && (
-            <Button
-              onClick={addExperience}
-              variant="outline"
-              className="border-primary text-primary hover:bg-primary hover:text-white transition-colors duration-300 flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" /> 
-              Add {experienceList?.length > 0 ? "Another" : ""} Experience
-            </Button>
-          )}
-          
-          {experienceList?.length > 0 && (
-            <Button 
-              onClick={onSave}
-              disabled={loading}
-              className="px-6 py-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary transition-all duration-300 flex items-center gap-2"
-            >
-              {loading ? (
-                <><LoaderCircle className="h-4 w-4 animate-spin" /> Saving...</>
-              ) : (
-                "Save Experiences"
-              )}
-            </Button>
-          )}
-        </div>
       </div>
     </div>
   );
