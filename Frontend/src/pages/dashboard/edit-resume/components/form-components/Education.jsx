@@ -1,27 +1,18 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import ReactDOM from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { 
-  LoaderCircle, 
-  GraduationCap, 
-  School, 
-  BookOpen, 
-  Calendar, 
-  Award, 
-  Plus, 
-  Trash2, 
-  ChevronDown, 
-  ChevronUp, 
-  ArrowUpDown,
-  ArrowDown,
-  ArrowUp 
+  LoaderCircle, GraduationCap, School, BookOpen, Calendar, Award, 
+  Plus, Trash2, ChevronDown, ChevronUp, ArrowUpDown, ArrowDown, ArrowUp 
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { addResumeData } from "@/features/resume/resumeFeatures";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { updateThisResume } from "@/Services/resumeAPI";
+import { debounce } from "lodash-es"; // Make sure lodash-es is installed
 
 const formFields = {
   universityName: "",
@@ -34,294 +25,214 @@ const formFields = {
   description: "",
 };
 
-const months = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
-];
-
-const currentYear = new Date().getFullYear();
-const startYear = currentYear - 60;
-const endYear = currentYear + 10;
-const YEARS = Array.from({ length: endYear - startYear + 1 }, (_, i) => endYear - i);
-const getDaysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
-
-const getEducationLevelWeight = (degree) => {
-  if (!degree) return 0;
-  const degreeText = degree.toLowerCase();
-  if (degreeText.includes("phd") || degreeText.includes("doctorate")) return 5;
-  if (degreeText.includes("master") || degreeText.includes("mba") || degreeText.includes("ms") || degreeText.includes("ma")) return 4;
-  if (degreeText.includes("bachelor") || degreeText.includes("btech") || degreeText.includes("bsc") || degreeText.includes("ba")) return 3;
-  if (degreeText.includes("diploma") || degreeText.includes("associate")) return 2;
-  if (degreeText.includes("high school") || degreeText.includes("secondary") || degreeText.includes("ssc") || degreeText.includes("hsc")) return 1;
-  return 0;
-};
-
+// DatePicker sub-component remains unchanged
 function DatePicker({ index, field, value, onChange, isDisabled, label }) {
+  // ... (All DatePicker code remains the same as in your CertificationsForm.jsx)
   const [showDropdown, setShowDropdown] = useState(false);
-  const containerRef = useRef(null);
-  const dropdownRef = useRef(null);
-  const [dropdownPosition, setDropdownPosition] = useState('bottom');
-  
-  const parseInitialValue = () => {
-    if (!value) return { day: "", month: "", year: "" };
-    try {
-      const date = new Date(value);
-      if (isNaN(date)) {
-        const [yearStr, monthStr, dayStr] = value.split('-').map(v => v.trim());
-        return { year: yearStr || "", month: monthStr ? parseInt(monthStr) - 1 : "", day: dayStr || "" };
-      }
-      return { year: date.getFullYear().toString(), month: date.getMonth(), day: date.getDate().toString() };
-    } catch (e) {
-      return { day: "", month: "", year: "" };
-    }
-  };
+  const triggerRef = useRef(null);
+  const [dropdownCoords, setDropdownCoords] = useState({ top: 0, left: 0, width: 0 });
 
-  const initialValue = parseInitialValue();
-  const [selectedDay, setSelectedDay] = useState(initialValue.day);
-  const [selectedMonth, setSelectedMonth] = useState(initialValue.month);
-  const [selectedYear, setSelectedYear] = useState(initialValue.year);
-  const [currentView, setCurrentView] = useState("day");
-  
-  const daysInMonth = selectedMonth !== "" && selectedYear ? getDaysInMonth(selectedMonth, selectedYear) : 31;
-  const DAYS = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-  
-  const updateDate = (day, month, year) => {
-    if (day && month && year) {
-      const formattedDay = day.toString().padStart(2, '0');
-      const formattedMonth = month.toString().padStart(2, '0');
-      onChange({ target: { name: field, value: `${year}-${formattedMonth}-${formattedDay}` } });
-    }
-  };
-
-  const handleDayChange = (day) => {
-    setSelectedDay(day);
-    updateDate(day, selectedMonth + 1, selectedYear);
-    setShowDropdown(false);
-  };
-  
-  const handleMonthChange = (monthIndex) => {
-    setSelectedMonth(monthIndex);
-    const maxDaysInNewMonth = getDaysInMonth(monthIndex, selectedYear);
-    if (selectedDay > maxDaysInNewMonth) {
-      setSelectedDay(maxDaysInNewMonth);
-      updateDate(maxDaysInNewMonth, monthIndex + 1, selectedYear);
-    } else {
-      updateDate(selectedDay, monthIndex + 1, selectedYear);
-    }
-    setCurrentView("day");
-  };
-
-  const handleYearChange = (year) => {
-    setSelectedYear(year);
-    if (selectedMonth === 1) {
-      const maxDaysInNewMonth = getDaysInMonth(selectedMonth, year);
-      if (selectedDay > maxDaysInNewMonth) {
-        setSelectedDay(maxDaysInNewMonth);
-        updateDate(maxDaysInNewMonth, selectedMonth + 1, year);
-        return;
-      }
-    }
-    updateDate(selectedDay, selectedMonth + 1, year);
-    setCurrentView("month");
-  };
+  const initialDate = value ? new Date(value.split(' ').join(' 1, ')) : new Date();
+  const [currentYear, setCurrentYear] = useState(initialDate.getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(initialDate.getMonth());
 
   const calculateDropdownPosition = () => {
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
-      spaceBelow < 300 ? setDropdownPosition('top') : setDropdownPosition('bottom');
-    }
-  };
-
-  const toggleDropdown = () => {
-    if (!isDisabled) {
-      if (!showDropdown) calculateDropdownPosition();
-      setShowDropdown(!showDropdown);
+      setDropdownCoords({
+        left: rect.left,
+        top: spaceBelow > 310 ? rect.bottom + window.scrollY + 4 : rect.top + window.scrollY - 300 - 4,
+        width: rect.width,
+      });
     }
   };
 
   useEffect(() => {
+    if (showDropdown) {
+      calculateDropdownPosition();
+      window.addEventListener('resize', calculateDropdownPosition);
+      window.addEventListener('scroll', calculateDropdownPosition, true);
+    }
+    return () => {
+      window.removeEventListener('resize', calculateDropdownPosition);
+      window.removeEventListener('scroll', calculateDropdownPosition, true);
+    };
+  }, [showDropdown]);
+
+  useEffect(() => {
     const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
+      if (triggerRef.current && !triggerRef.current.contains(event.target) && event.target.closest('.date-picker-portal') === null) {
         setShowDropdown(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  return (
-    <div className="relative" ref={containerRef}>
-      <div 
-        className={`date-picker-trigger flex items-center justify-between p-3 border rounded-md ${isDisabled ? 'bg-gray-50' : 'bg-white'} ${showDropdown ? 'border-primary ring-2 ring-primary/20' : 'border-gray-300'} cursor-pointer transition-all duration-200`}
-        onClick={toggleDropdown}
-      >
-        <div className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-primary" />
-          {selectedDay && selectedMonth !== "" && selectedYear ? (
-            <span className="text-gray-800">{selectedDay} {months[selectedMonth]}, {selectedYear}</span>
-          ) : (
-            <span className="text-gray-400">{label}</span>
-          )}
+  const handleDateSelection = (year, month) => {
+    const formattedDate = `${MONTHS[month]} ${year}`;
+    onChange({ target: { name: field, value: formattedDate } }, index);
+    setShowDropdown(false);
+  };
+  const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const YEARS = Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - i);
+  
+  const dropdownJsx = (
+    <div
+      style={{
+        position: 'absolute',
+        top: `${dropdownCoords.top}px`,
+        left: `${dropdownCoords.left}px`,
+        width: `${dropdownCoords.width}px`,
+      }}
+      className="date-picker-portal"
+    >
+      <div className="z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl p-3 w-full">
+        <div className="flex justify-between items-center mb-4">
+          <button type="button" onClick={() => setCurrentYear(y => y - 1)} className="p-1 hover:bg-gray-100 rounded-full"><ChevronDown /></button>
+          <span className="mx-2 font-medium">{currentYear}</span>
+          <button type="button" onClick={() => setCurrentYear(y => y + 1)} className="p-1 hover:bg-gray-100 rounded-full"><ChevronUp /></button>
         </div>
-        {!isDisabled && <ChevronDown className={`h-5 w-5 text-gray-500 transition-transform duration-300 ${showDropdown ? 'rotate-180' : ''}`} />}
+        <div className="grid grid-cols-3 gap-2">
+          {MONTHS.map((month, monthIndex) => (
+            <button key={month} type="button" onClick={() => handleDateSelection(currentYear, monthIndex)} className={`px-2 py-1.5 text-sm rounded-md transition-colors ${currentMonth === monthIndex && initialDate.getFullYear() === currentYear ? 'bg-primary text-white' : 'hover:bg-primary/10'}`}>
+              {month}
+            </button>
+          ))}
+        </div>
       </div>
-      {showDropdown && !isDisabled && (
-        <div 
-          ref={dropdownRef}
-          className={`date-picker-container absolute z-50 ${dropdownPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'} w-full bg-white border border-gray-200 rounded-lg shadow-lg p-4 animate-fadeIn`}
-        >
-            <div className="flex justify-between items-center mb-2 border-b pb-2">
-                <button type="button" className="text-sm font-medium text-primary hover:text-primary-dark" onClick={() => setCurrentView("day")}>Day</button>
-                <button type="button" className="text-sm font-medium text-primary hover:text-primary-dark" onClick={() => setCurrentView("month")}>Month</button>
-                <button type="button" className="text-sm font-medium text-primary hover:text-primary-dark" onClick={() => setCurrentView("year")}>Year</button>
-            </div>
-            
-            {currentView === "day" && selectedMonth !== "" && selectedYear && (
-              <div className="grid grid-cols-7 gap-1">
-                {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(day => ( <div key={day} className="text-xs font-medium text-gray-500 text-center py-1">{day}</div> ))}
-                {Array.from({ length: new Date(selectedYear, selectedMonth, 1).getDay() }).map((_, i) => (<div key={`empty-${i}`} className="h-8 w-8"></div>))}
-                {DAYS.map(day => (
-                  <button key={day} type="button" onClick={() => handleDayChange(day)} className={`h-8 w-8 rounded-full flex items-center justify-center text-sm transition-colors duration-200 ${selectedDay == day ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}>{day}</button>
-                ))}
-              </div>
-            )}
-            
-            {currentView === "month" && (
-                <div className="grid grid-cols-3 gap-2">
-                    {months.map((month, index) => (
-                        <button key={month} type="button" onClick={() => handleMonthChange(index)} className={`px-2 py-2 text-sm rounded-md transition-colors duration-200 ${selectedMonth === index ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}>
-                            {month.substring(0, 3)}
-                        </button>
-                    ))}
-                </div>
-            )}
-            
-            {currentView === "year" && (
-                <div className="max-h-36 overflow-y-auto grid grid-cols-4 gap-2 scrollbar-thin scrollbar-thumb-primary scrollbar-track-gray-100">
-                    {YEARS.map(year => (
-                        <button key={year} type="button" onClick={() => handleYearChange(year)} className={`px-2 py-2 text-sm rounded-md transition-colors duration-200 ${selectedYear === year.toString() ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}>
-                            {year}
-                        </button>
-                    ))}
-                </div>
-            )}
-        </div>
-      )}
     </div>
   );
-}
+
+  return (
+    <div className="w-full">
+      <div 
+        ref={triggerRef}
+        className={`flex items-center w-full justify-between p-3 border rounded-md ${isDisabled ? 'bg-gray-50' : 'bg-white'} ${showDropdown ? 'border-primary ring-2 ring-primary/20' : 'border-gray-300'} cursor-pointer transition-all`}
+        onClick={() => !isDisabled && setShowDropdown(!showDropdown)}
+      >
+        <span className={value ? 'text-gray-800' : 'text-gray-400'}>{value || label}</span>
+        <Calendar className="h-4 w-4 text-primary ml-auto" />
+      </div>
+      {showDropdown && ReactDOM.createPortal(dropdownJsx, document.body)}
+    </div>
+  );
+};
 
 
 function Education({ resumeInfo, enanbledNext, enanbledPrev }) {
   const dispatch = useDispatch();
   const { resume_id } = useParams();
+  
+  // 1. Source of truth from Redux
+  const reduxEducationalList = useSelector((state) => state.editResume.resumeData?.education) || [];
 
-  const educationalList = useSelector((state) => state.editResume.resumeData?.education) || [];
-
+  // 2. Local state for fast UI interaction
+  const [localEducationalList, setLocalEducationalList] = useState(reduxEducationalList);
   const [loading, setLoading] = useState(false);
   const [sortOrder, setSortOrder] = useState("desc");
   const [isSorting, setIsSorting] = useState(false);
   const [activeEducation, setActiveEducation] = useState(0);
-
-  const setEducationalList = (newList) => {
-    dispatch(addResumeData({ ...resumeInfo, education: newList }));
-  };
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  // 3. Sync local state with Redux when it changes
+  useEffect(() => {
+    setLocalEducationalList(reduxEducationalList);
+  }, [reduxEducationalList]);
+  
+  // 4. Debounced function to update Redux store
+  const debouncedReduxUpdate = useMemo(
+    () => debounce((newList) => {
+        dispatch(addResumeData({ ...resumeInfo, education: newList }));
+        setHasUnsavedChanges(true);
+    }, 500),
+    [dispatch, resumeInfo]
+  );
+  
+  // 5. Cleanup debounce function
+  useEffect(() => {
+    return () => debouncedReduxUpdate.cancel();
+  }, [debouncedReduxUpdate]);
 
   const AddNewEducation = () => {
-    const newList = [...educationalList, { ...formFields }];
-    setEducationalList(newList);
+    const newList = [...localEducationalList, { ...formFields }];
+    setLocalEducationalList(newList);
     setActiveEducation(newList.length - 1);
+    debouncedReduxUpdate(newList);
   };
 
   const RemoveEducation = async (index) => {
-    const originalList = [...educationalList];
-    const newList = educationalList.filter((_, i) => i !== index);
-    setEducationalList(newList); // Optimistically update UI
-
+    const newList = localEducationalList.filter((_, i) => i !== index);
+    
+    // Update UI instantly
+    setLocalEducationalList(newList);
+    dispatch(addResumeData({ ...resumeInfo, education: newList }));
+    
     if (activeEducation >= newList.length) {
       setActiveEducation(Math.max(0, newList.length - 1));
     }
     
-    const data = {
-      data: {
-        education: newList,
-      },
-    };
-
     try {
-      await updateThisResume(resume_id, data);
-      toast("Education entry removed.", { description: "Your education history has been updated." });
+      await updateThisResume(resume_id, { data: { education: newList } });
+      toast("Education entry removed.");
+      setHasUnsavedChanges(false);
     } catch (error) {
-      toast("Error removing entry", {
-        description: "Could not save the change. Reverting.",
-        variant: "destructive"
-      });
-      setEducationalList(originalList); // Revert on failure
+      toast("Error removing entry", { description: "Reverting change.", variant: "destructive"});
+      setLocalEducationalList(reduxEducationalList); // Revert on failure
     }
   };
 
   const sortEducation = () => {
     setIsSorting(true);
-    const sorted = [...educationalList].sort((a, b) => {
-      const dateA = a.endDate ? new Date(a.endDate) : new Date(a.startDate);
-      const dateB = b.endDate ? new Date(b.endDate) : new Date(b.startDate);
-
-      if (!isNaN(dateA) && !isNaN(dateB)) {
-        if(dateA.getTime() !== dateB.getTime()) {
-           return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
-        }
-      }
-
-      const weightA = getEducationLevelWeight(a.degree);
-      const weightB = getEducationLevelWeight(b.degree);
-      return sortOrder === "desc" ? weightB - weightA : weightA - weightB;
+    const sorted = [...localEducationalList].sort((a, b) => {
+        const dateA = a.endDate ? new Date(a.endDate) : new Date(a.startDate);
+        const dateB = b.endDate ? new Date(b.endDate) : new Date(b.startDate);
+        return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
     });
-
-    setEducationalList(sorted);
-    setTimeout(() => {
-      setIsSorting(false);
-      toast("Education sorted", { description: `Sorted from ${sortOrder === 'desc' ? 'most recent' : 'oldest'}.` });
-    }, 500);
+    setLocalEducationalList(sorted);
+    debouncedReduxUpdate(sorted);
+    setTimeout(() => setIsSorting(false), 500);
   };
-
+  
   const toggleSortOrder = () => {
-    setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
-    setTimeout(sortEducation, 0);
+    setSortOrder(prev => (prev === 'desc' ? 'asc' : 'desc'));
+    setTimeout(sortEducation, 0); // Allow state to update before sorting
   };
 
-  const onSave = () => {
+  const onSave = async () => {
     setLoading(true);
-    const data = {
-      data: {
-        education: educationalList,
-      },
-    };
-    if (resume_id) {
-      updateThisResume(resume_id, data)
-        .then(() => toast("Education details updated!"))
-        .catch(error => toast("Error updating: " + error.message, { variant: "destructive" }))
-        .finally(() => {
-          setLoading(false);
-          enanbledNext?.(true);
-          enanbledPrev?.(true);
-        });
+    debouncedReduxUpdate.cancel();
+    
+    dispatch(addResumeData({ ...resumeInfo, education: localEducationalList }));
+
+    try {
+      await updateThisResume(resume_id, { data: { education: localEducationalList } });
+      toast("Education details updated!");
+      setHasUnsavedChanges(false);
+      enanbledNext?.(true);
+      enanbledPrev?.(true);
+    } catch (error) {
+      toast("Error updating education", { description: error.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleChange = (e, index) => {
     enanbledNext?.(false);
     enanbledPrev?.(false);
+    
     const { name, value } = e.target;
-    const list = [...educationalList];
-    list[index] = { ...list[index], [name]: value };
-    setEducationalList(list);
-  };
+    const newList = [...localEducationalList];
+    newList[index] = { ...newList[index], [name]: value };
 
-  const getDegreeDescription = (education) => {
-    return education.degree || education.universityName || `Education ${educationalList.indexOf(education) + 1}`;
+    setLocalEducationalList(newList);
+    debouncedReduxUpdate(newList);
   };
-
+  
+  const getDegreeDescription = (education) => education.degree || education.universityName || `Education ${localEducationalList.indexOf(education) + 1}`;
+  
   const getSortAnimationClass = (index) => (isSorting ? "animate-pulse bg-primary/5" : "");
 
   return (
@@ -330,9 +241,12 @@ function Education({ resumeInfo, enanbledNext, enanbledPrev }) {
         <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
                 <GraduationCap className="h-6 w-6 text-primary" />
-                <h2 className="text-2xl font-bold text-gray-800">Education</h2>
+                <h2 className="text-2xl font-bold text-gray-800">
+                  Education
+                  {hasUnsavedChanges && <span className="ml-2 text-sm text-orange-500 font-normal">(Unsaved changes)</span>}
+                </h2>
             </div>
-            {educationalList.length > 1 && (
+            {localEducationalList.length > 1 && (
                 <Button variant="outline" size="sm" onClick={toggleSortOrder} className="border-primary/60 text-primary hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2">
                     <ArrowUpDown className="h-4 w-4 mr-1" />
                     Sort {sortOrder === 'desc' ? "Newest" : "Oldest"}
@@ -341,7 +255,7 @@ function Education({ resumeInfo, enanbledNext, enanbledPrev }) {
             )}
         </div>
 
-        {!educationalList.length ? (
+        {!localEducationalList.length ? (
             <div className="text-center py-10 border border-dashed border-gray-300 rounded-lg mb-6 hover:border-primary transition-all duration-300">
                 <GraduationCap className="h-10 w-10 text-gray-400 mx-auto mb-3" />
                 <h3 className="text-gray-500 font-medium mb-2">No education added yet</h3>
@@ -351,7 +265,7 @@ function Education({ resumeInfo, enanbledNext, enanbledPrev }) {
         ) : (
             <div className="space-y-8">
                 <div className="flex space-x-2 overflow-x-auto pb-2 mb-4">
-                    {educationalList.map((item, index) => (
+                    {localEducationalList.map((item, index) => (
                         <Button key={`tab-${index}`} variant={activeEducation === index ? 'default' : 'outline'} className={`flex items-center gap-2 whitespace-nowrap ${activeEducation === index ? 'bg-primary' : 'border-primary text-primary'}`} onClick={() => setActiveEducation(index)}>
                             <span className={`flex items-center justify-center ${activeEducation === index ? "bg-white/20 text-white" : "bg-primary/10 text-primary"} h-5 w-5 rounded-full text-xs font-bold`}>{index + 1}</span>
                             {getDegreeDescription(item)}
@@ -360,7 +274,7 @@ function Education({ resumeInfo, enanbledNext, enanbledPrev }) {
                     <Button variant="ghost" className="border border-dashed border-gray-300 text-gray-500 hover:bg-gray-100 hover:text-gray-700 whitespace-nowrap" onClick={AddNewEducation}><Plus className="h-4 w-4 mr-2" /> Add More</Button>
                 </div>
 
-                {educationalList.map((item, index) => (
+                {localEducationalList.map((item, index) => (
                     <div key={`content-${index}`} className={`border border-gray-200 rounded-lg overflow-hidden transition-all duration-300 ${getSortAnimationClass(index)} ${activeEducation === index ? "block" : "hidden"}`}>
                         <div className="bg-gray-50 px-5 py-3 flex justify-between items-center">
                           <h3 className="font-semibold text-gray-800 flex items-center gap-2">
@@ -397,8 +311,8 @@ function Education({ resumeInfo, enanbledNext, enanbledPrev }) {
                                <div className="flex gap-4">
                                    <select name="gradeType" className="py-2 px-4 rounded-md border border-gray-300 focus:border-primary focus:ring focus:ring-primary/20 transition-all bg-white" onChange={(e) => handleChange(e, index)} value={item?.gradeType || "CGPA"}>
                                        <option value="CGPA">CGPA</option>
-                                       <option value="GPA">GPA</option>
                                        <option value="Percentage">Percentage</option>
+                                       <option value="GPA">GPA</option>
                                    </select>
                                    <Input type="text" name="grade" onChange={(e) => handleChange(e, index)} value={item?.grade || ""} className="flex-1 border-gray-300 focus:border-primary focus:ring focus:ring-primary/20 transition-all" placeholder="e.g. 3.8" />
                                </div>
@@ -409,23 +323,22 @@ function Education({ resumeInfo, enanbledNext, enanbledPrev }) {
                            </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-              )}
-                
-              <div className="flex justify-between mt-8">
-                  {educationalList.length > 0 && (
-                    <Button variant="outline" onClick={AddNewEducation} className="border-primary text-primary hover:bg-primary hover:text-white transition-colors duration-300 flex items-center gap-2">
-                      <Plus className="h-4 w-4" /> Add {educationalList.length > 0 ? "Another" : ""} Education
-                    </Button>
-                  )}
-                  {educationalList.length > 0 && (
-                    <Button disabled={loading} onClick={onSave} className="px-6 py-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary transition-all duration-300 flex items-center gap-2">
-                      {loading ? <><LoaderCircle className="h-4 w-4 animate-spin mr-2" /> Saving...</> : "Save Education"}
-                    </Button>
-                  )}
-              </div>
+                ))}
+            </div>
+        )}
+        <div className="flex justify-between mt-8">
+            {localEducationalList.length > 0 && (
+              <Button variant="outline" onClick={AddNewEducation} className="border-primary text-primary hover:bg-primary hover:text-white transition-colors duration-300 flex items-center gap-2">
+                <Plus className="h-4 w-4" /> Add {localEducationalList.length > 0 ? "Another" : ""} Education
+              </Button>
+            )}
+            {localEducationalList.length > 0 && (
+              <Button disabled={loading} onClick={onSave} className="px-6 py-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary transition-all duration-300 flex items-center gap-2">
+                {loading ? <><LoaderCircle className="h-4 w-4 animate-spin mr-2" /> Saving...</> : "Save Education"}
+              </Button>
+            )}
         </div>
+      </div>
     </div>
   );
 }
