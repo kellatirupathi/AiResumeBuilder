@@ -110,9 +110,9 @@ function ProfilePage() {
         try {
             const response = await generatePortfolio(templateName); // <-- PASS templateName
             dispatch(addUserData(response.data));
-            toast.success("Portfolio Generated & Saved! and Wait for 2 mins to build your Portfolio", {
+            toast.success("Portfolio Generated & Saved! and Wait for 1-2 mins to build your Portfolio", {
                 id: toastId,
-                description: "Your new portfolio is live. The link has been updated in your profile.",
+                description: "Your new portfolio is live. The link has been updated in your portfolio.",
             });
         } catch (error) {
             toast.error("Generation Failed", { id: toastId, description: error.message });
