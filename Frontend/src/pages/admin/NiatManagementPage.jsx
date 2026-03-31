@@ -98,9 +98,6 @@ function NiatManagementPage() {
     const fileInputRef = useRef(null);
     const navigate = useNavigate();
 
-    // Validation regex for NIAT ID format
-    const niatIdRegex = /^N24H01[A-Z]\d{4}$/;
-
     const fetchIds = async () => {
         setIsLoading(true);
         try {
@@ -144,12 +141,6 @@ function NiatManagementPage() {
     const handleAddSingle = async () => {
         if (!singleIdInput.trim()) return;
         
-        // Validate format
-        if (!niatIdRegex.test(singleIdInput.trim())) {
-            toast.error("Invalid NIAT ID format", { description: "Please use format: N24H01X####" });
-            return;
-        }
-        
         setIsSingleSubmitting(true);
         try {
             await addSingleNiatId(singleIdInput.trim());
@@ -166,15 +157,6 @@ function NiatManagementPage() {
     const handleAddBulk = async () => {
         const ids = bulkIdInput.split(/\r?\n/).map(id => id.trim()).filter(id => id);
         if (ids.length === 0) return;
-        
-        // Validate all IDs
-        const invalidIds = ids.filter(id => !niatIdRegex.test(id));
-        if (invalidIds.length > 0) {
-            toast.error(`${invalidIds.length} invalid NIAT IDs found`, { 
-                description: `Example: ${invalidIds[0]}. Please check the format.` 
-            });
-            return;
-        }
         
         setIsBulkSubmitting(true);
         try {
@@ -210,10 +192,10 @@ function NiatManagementPage() {
             const ids = text.split(/\r?\n/).map(id => id.trim()).filter(id => id);
             
             // Validate IDs
-            const invalidIds = ids.filter(id => !niatIdRegex.test(id));
+            const invalidIds = ids.filter(id => !id.trim());
             if (invalidIds.length > 0) {
-                toast.error(`${invalidIds.length} invalid NIAT IDs found in file`, { 
-                    description: `Example: ${invalidIds[0]}. Please check the format.` 
+                toast.error(`${invalidIds.length} empty IDs found in file`, {
+                    description: `Please remove empty lines and try again.`
                 });
                 setIsFileUploading(false);
                 // Reset file input
@@ -391,7 +373,7 @@ function NiatManagementPage() {
                             <div className="w-full">
                                 <div className="flex items-center mb-2">
                                     <label htmlFor="single-id" className="text-sm font-medium text-gray-700 mr-2">NIAT ID</label>
-                                    <Tooltip text="Format: N24H01X#### where X is any uppercase letter and # is any digit">
+                                    <Tooltip text="Enter any ID — no specific format required">
                                         <HelpCircle className="h-4 w-4 text-gray-400" />
                                     </Tooltip>
                                 </div>
@@ -399,10 +381,10 @@ function NiatManagementPage() {
                                     id="single-id"
                                     value={singleIdInput}
                                     onChange={e => setSingleIdInput(e.target.value.toUpperCase())}
-                                    placeholder="N24H01B1234"
+                                    placeholder="Enter ID"
                                     className="border-gray-300"
                                 />
-                                <p className="mt-1 text-xs text-gray-500">Please ensure the NIAT ID follows the correct format: N24H01X####</p>
+                                <p className="mt-1 text-xs text-gray-500">Any ID format is accepted.</p>
                             </div>
                             <Button 
                                 onClick={handleAddSingle} 
@@ -423,7 +405,7 @@ function NiatManagementPage() {
                         <div>
                             <div className="flex items-center mb-2">
                                 <label htmlFor="bulk-ids" className="text-sm font-medium text-gray-700 mr-2">Multiple NIAT IDs</label>
-                                <Tooltip text="Enter one NIAT ID per line. Each must follow the format N24H01X####">
+                                <Tooltip text="Enter one ID per line. Any format is accepted.">
                                     <HelpCircle className="h-4 w-4 text-gray-400" />
                                 </Tooltip>
                             </div>
@@ -431,7 +413,7 @@ function NiatManagementPage() {
                                 id="bulk-ids"
                                 value={bulkIdInput} 
                                 onChange={e => setBulkIdInput(e.target.value.toUpperCase())} 
-                                placeholder="Example:&#10;N24H01A1234&#10;N24H01B5678" 
+                                placeholder="Enter one ID per line" 
                                 className="min-h-[120px] border-gray-300 mb-4"
                             />
                             <Button 

@@ -9,7 +9,6 @@ const niatIdSchema = new Schema({
     unique: true,
     trim: true,
     uppercase: true, // Ensure consistency
-    match: [/^N24H01[A-Z]\d{4}$/, 'Please fill a valid NIAT ID format.']
   }
 }, { timestamps: true });
 
