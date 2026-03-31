@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   PieChart,
   FileText,
+  Upload,
   ChevronDown,
   ArrowLeft,
   Search,
@@ -19,7 +20,6 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { AIChatSession } from "@/Services/AiModel";
 import { getAllResumeData, getResumeData } from "@/Services/resumeAPI";
@@ -106,6 +106,50 @@ const generateResumeContent = (resume) => {
   return c;
 };
 
+let pdfJsLibPromise = null;
+
+const getPdfJsLib = async () => {
+  if (!pdfJsLibPromise) {
+    pdfJsLibPromise = import("pdfjs-dist/legacy/build/pdf.mjs").then((pdfjsLib) => {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+        "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
+        import.meta.url
+      ).toString();
+      return pdfjsLib;
+    });
+  }
+
+  return pdfJsLibPromise;
+};
+
+const extractTextFromPdf = async (file) => {
+  const pdfjsLib = await getPdfJsLib();
+  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+  const pageTexts = [];
+
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .map((item) => item.str || "")
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (pageText) {
+      pageTexts.push(pageText);
+    }
+  }
+
+  const combinedText = pageTexts.join("\n\n").trim();
+
+  if (!combinedText) {
+    throw new Error("No readable text was found in the uploaded PDF. Only text-based PDFs are supported.");
+  }
+
+  return combinedText;
+};
+
 const analyzeStages = [
   { label: "Extracting keywords…",   icon: Search   },
   { label: "Matching skills…",        icon: Cpu      },
@@ -127,9 +171,13 @@ export default function ATSCheckerPage() {
 
   // left panel state
   const [resumeList, setResumeList]         = useState([]);
+  const [sourceType, setSourceType]         = useState("saved");
   const [selectedId, setSelectedId]         = useState("");
   const [resumeData, setResumeData]         = useState(null);
+  const [uploadedFileName, setUploadedFileName] = useState("");
+  const [uploadedResumeText, setUploadedResumeText] = useState("");
   const [loadingResume, setLoadingResume]   = useState(false);
+  const [loadingUploadedPdf, setLoadingUploadedPdf] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
   const [dropdownOpen, setDropdownOpen]     = useState(false);
 
@@ -163,9 +211,30 @@ export default function ATSCheckerPage() {
     return () => clearInterval(id);
   }, [isAnalyzing]);
 
-  const handleSelectResume = async (id, title) => {
+  const handleSourceChange = (nextSource) => {
+    if (nextSource === sourceType) return;
+
+    setSourceType(nextSource);
+    setResult(null);
+    setDropdownOpen(false);
+
+    if (nextSource === "saved") {
+      setUploadedFileName("");
+      setUploadedResumeText("");
+      setLoadingUploadedPdf(false);
+    } else {
+      setSelectedId("");
+      setResumeData(null);
+      setLoadingResume(false);
+    }
+  };
+
+  const handleSelectResume = async (id) => {
+    setSourceType("saved");
     setSelectedId(id);
     setDropdownOpen(false);
+    setUploadedFileName("");
+    setUploadedResumeText("");
     setLoadingResume(true);
     try {
       const res = await getResumeData(id);
@@ -177,10 +246,58 @@ export default function ATSCheckerPage() {
     }
   };
 
+  const handlePdfUpload = async (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      toast.error("Please upload a PDF file only.");
+      event.target.value = "";
+      return;
+    }
+
+    setSourceType("pdf");
+    setDropdownOpen(false);
+    setSelectedId("");
+    setResumeData(null);
+    setResult(null);
+    setUploadedFileName(file.name);
+    setUploadedResumeText("");
+    setLoadingUploadedPdf(true);
+
+    try {
+      const extractedText = await extractTextFromPdf(file);
+      setUploadedResumeText(extractedText);
+      toast.success("PDF loaded successfully");
+    } catch (error) {
+      setUploadedFileName("");
+      setUploadedResumeText("");
+      toast.error("Could not read the uploaded PDF", {
+        description: error.message || "Only text-based PDFs are supported right now.",
+      });
+    } finally {
+      setLoadingUploadedPdf(false);
+      event.target.value = "";
+    }
+  };
+
   const handleAnalyze = async () => {
-    if (!selectedId)                      return toast.error("Please select a resume");
     if (jobDescription.trim().length < 50) return toast.error("Job description is too short");
-    if (!resumeData)                      return toast.error("Resume data not loaded yet");
+
+    let content = "";
+
+    if (sourceType === "saved") {
+      if (!selectedId) return toast.error("Please select a resume");
+      if (loadingResume || !resumeData) return toast.error("Resume data not loaded yet");
+      content = generateResumeContent(resumeData);
+    } else {
+      if (loadingUploadedPdf) return toast.error("PDF is still being processed");
+      if (!uploadedResumeText) return toast.error("Please upload a text-based PDF resume");
+      content = uploadedResumeText;
+    }
+
+    if (!content.trim()) return toast.error("Resume content is empty");
 
     setResult(null);
     setIsAnalyzing(true);
@@ -188,7 +305,6 @@ export default function ATSCheckerPage() {
     setProgress(0);
 
     try {
-      const content = generateResumeContent(resumeData);
       const prompt  = ATS_PROMPT
         .replace("{jobDescription}", jobDescription)
         .replace("{resumeContent}", content);
@@ -216,6 +332,9 @@ export default function ATSCheckerPage() {
   };
 
   const selectedTitle = resumeList.find((r) => r._id === selectedId)?.title || "";
+  const isReadyToAnalyze = sourceType === "saved"
+    ? Boolean(selectedId && resumeData && !loadingResume)
+    : Boolean(uploadedResumeText && !loadingUploadedPdf);
 
   // ── RENDER ────────────────────────────────────────────────────────────────
   return (
@@ -252,9 +371,34 @@ export default function ATSCheckerPage() {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">1</span>
-                <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Select a Resume</h3>
+                <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Choose Resume Source</h3>
               </div>
 
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <button
+                  onClick={() => handleSourceChange("saved")}
+                  className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
+                    sourceType === "saved"
+                      ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-900/30 dark:text-indigo-300"
+                      : "border-gray-200 bg-gray-50 text-gray-500 hover:border-indigo-300 dark:border-gray-600 dark:bg-gray-700/50 dark:text-gray-300"
+                  }`}
+                >
+                  Saved Resume
+                </button>
+                <button
+                  onClick={() => handleSourceChange("pdf")}
+                  className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
+                    sourceType === "pdf"
+                      ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-900/30 dark:text-indigo-300"
+                      : "border-gray-200 bg-gray-50 text-gray-500 hover:border-indigo-300 dark:border-gray-600 dark:bg-gray-700/50 dark:text-gray-300"
+                  }`}
+                >
+                  Upload PDF
+                </button>
+              </div>
+
+              {sourceType === "saved" ? (
+                <>
               {/* Custom dropdown */}
               <div className="relative">
                 <button
@@ -278,7 +422,7 @@ export default function ATSCheckerPage() {
                       resumeList.map((r) => (
                         <button
                           key={r._id}
-                          onClick={() => handleSelectResume(r._id, r.title)}
+                          onClick={() => handleSelectResume(r._id)}
                           className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-left transition-colors ${
                             r._id === selectedId
                               ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-medium"
@@ -306,6 +450,46 @@ export default function ATSCheckerPage() {
                   <CheckCircle className="h-3 w-3" /> Resume loaded successfully
                 </p>
               )}
+                </>
+              ) : (
+                <>
+                  <label className="block">
+                    <input
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      className="hidden"
+                      onChange={handlePdfUpload}
+                    />
+                    <div className="rounded-2xl border border-dashed border-indigo-200 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-900/10 px-4 py-5 cursor-pointer transition-colors hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white dark:bg-gray-800 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center flex-shrink-0">
+                          <Upload className="h-4 w-4 text-indigo-500" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
+                            {uploadedFileName || "Upload resume PDF"}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
+                            Choose a normal text-based PDF resume. Scanned image PDFs are not supported.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </label>
+
+                  {loadingUploadedPdf && (
+                    <p className="text-xs text-indigo-500 mt-2 flex items-center gap-1.5">
+                      <span className="inline-block w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                      Extracting text from PDF...
+                    </p>
+                  )}
+                  {uploadedFileName && !loadingUploadedPdf && uploadedResumeText && (
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2 flex items-center gap-1.5">
+                      <CheckCircle className="h-3 w-3" /> PDF text loaded successfully
+                    </p>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Step 2 — Job Description */}
@@ -329,7 +513,7 @@ export default function ATSCheckerPage() {
           <div className="flex-shrink-0 px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
             <button
               onClick={handleAnalyze}
-              disabled={isAnalyzing || !selectedId || jobDescription.trim().length < 50 || !resumeData}
+              disabled={isAnalyzing || loadingResume || loadingUploadedPdf || jobDescription.trim().length < 50 || !isReadyToAnalyze}
               className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-emerald-500 hover:from-indigo-700 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm py-3 rounded-xl shadow-md shadow-indigo-900/20 transition-all duration-200"
             >
               {isAnalyzing ? (
@@ -358,7 +542,7 @@ export default function ATSCheckerPage() {
               </div>
               <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Ready to Analyze</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs leading-relaxed">
-                Select a resume and paste a job description on the left, then click <strong>Analyze Resume</strong> to see how well you match the role.
+                Select a saved resume or upload a PDF on the left, then paste a job description and click <strong>Analyze Resume</strong>.
               </p>
               <div className="mt-8 grid grid-cols-3 gap-3 w-full max-w-sm">
                 {[
@@ -612,7 +796,17 @@ export default function ATSCheckerPage() {
               {/* ── Re-analyze CTA ── */}
               <div className="flex gap-3 pb-2">
                 <button
-                  onClick={() => { setResult(null); setJobDescription(""); setSelectedId(""); setResumeData(null); }}
+                  onClick={() => {
+                    setResult(null);
+                    setJobDescription("");
+                    setSourceType("saved");
+                    setSelectedId("");
+                    setResumeData(null);
+                    setUploadedFileName("");
+                    setUploadedResumeText("");
+                    setDropdownOpen(false);
+                    setCopied(false);
+                  }}
                   className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   Start Over

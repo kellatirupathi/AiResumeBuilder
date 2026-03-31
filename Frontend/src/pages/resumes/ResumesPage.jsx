@@ -41,7 +41,7 @@ export default function ResumesPage() {
   const [resumeList,   setResumeList]   = useState([]);
   const [filteredList, setFilteredList] = useState([]);
   const [isLoading,    setIsLoading]    = useState(true);
-  const [viewMode,     setViewMode]     = useState("grid");
+  const [viewMode,     setViewMode]     = useState("list");
   const [searchQuery,  setSearchQuery]  = useState("");
   const [sortOption,   setSortOption]   = useState("newest");
   const [showSort,     setShowSort]     = useState(false);

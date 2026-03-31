@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useSelector } from "react-redux";
 import PersonalDeatailPreview from "./preview-components/PersonalDeatailPreview";
 import SummeryPreview from "./preview-components/SummaryPreview";
@@ -1261,13 +1261,10 @@ const MinimalistTemplate = ({ resumeInfo }) => {
   );
 };
 
-function PreviewPage() {
-  const resumeData = useSelector((state) => state.editResume.resumeData);
-  
-  useEffect(() => {
-    console.log("PreviewPage rendered with template:", resumeData?.template);
-  }, [resumeData]);
-  
+function PreviewPage({ resumeData: resumeDataProp = null }) {
+  const resumeDataFromStore = useSelector((state) => state.editResume.resumeData);
+  const resumeData = resumeDataProp || resumeDataFromStore;
+
   // If no data yet, show placeholder
   if (!resumeData) {
     return (

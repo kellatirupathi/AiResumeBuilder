@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Eye, Edit, Trash2, MoreVertical, Calendar, ChevronRight, Share2, Copy } from "lucide-react";
 import {
   AlertDialog,
@@ -14,8 +14,8 @@ import { Button } from "@/components/ui/button";
 import { deleteThisResume, cloneResume } from "@/Services/resumeAPI";
 import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
-import { VITE_APP_URL } from "@/config/config.js";
 import CloneResumeModal from "./CloneResumeModal";
+import ResumePreview from "../edit-resume/components/PreviewPage";
 
 const gradients = [
   "from-blue-600 to-indigo-600",
@@ -26,6 +26,53 @@ const gradients = [
   "from-cyan-500 to-blue-600",
   "from-fuchsia-500 to-purple-600"
 ];
+
+const PREVIEW_BASE_WIDTH = 820;
+const PREVIEW_BASE_HEIGHT = 1160;
+
+const ResumeExactPreview = ({ resume }) => {
+  const containerRef = useRef(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return undefined;
+
+    const updateSize = () => {
+      setSize({
+        width: element.clientWidth,
+        height: element.clientHeight,
+      });
+    };
+
+    updateSize();
+
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, []);
+
+  const scaleX = size.width ? size.width / PREVIEW_BASE_WIDTH : 1;
+  const scaleY = size.height ? size.height / PREVIEW_BASE_HEIGHT : 1;
+
+  return (
+    <div ref={containerRef} className="absolute inset-0 overflow-hidden bg-white pointer-events-none">
+      <div
+        className="absolute top-0 left-0 origin-top-left"
+        style={{
+          width: `${PREVIEW_BASE_WIDTH}px`,
+          height: `${PREVIEW_BASE_HEIGHT}px`,
+          transform: `scale(${scaleX}, ${scaleY})`,
+          transformOrigin: "top left",
+        }}
+      >
+        <ResumePreview resumeData={resume} />
+      </div>
+      <div className="absolute inset-0 bg-white/6 dark:bg-gray-900/8" />
+    </div>
+  );
+};
 
 function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -159,10 +206,10 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
     );
   }
 
-  // Grid View - More compact and fixed height
+  // Grid View - Reuse the exact resume renderer and scale it into the card
   return (
     <>
-      <div className="group relative flex flex-col h-[210px] rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 bg-white dark:bg-gray-800/90 backdrop-blur-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+      <div className="group relative flex flex-col h-[348px] rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 bg-white dark:bg-gray-800/90 backdrop-blur-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
         <div className={`h-1.5 w-full bg-gradient-to-r ${gradient}`}></div>
         <div className="absolute top-2 right-2 z-10 md:hidden">
           <Button variant="ghost" size="sm" className="rounded-full h-7 w-7 p-0 flex items-center justify-center bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm" onClick={() => setShowMobileMenu(!showMobileMenu)}>
@@ -179,16 +226,21 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
             </div></div>
           )}
         </div>
-        <div className="p-4 flex-grow">
-          <Link to={`/dashboard/edit-resume/${resume._id}`}>
-            <h3 className="text-lg font-bold text-blue-600 dark:text-blue-400 hover:underline transition-colors line-clamp-1">{resume.title}</h3>
-          </Link>
-          <div className="flex items-center gap-3 mt-2 text-gray-500 dark:text-gray-400 text-xs">
-            <div className="flex items-center"><Calendar className="h-3.5 w-3.5 mr-1" /><span>{formatDate(resume.updatedAt)}</span></div>
-            <div className="flex items-center" title="Total Views"><Eye className="h-3.5 w-3.5 mr-1"/><span>{resume.viewCount || 0} views</span></div>
+        <div className="relative flex-grow overflow-hidden">
+          <ResumeExactPreview resume={resume} />
+          <div className="absolute inset-x-0 top-0 z-[1] bg-gradient-to-b from-white/94 via-white/78 to-transparent dark:from-gray-900/92 dark:via-gray-900/68 dark:to-transparent px-4 pt-4 pb-10">
+            <Link to={`/dashboard/edit-resume/${resume._id}`}>
+              <h3 className="text-base font-bold text-blue-600 dark:text-blue-400 hover:underline transition-colors line-clamp-1">
+                {resume.title}
+              </h3>
+            </Link>
+            <div className="flex items-center gap-3 mt-2 text-gray-600 dark:text-gray-300 text-xs">
+              <div className="flex items-center"><Calendar className="h-3.5 w-3.5 mr-1" /><span>{formatDate(resume.updatedAt)}</span></div>
+              <div className="flex items-center" title="Total Views"><Eye className="h-3.5 w-3.5 mr-1"/><span>{resume.viewCount || 0} views</span></div>
+            </div>
           </div>
         </div>
-        <div className="border-t border-gray-100 dark:border-gray-700 p-3 pt-2 pb-2 flex justify-between items-center mt-auto">
+        <div className="relative z-[1] border-t border-white/80 dark:border-white/10 bg-white/88 dark:bg-gray-900/80 backdrop-blur-sm p-3 pt-2 pb-2 flex justify-between items-center mt-auto">
           <div className="flex space-x-1">
             <Button variant="ghost" size="sm" onClick={() => navigate(`/dashboard/view-resume/${resume._id}`)} className="rounded-full w-7 h-7 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20" title="View Resume"><Eye className="w-3.5 h-3.5" /></Button>
             <Button variant="ghost" size="sm" onClick={() => navigate(`/dashboard/edit-resume/${resume._id}`)} className="rounded-full w-7 h-7 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20" title="Edit Resume"><Edit className="w-3.5 h-3.5" /></Button>
