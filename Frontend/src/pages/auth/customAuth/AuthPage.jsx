@@ -75,11 +75,9 @@ function AuthPage() {
   // Toast notification state
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
-  const niatIdRegex = /^N24H01[A-Z]\d{4}$/;
-
   const validateNiatId = (id) => {
     if (!id) return true;
-    return niatIdRegex.test(id);
+    return id.trim().length > 0;
   };
 
   const handleNiatIdChange = (e) => {
@@ -148,7 +146,7 @@ function AuthPage() {
     
     // Validate form fields
     if (!validateNiatId(niatId)) {
-      showToast("Invalid NIAT ID format. Correct format is N24H01X####.", "error");
+      showToast("Please enter a valid ID.", "error");
       return;
     }
     
@@ -266,7 +264,7 @@ function AuthPage() {
                     <label htmlFor="niatId" className="block text-gray-700 font-medium mb-1">NIAT ID</label>
                     <div className={`flex items-center border rounded-lg px-3 py-2 border-gray-300 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500`}>
                       <FaIdBadge className="text-gray-400 mr-2" />
-                      <input id="niatId" type="text" className="w-full outline-none" placeholder="Format: N24H01X####" value={niatId} onChange={handleNiatIdChange} required/>
+                      <input id="niatId" type="text" className="w-full outline-none" placeholder="Enter your ID" value={niatId} onChange={handleNiatIdChange} required/>
                     </div>
                   </div>
                   <div>

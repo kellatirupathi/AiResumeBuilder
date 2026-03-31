@@ -36,9 +36,8 @@ function CompleteProfilePage() {
         setError('');
         setShowError(false);
 
-        const niatIdRegex = /^N24H01[A-Z]\d{4}$/;
-        if (!niatIdRegex.test(niatId)) {
-            setError("Invalid NIAT ID format. Correct format is N24H01X####.");
+        if (!niatId.trim()) {
+            setError("Please enter your ID.");
             return;
         }
         
@@ -104,7 +103,7 @@ function CompleteProfilePage() {
                                 id="niatId"
                                 type="text"
                                 className="pl-10 h-12 text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                placeholder="e.g., N24H01B1234"
+                                placeholder="Enter your ID"
                                 value={niatId}
                                 onChange={(e) => setNiatId(e.target.value.toUpperCase())}
                                 required
