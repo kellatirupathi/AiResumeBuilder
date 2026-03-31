@@ -134,7 +134,7 @@ function AddResume({ viewMode = "grid" }) {
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={() => setOpenDialog(true)}
-        className="add-resume-trigger flex flex-col items-center justify-center h-[210px] rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-5 cursor-pointer group transition-all duration-300"
+        className="add-resume-trigger flex flex-col items-center justify-center h-[348px] rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-5 cursor-pointer group transition-all duration-300"
       >
         <div className="w-14 h-14 mb-4 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 flex items-center justify-center group-hover:from-blue-500 group-hover:to-indigo-600 transition-colors duration-300">
           <CopyPlus className="w-7 h-7 text-blue-600 dark:text-blue-400 group-hover:text-white transition-colors duration-300" />
