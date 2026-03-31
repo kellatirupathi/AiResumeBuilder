@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+/* eslint-disable react/prop-types */
+import { Fragment, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import PersonalDetails from "./form-components/PersonalDetails";
 import Summary from "./form-components/Summary";
@@ -29,17 +30,14 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import ThemeColor from "./ThemeColor";
 import CertificationsForm from "./form-components/CertificationsForm";
 import ManageAdditionalSections from "./form-components/ManageAdditionalSections";
-import { addResumeData } from "@/features/resume/resumeFeatures";
-import AIReviewModal from "./AIReviewModal";
 
-function ResumeForm() {
+function ResumeForm({ onOpenAIReview, isAIReviewOpen = false }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [enanbledNext, setEnabledNext] = useState(true);
   const [enanbledPrev, setEnabledPrev] = useState(true);
   const resumeInfo = useSelector((state) => state.editResume.resumeData);
   const { resume_id } = useParams();
   const navigate = useNavigate();
-  const [isReviewModalOpen, setReviewModalOpen] = useState(false);
 
   const sections = [
     { name: "Details", icon: <User className="h-4 w-4" /> },
@@ -98,7 +96,16 @@ function ResumeForm() {
             </Button>
           </Link>
           <ThemeColor resumeInfo={resumeInfo}/> 
-          <Button variant="outline" size="sm" onClick={() => setReviewModalOpen(true)} className="flex items-center gap-1.5 hover:bg-indigo-500 hover:text-white transition-colors duration-300 px-3 border-indigo-500 text-indigo-600">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onOpenAIReview}
+            className={`flex items-center gap-1.5 px-3 transition-colors duration-300 ${
+              isAIReviewOpen
+                ? "bg-indigo-500 text-white border-indigo-500 hover:bg-indigo-600"
+                : "border-indigo-500 text-indigo-600 hover:bg-indigo-500 hover:text-white"
+            }`}
+          >
             <Sparkles className="h-4 w-4" /> 
             <span className="text-xs font-semibold">AI Review</span>
           </Button>
@@ -143,12 +150,11 @@ function ResumeForm() {
       </div>
       
       <FloatingResumeScore resumeInfo={resumeInfo} />
-      <AIReviewModal isOpen={isReviewModalOpen} onClose={() => setReviewModalOpen(false)} resumeInfo={resumeInfo} />
 
       <div className="hidden sm:flex justify-start overflow-x-auto py-2 no-scrollbar">
         <div className="flex items-center">
           {sections.map((section, idx) => (
-            <React.Fragment key={idx}>
+            <Fragment key={idx}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -170,7 +176,7 @@ function ResumeForm() {
                   currentIndex > idx ? "text-primary" : "text-gray-300"
                 }`} />
               )}
-            </React.Fragment>
+            </Fragment>
           ))}
         </div>
       </div>
