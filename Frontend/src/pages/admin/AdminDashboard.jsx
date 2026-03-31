@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
 import { Input } from "@/components/ui/input";
-import { VITE_APP_URL } from "@/config/config.js"; 
+import { VITE_APP_URL } from "@/config/config.js";
 import { toast } from 'sonner';
-import { checkAdminSession, getAllUsers, getAllResumes, logoutAdmin } from "@/Services/adminApi";
+import { checkAdminSession, getAllUsers, getAllResumes, logoutAdmin, processPendingResumeLinks } from "@/Services/adminApi";
 import { format } from 'date-fns';
-import { Search, Download, LogOut, User, FileText, Fingerprint, BarChart, RefreshCw } from 'lucide-react';
+import { Search, Download, LogOut, User, FileText, Fingerprint, RefreshCw } from 'lucide-react';
 import ResumePreviewModal from "./ResumePreviewModal";
-import UserResumesModal from "./UserResumesModal"; 
+import UserResumesModal from "./UserResumesModal";
+import NiatManagementPage from "./NiatManagementPage";
+import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
 import { cn } from "@/lib/utils";
 
 function AdminDashboard() {
@@ -24,17 +25,22 @@ function AdminDashboard() {
   const [selectedUserForResumes, setSelectedUserForResumes] = useState(null);
   const navigate = useNavigate();
 
+  const fetchDashboardData = async () => {
+    const [usersRes, resumesRes] = await Promise.all([
+      getAllUsers(),
+      getAllResumes()
+    ]);
+
+    setUsers(usersRes.data || []);
+    setResumes(resumesRes.data || []);
+  };
+
   useEffect(() => {
     const verifySessionAndFetch = async () => {
       setLoading(true);
       try {
         await checkAdminSession();
-        const [usersRes, resumesRes] = await Promise.all([
-          getAllUsers(),
-          getAllResumes()
-        ]);
-        setUsers(usersRes.data || []);
-        setResumes(resumesRes.data || []);
+        await fetchDashboardData();
       } catch (error) {
         toast.error("Session invalid or expired", { description: "Redirecting to admin login." });
         navigate('/admin/login');
@@ -79,6 +85,23 @@ function AdminDashboard() {
   
   const handleViewUserResumes = (user) => {
     setSelectedUserForResumes(user);
+  };
+
+  const handleTabChange = async (tab) => {
+    if (tab === activeTab) return;
+
+    setActiveTab(tab);
+
+    if (tab === "studentids") return;
+
+    setLoading(true);
+    try {
+      await fetchDashboardData();
+    } catch (error) {
+      toast.error("Failed to load data", { description: error.message });
+    } finally {
+      setLoading(false);
+    }
   };
   
   const filteredUsers = useMemo(() =>
@@ -157,13 +180,31 @@ function AdminDashboard() {
   const refreshData = async () => {
     setRefreshing(true);
     try {
+      let processSummary = null;
+
+      if (activeTab === "resumes") {
+        const processResponse = await processPendingResumeLinks();
+        processSummary = processResponse.data || null;
+      }
+
       const [usersRes, resumesRes] = await Promise.all([
         getAllUsers(),
         getAllResumes()
       ]);
       setUsers(usersRes.data || []);
       setResumes(resumesRes.data || []);
-      toast.success("Data refreshed successfully");
+
+      if (activeTab === "resumes" && processSummary?.attempted) {
+        const descriptionParts = [];
+        if (processSummary.failed) descriptionParts.push(`Failed: ${processSummary.failed}`);
+        if (processSummary.skipped) descriptionParts.push(`Skipped: ${processSummary.skipped}`);
+
+        toast.success("Data refreshed successfully", {
+          description: `Processed ${processSummary.processed} pending resume link(s)${descriptionParts.length ? `. ${descriptionParts.join(" • ")}` : ""}.`
+        });
+      } else {
+        toast.success("Data refreshed successfully");
+      }
     } catch (error) {
       toast.error("Failed to refresh data", { description: error.message });
     } finally {
@@ -173,161 +214,172 @@ function AdminDashboard() {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <header className="bg-white shadow-sm noPrint">
-          <div className="px-4 md:px-8 py-4 flex justify-between items-center">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-800 bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent">Admin Dashboard</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <Button onClick={() => navigate('/admin/niat-ids')} variant="outline" size="sm" className="border-indigo-200 hover:bg-indigo-50 transition-all">
-                <Fingerprint className="h-4 w-4 mr-2 text-indigo-600"/>
-                Student ID's
-              </Button>
-              <Button onClick={handleLogout} variant="outline" size="sm" className="border-red-200 hover:bg-red-50 transition-all">
-                <LogOut className="h-4 w-4 mr-2 text-red-500" />
-                Logout
-              </Button>
+      <div className="h-screen bg-gray-50 flex overflow-hidden">
+
+        {/* ── Sidebar ── */}
+        <aside className="w-64 bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 flex flex-col h-screen fixed left-0 top-0 z-20 noPrint shadow-xl">
+
+          {/* Brand */}
+          <div className="px-6 py-5 border-b border-white/10">
+            <div className="flex items-center gap-3">
+              <NxtResumeLogoMark className="h-10 w-10" />
+              <div>
+                <p className="text-white font-bold text-base leading-tight">NxtResume</p>
+                <p className="text-indigo-400 text-xs">Admin Panel</p>
+              </div>
             </div>
           </div>
-        </header>
 
-        {/* Dashboard Stats Section */}
-        <div className="bg-white border-b shadow-sm py-4 px-4 md:px-8 noPrint">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-medium text-gray-700 flex items-center">
-              <BarChart className="h-5 w-5 mr-2 text-indigo-500" />
-              Dashboard Overview
-            </h2>
-            <Button 
-              onClick={refreshData} 
-              variant="ghost" 
-              size="sm" 
-              className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50"
-              disabled={refreshing}
+          {/* Nav menu */}
+          <nav className="px-4 py-4 border-b border-white/10 space-y-1">
+            <p className="text-indigo-500 text-xs font-semibold uppercase tracking-widest px-3 mb-3">Management</p>
+
+            <button
+              onClick={() => handleTabChange("users")}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                activeTab === "users"
+                  ? "bg-indigo-600 text-white shadow-lg"
+                  : "text-indigo-200 hover:bg-white/10 hover:text-white"
+              }`}
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-              {refreshing ? 'Refreshing...' : 'Refresh Data'}
-            </Button>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <StatCard 
-              title="Total Users" 
-              value={dashboardStats.totalUsers} 
-              icon={<User className="h-5 w-5 text-indigo-400" />} 
-              color="indigo"
-            />
-            <StatCard 
-              title="Total Resumes" 
-              value={dashboardStats.totalResumes} 
-              icon={<FileText className="h-5 w-5 text-blue-400" />} 
-              color="blue"
-            />
-            <StatCard 
-              title="New Users Today" 
-              value={dashboardStats.newUsersToday} 
-              icon={<User className="h-5 w-5 text-green-400" />} 
-              color="green"
-            />
-            <StatCard 
-              title="New Resumes Today" 
-              value={dashboardStats.newResumesToday} 
-              icon={<FileText className="h-5 w-5 text-amber-400" />} 
-              color="amber"
-            />
-            <StatCard 
-              title="Users with Resumes" 
-              value={dashboardStats.usersWithResumes} 
-              icon={<User className="h-5 w-5 text-purple-400" />} 
-              color="purple"
-            />
-            <StatCard 
-              title="Avg. Resumes/User" 
-              value={dashboardStats.averageResumesPerUser} 
-              icon={<FileText className="h-5 w-5 text-cyan-400" />} 
-              color="cyan"
-            />
-          </div>
-        </div>
+              <span className="flex items-center gap-3">
+                <User className="h-4 w-4 flex-shrink-0" />
+                Users
+              </span>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${activeTab === "users" ? "bg-white/20 text-white" : "bg-white/10 text-indigo-300"}`}>
+                {filteredUsers.length}
+              </span>
+            </button>
 
-        <main className="flex-1 flex flex-col p-4 md:px-8 md:py-4 noPrint">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
-            <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
-              <TabsList className="bg-indigo-50 p-1">
-                <TabsTrigger 
-                  value="users" 
-                  className={`transition-all ${activeTab === "users" ? "bg-white text-indigo-700 shadow-sm" : "text-indigo-600 hover:bg-indigo-100"}`}
-                >
-                  <User className="h-4 w-4 mr-2" /> 
-                  <span>Users</span>
-                  <span className="ml-2 bg-indigo-100 text-indigo-700 rounded-full px-2 py-0.5 text-xs font-medium">
-                    {filteredUsers.length}
-                  </span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="resumes" 
-                  className={`transition-all ${activeTab === "resumes" ? "bg-white text-indigo-700 shadow-sm" : "text-indigo-600 hover:bg-indigo-100"}`}
-                >
-                  <FileText className="h-4 w-4 mr-2" /> 
-                  <span>Resumes</span>
-                  <span className="ml-2 bg-indigo-100 text-indigo-700 rounded-full px-2 py-0.5 text-xs font-medium">
-                    {filteredResumes.length}
-                  </span>
-                </TabsTrigger>
-              </TabsList>
-              <div className="flex items-center gap-4 w-full sm:w-auto">
-                <div className="relative flex-grow sm:flex-grow-0">
-                  <Input 
-                    placeholder={activeTab === 'users' ? 'Search by name, email, NIAT...' : 'Search resumes...'}
+            <button
+              onClick={() => handleTabChange("resumes")}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                activeTab === "resumes"
+                  ? "bg-indigo-600 text-white shadow-lg"
+                  : "text-indigo-200 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-3">
+                <FileText className="h-4 w-4 flex-shrink-0" />
+                Resumes
+              </span>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${activeTab === "resumes" ? "bg-white/20 text-white" : "bg-white/10 text-indigo-300"}`}>
+                {filteredResumes.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => handleTabChange("studentids")}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                activeTab === "studentids"
+                  ? "bg-indigo-600 text-white shadow-lg"
+                  : "text-indigo-200 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-3">
+                <Fingerprint className="h-4 w-4 flex-shrink-0" />
+                Student ID's
+              </span>
+            </button>
+          </nav>
+
+          {/* Stats */}
+          <div className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
+            <p className="text-indigo-500 text-xs font-semibold uppercase tracking-widest px-1 mb-3">Overview</p>
+            {[
+              { label: "Total Users",        value: dashboardStats.totalUsers,            color: "text-indigo-300" },
+              { label: "Total Resumes",       value: dashboardStats.totalResumes,          color: "text-blue-300" },
+              { label: "New Users Today",     value: `+${dashboardStats.newUsersToday}`,   color: "text-emerald-400" },
+              { label: "New Resumes Today",   value: `+${dashboardStats.newResumesToday}`, color: "text-amber-400" },
+              { label: "Users with Resumes",  value: dashboardStats.usersWithResumes,      color: "text-purple-300" },
+              { label: "Avg Resumes/User",    value: dashboardStats.averageResumesPerUser, color: "text-cyan-300" },
+            ].map(({ label, value, color }) => (
+              <div key={label} className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/5 hover:bg-white/8 transition-colors">
+                <span className="text-indigo-300 text-xs">{label}</span>
+                <span className={`font-bold text-sm ${color}`}>{value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Logout */}
+          <div className="px-4 py-4 border-t border-white/10">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all duration-200 text-sm font-medium"
+            >
+              <LogOut className="h-4 w-4 flex-shrink-0" />
+              Logout
+            </button>
+          </div>
+        </aside>
+
+        {/* ── Main content ── */}
+        <div className="flex-1 ml-64 flex flex-col h-screen min-h-0 overflow-hidden">
+
+          {/* Top header */}
+          <header className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center noPrint sticky top-0 z-10 shadow-sm flex-shrink-0">
+            <div>
+              <h1 className="text-xl font-bold text-gray-800 capitalize">
+                {activeTab === "users" ? "Users" : activeTab === "resumes" ? "Resumes" : "Student ID's"}
+              </h1>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {activeTab === "users" ? "Manage registered users" : activeTab === "resumes" ? "Browse all resumes" : "Manage allowed Student IDs"}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {/* Search — only for users/resumes */}
+              {activeTab !== "studentids" && (
+                <div className="relative">
+                  <Input
+                    placeholder={activeTab === 'users' ? 'Search by name, email, ID...' : 'Search resumes...'}
                     value={activeTab === 'users' ? userSearchQuery : resumeSearchQuery}
                     onChange={(e) => activeTab === 'users' ? setUserSearchQuery(e.target.value) : setResumeSearchQuery(e.target.value)}
-                    className="pl-10 w-full sm:w-80 border-indigo-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md transition-all"
+                    className="pl-10 w-72 border-indigo-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-lg"
                   />
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-400" />
                 </div>
-                <Button 
-                  variant="outline" 
-                  onClick={handleExport}
-                  className="bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 transition-all"
-                >
-                  <Download className="h-4 w-4 mr-2 text-indigo-500"/>
+              )}
+              {/* Export CSV — only for users/resumes */}
+              {activeTab !== "studentids" && (
+                <Button variant="outline" onClick={handleExport} className="bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+                  <Download className="h-4 w-4 mr-2 text-indigo-500" />
                   Export CSV
                 </Button>
-              </div>
+              )}
+              {/* Refresh — only for users/resumes */}
+              {activeTab !== "studentids" && (
+                <Button onClick={refreshData} variant="outline" size="sm" className="text-indigo-600 border-indigo-200 hover:bg-indigo-50" disabled={refreshing}>
+                  <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                  {refreshing ? 'Refreshing...' : 'Refresh Data'}
+                </Button>
+              )}
             </div>
+          </header>
 
-            <TabsContent value="users" className="flex-1 overflow-auto">
-              {loading ? (
-                <div className="flex items-center justify-center h-64">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
-                </div>
-              ) : (
-                <UsersTable users={filteredUsers} onViewResumes={handleViewUserResumes} />
-              )}
-            </TabsContent>
-            <TabsContent value="resumes" className="flex-1 overflow-auto">
-              {loading ? (
-                <div className="flex items-center justify-center h-64">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
-                </div>
-              ) : (
-                <DetailedResumesTable resumes={filteredResumes} allResumes={resumes} onViewResume={handleViewResume} />
-              )}
-            </TabsContent>
-          </Tabs>
-        </main>
+          {/* Content area */}
+          <main
+            className={`flex-1 flex flex-col noPrint min-h-0 ${
+              activeTab === "studentids" ? "overflow-y-auto p-6" : "overflow-hidden p-0 bg-white"
+            }`}
+          >
+            {activeTab === "studentids" ? (
+              <NiatManagementPage embedded />
+            ) : loading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+              </div>
+            ) : activeTab === "users" ? (
+              <UsersTable users={filteredUsers} onViewResumes={handleViewUserResumes} />
+            ) : (
+              <DetailedResumesTable resumes={filteredResumes} allResumes={resumes} onViewResume={handleViewResume} />
+            )}
+          </main>
+        </div>
       </div>
 
-      <ResumePreviewModal 
-        resumeInfo={selectedResume} 
-        onClose={() => setSelectedResume(null)} 
-      />
-
-      <UserResumesModal
-        user={selectedUserForResumes}
-        isOpen={!!selectedUserForResumes}
-        onClose={() => setSelectedUserForResumes(null)}
-      />
+      <ResumePreviewModal resumeInfo={selectedResume} onClose={() => setSelectedResume(null)} />
+      <UserResumesModal user={selectedUserForResumes} isOpen={!!selectedUserForResumes} onClose={() => setSelectedUserForResumes(null)} />
     </>
   );
 }
@@ -421,8 +473,8 @@ const getFlattenedResumeData = (resumes) => {
     };
 
     const baseHeaders = [
-        { key: "title", label: "Resume Title" }, 
         { key: "userName", label: "User Name" },
+        { key: "title", label: "Resume Title" }, 
         { key: "userNiatId", label: "User Student ID" },
         { key: "googleDriveLink", label: "Resume Link (Google Drive)"}, 
         { key: "userEmail", label: "User Email" },
@@ -467,7 +519,7 @@ const getFlattenedResumeData = (resumes) => {
 
 const UsersTable = ({ users, onViewResumes }) => {
     return (
-        <div className="overflow-auto mt-4 border rounded-lg h-full shadow-md">
+        <div className="flex-1 min-h-0 overflow-auto bg-white">
           <table className="min-w-full bg-white">
             <thead className="bg-gradient-to-r from-indigo-50 to-blue-50 sticky top-0 z-10">
               <tr>
@@ -545,7 +597,7 @@ const DetailedResumesTable = ({ resumes, allResumes, onViewResume }) => {
   
     if (resumes.length === 0) {
       return (
-        <div className="mt-4 text-center text-gray-500 border rounded-lg py-12 bg-white shadow-sm">
+        <div className="flex-1 min-h-0 text-center text-gray-500 py-12 bg-white flex items-center justify-center">
           <div className="flex flex-col items-center">
             <FileText className="h-10 w-10 text-gray-300 mb-2" />
             <p className="text-lg font-medium">No matching resumes found</p>
@@ -572,16 +624,32 @@ const DetailedResumesTable = ({ resumes, allResumes, onViewResume }) => {
                 return 'w-40 max-w-40';
         }
     };
+
+    const getStickyColumnClasses = (key, rowIndex, isHeader = false) => {
+        if (key === 'userName') {
+            return cn(
+                'sticky left-0 border-r border-gray-200',
+                isHeader
+                    ? 'z-30 bg-indigo-50'
+                    : rowIndex % 2 === 0
+                        ? 'bg-white group-hover:bg-indigo-50'
+                        : 'bg-gray-50 group-hover:bg-indigo-50'
+            );
+        }
+
+        return '';
+    };
     
     return (
-        <div className="overflow-auto mt-4 border rounded-lg shadow-md h-full">
+        <div className="flex-1 min-h-0 overflow-auto bg-white">
             <table className="min-w-full bg-white text-sm">
                 <thead className="bg-gradient-to-r from-indigo-50 to-blue-50 sticky top-0 z-10">
                     <tr>
                     {headers.map(header => (
                         <th key={header.key} className={cn(
                           "px-4 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider sticky top-0 z-10",
-                          getColumnWidth(header.key)
+                          getColumnWidth(header.key),
+                          getStickyColumnClasses(header.key, 0, true)
                         )}>
                         {header.label}
                         </th>
@@ -592,10 +660,17 @@ const DetailedResumesTable = ({ resumes, allResumes, onViewResume }) => {
                     {flattenedData.map((row, rowIndex) => (
                     <tr 
                       key={resumes[rowIndex]._id} 
-                      className={`hover:bg-indigo-50/30 transition-colors ${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}
+                      className={`group hover:bg-indigo-50/30 transition-colors ${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}
                     >
                         {headers.map(header => (
-                        <td key={`${rowIndex}-${header.key}`} className={cn("px-4 py-3 whitespace-nowrap", getColumnWidth(header.key))}>
+                        <td
+                          key={`${rowIndex}-${header.key}`}
+                          className={cn(
+                            "px-4 py-3 whitespace-nowrap",
+                            getColumnWidth(header.key),
+                            getStickyColumnClasses(header.key, rowIndex)
+                          )}
+                        >
                             <div className="truncate" title={String(row[header.key] ?? '')}>
                                 {header.key === 'title' ? (
                                     <button 

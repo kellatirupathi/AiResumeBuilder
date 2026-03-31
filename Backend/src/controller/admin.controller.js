@@ -4,6 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import User from "../models/user.model.js";
 import Resume from "../models/resume.model.js";
 import jwt from "jsonwebtoken";
+import { processPendingResumeDriveLinks } from "../services/resumeDrive.service.js";
 
 // Predefined admin credentials stored in environment variables for security
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "tirupathirao.kella@nxtwave.co.in";
@@ -95,5 +96,31 @@ export const getAllResumes = async (req, res) => {
     return res
       .status(500)
       .json(new ApiError(500, "Failed to fetch resumes", [], error.stack));
+  }
+};
+
+export const processPendingResumeLinks = async (req, res) => {
+  try {
+    const summary = await processPendingResumeDriveLinks();
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          summary,
+          "Pending resume Drive links processed successfully"
+        )
+      );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiError(
+          500,
+          "Failed to process pending resume Drive links",
+          [error.message],
+          error.stack
+        )
+      );
   }
 };

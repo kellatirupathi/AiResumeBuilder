@@ -5,6 +5,7 @@ import {
   checkAdminSession,
   getAllUsers,
   getAllResumes,
+  processPendingResumeLinks,
 } from "../controller/admin.controller.js";
 import { isAdmin } from "../middleware/adminAuth.js";
 
@@ -20,5 +21,6 @@ router.get("/session", checkAdminSession);
 router.post("/logout", logoutAdmin);
 router.get("/users", getAllUsers);
 router.get("/resumes", getAllResumes);
+router.post("/resumes/process-pending-links", processPendingResumeLinks);
 
 export default router;

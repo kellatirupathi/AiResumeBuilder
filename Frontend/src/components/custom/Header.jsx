@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { FaUser, FaSignOutAlt, FaTachometerAlt, FaKey, FaEdit } from "react-icons/fa"; // Import FaEdit
 import { Moon, Sun } from "lucide-react";
 import ChangePasswordModal from "./ChangePasswordModal";
+import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
 
 function Header({ user, darkMode, toggleDarkMode }) {
   const dispatch = useDispatch();
@@ -62,7 +63,8 @@ function Header({ user, darkMode, toggleDarkMode }) {
         className={`fixed top-0 left-0 right-0 z-50 px-6 md:px-10 py-4 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-sm shadow-md dark:bg-gray-900/80" : "bg-white/80 backdrop-blur-sm dark:bg-gray-900/60"}`}
       >
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link to="/" className="flex items-center space-x-2 group">
+          <Link to="/" className="flex items-center gap-3 group">
+            <NxtResumeLogoMark className="h-11 w-11 transition-transform duration-300 group-hover:scale-105" />
             <span className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-indigo-600 bg-clip-text text-transparent">
               NxtResume
             </span>

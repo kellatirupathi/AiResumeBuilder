@@ -5,10 +5,10 @@ import { useSelector, useDispatch } from "react-redux";
 import { getAllResumeData } from "@/Services/resumeAPI";
 import { logoutUser } from "@/Services/login";
 import { addUserData } from "@/features/user/userFeatures";
+import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
 import AddResume from "./components/AddResume";
 import ResumeCard from "./components/ResumeCard";
 import ATSScoreChecker from "./components/ATSScoreChecker";
-import ChangePasswordModal from "@/components/custom/ChangePasswordModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaEdit, FaKey, FaSignOutAlt } from "react-icons/fa";
 import {
@@ -30,12 +30,14 @@ import {
   BadgePlus,
   PlusCircle,
   User,
-  Calendar,
-  ChevronRight,
   Filter,
   SlidersHorizontal,
   Moon,
-  Sun
+  Sun,
+  LayoutDashboard,
+  HelpCircle,
+  LogOut,
+  ChevronUp,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -113,9 +115,10 @@ function Dashboard() {
   const [sortOption, setSortOption] = useState("newest");
   const [showATSModal, setShowATSModal] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [activeNav, setActiveNav] = useState("dashboard");
   const sortDropdownRef = useRef(null);
   const userDropdownRef = useRef(null);
+  const profileDropdownRef = useRef(null);
   const navigate = useNavigate();
 
   const isDarkMode = document.documentElement.classList.contains('dark');
@@ -134,14 +137,6 @@ function Dashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleOpenATSChecker = () => {
-    if (resumeList.length === 0) {
-      toast.error("No resumes available", { description: "Please create a resume first to use the ATS checker"});
-      return;
-    }
-    setShowATSModal(true);
   };
 
   useEffect(() => { fetchAllResumeData(); }, [user]);
@@ -164,6 +159,9 @@ function Dashboard() {
         setShowSortOptions(false);
       }
       if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
+        setUserDropdownOpen(false);
+      }
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
         setUserDropdownOpen(false);
       }
     };
@@ -201,380 +199,245 @@ function Dashboard() {
     return "-";
   };
 
+  const navItems = [
+    { key: "dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
+    { key: "resumes",   label: "Resumes",   icon: <FileText        className="h-4 w-4" /> },
+    { key: "profile",   label: "Profile",   icon: <User            className="h-4 w-4" /> },
+    { key: "ats",       label: "ATS Checker", icon: <PieChart      className="h-4 w-4" /> },
+    { key: "help",      label: "Help",      icon: <HelpCircle      className="h-4 w-4" /> },
+  ];
+
   return (
-    <div className={`min-h-screen w-full transition-colors duration-500 overflow-x-hidden ${isDarkMode ? 'dark bg-gradient-to-br from-gray-900 via-indigo-950/30 to-purple-950/30 text-gray-200' : 'bg-gradient-to-br from-blue-50 via-indigo-50/30 to-purple-50/20 text-gray-800'}`}>
-      {/* Background Effects */}
-      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-purple-400/10 dark:bg-purple-600/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-40 left-20 w-72 h-72 bg-blue-400/10 dark:bg-blue-600/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-10 left-20 w-80 h-80 bg-emerald-400/10 dark:bg-emerald-600/10 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-20 right-40 w-64 h-64 bg-pink-400/10 dark:bg-pink-600/10 rounded-full blur-3xl"></div>
-        <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] dark:opacity-[0.03]"></div>
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">{[...Array(30)].map((_, i) => <motion.div key={i} className={`absolute w-1 h-1 rounded-full ${isDarkMode ? 'bg-white' : 'bg-indigo-600'} opacity-20`} style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }} animate={{ y: [0, -30, 0], opacity: [0.1, 0.3, 0.1], scale: [1, Math.random() * 0.5 + 1, 1] }} transition={{ repeat: Infinity, duration: 3 + Math.random() * 5, delay: Math.random() * 2 }} />)}</div>
-        <motion.div className={`absolute top-1/4 -right-24 w-96 h-96 border ${isDarkMode ? 'border-indigo-600/20' : 'border-indigo-300/30'} rounded-full opacity-20`} animate={{ rotate: 360 }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }}></motion.div>
-        <motion.div className={`absolute bottom-1/4 -left-32 w-96 h-96 border ${isDarkMode ? 'border-emerald-600/20' : 'border-emerald-300/30'} rounded-full opacity-20`} animate={{ rotate: -360 }} transition={{ duration: 50, repeat: Infinity, ease: "linear" }}></motion.div>
-        <motion.div className={`absolute left-1/3 -top-40 w-[40rem] h-[40rem] border ${isDarkMode ? 'border-purple-600/20' : 'border-purple-300/30'} rounded-full opacity-10`} animate={{ rotate: 360 }} transition={{ duration: 100, repeat: Infinity, ease: "linear" }}></motion.div>
-      </div>
+    <div className="h-screen flex overflow-hidden bg-gray-50 dark:bg-gray-900">
 
-      {/* Main Layout: Full height, side-by-side */}
-      <div className="relative z-10 h-screen flex pt-4 px-4 gap-4 max-w-full mx-auto overflow-hidden">
+      {/* ─── LEFT SIDEBAR ─── */}
+      <aside className="w-60 flex-shrink-0 bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 flex flex-col h-screen shadow-xl z-20">
 
-        {/* ─── LEFT SIDEBAR ─── */}
-        <motion.aside
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4 }}
-          className="w-72 flex-shrink-0 flex flex-col gap-3 overflow-y-auto custom-scrollbar pb-4"
-        >
-          {/* User Identity Card */}
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-4">
-            {/* Avatar + Greeting + Action buttons */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <AnimatedUserIcon fullName={user.fullName} />
-                <div>
-                  <h2 className="text-base font-bold text-gray-800 dark:text-white leading-tight">
-                    {getGreeting()}
-                  </h2>
+        {/* Logo */}
+        <div className="px-5 py-5 border-b border-white/10 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <NxtResumeLogoMark className="h-9 w-9" />
+            <span className="text-white font-bold text-base">NxtResume</span>
+          </div>
+        </div>
+
+        {/* Nav items */}
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar">
+          {navItems.map(({ key, label, icon }) => (
+            <button
+              key={key}
+              onClick={() => {
+                if (key === "ats")     { navigate("/ats-checker");   return; }
+                if (key === "resumes") { navigate("/resumes");       return; }
+                if (key === "profile") { navigate("/profile");       return; }
+                if (key === "help")    { navigate("/documentation"); return; }
+                setActiveNav(key);
+              }}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                activeNav === key
+                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/40"
+                  : "text-indigo-200 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              {icon}
+              {label}
+              {key === "resumes" && (
+                <span className={`ml-auto text-xs px-1.5 py-0.5 rounded-full font-bold ${activeNav === key ? "bg-white/20 text-white" : "bg-white/10 text-indigo-300"}`}>
+                  {resumeList.length}
+                </span>
+              )}
+            </button>
+          ))}
+        </nav>
+
+        {/* Profile button at bottom — dropdown opens up-right */}
+        <div className="px-3 py-4 border-t border-white/10 flex-shrink-0" ref={profileDropdownRef}>
+          <button
+            onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-indigo-200 hover:bg-white/10 hover:text-white transition-all duration-200 text-sm font-medium"
+          >
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+              {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <p className="truncate text-xs font-semibold text-white leading-tight">{user.fullName || "User"}</p>
+              <p className="truncate text-[10px] text-indigo-400 leading-tight">{user.email || ""}</p>
+            </div>
+            <ChevronUp className={`h-3.5 w-3.5 flex-shrink-0 transition-transform ${userDropdownOpen ? "rotate-180" : ""}`} />
+          </button>
+
+          {/* Dropdown — pops up and to the RIGHT of sidebar */}
+          {userDropdownOpen && (
+            <div className="fixed bottom-16 left-60 ml-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-[9999] py-2 text-left">
+              <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user.fullName || "User"}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 break-all mt-0.5">{user.email || ""}</p>
+              </div>
+              <div className="px-4 py-2 space-y-1">
+                <div className="flex justify-between text-xs py-1">
+                  <span className="text-gray-500 dark:text-gray-400">Student ID</span>
+                  <span className="font-mono text-gray-700 dark:text-gray-300">{user.niatId || "—"}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 border-indigo-300 hover:bg-indigo-50 dark:border-indigo-700 dark:hover:bg-indigo-900/50"
-                  onClick={() => navigate("/profile")}
-                  title="Edit Profile"
+              <div className="px-4 py-1 border-t border-gray-100 dark:border-gray-700 space-y-0.5">
+                <button
+                  onClick={() => { navigate('/profile'); setUserDropdownOpen(false); }}
+                  className="w-full text-left text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 flex items-center gap-2 py-1.5"
                 >
-                  <Edit className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-                </Button>
-                <Button
-                  onClick={toggleDarkMode}
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 border-indigo-300 hover:bg-indigo-50 dark:border-indigo-700 dark:hover:bg-indigo-900/50"
-                  aria-label="Toggle dark mode"
+                  <FaEdit className="w-3 h-3" /> Edit Profile
+                </button>
+                <button
+                  onClick={() => { navigate('/change-password'); setUserDropdownOpen(false); }}
+                  className="w-full text-left text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 flex items-center gap-2 py-1.5"
                 >
-                  {darkMode ? <Sun className="h-3.5 w-3.5 text-amber-400" /> : <Moon className="h-3.5 w-3.5 text-indigo-600" />}
-                </Button>
+                  <FaKey className="w-3 h-3" /> Change Password
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left text-sm text-red-500 hover:text-red-700 flex items-center gap-2 py-1.5"
+                >
+                  <FaSignOutAlt className="w-3 h-3" /> Sign out
+                </button>
               </div>
             </div>
+          )}
+        </div>
+      </aside>
 
-            {/* Profile Stats Grid */}
-            <div className="grid grid-cols-2 gap-2">
-              <StatCard icon={<Briefcase />} label="Experience" count={user.experience?.length || 0} />
-              <StatCard icon={<GraduationCap />} label="Education" count={user.education?.length || 0} />
-              <StatCard icon={<FolderGit />} label="Projects" count={user.projects?.length || 0} />
-              <StatCard icon={<Award />} label="Certs" count={user.certifications?.length || 0} />
-              <StatCard icon={<BadgePlus />} label="Skills" count={user.skills?.length || 0} />
-              <StatCard icon={<PlusCircle />} label="Extras" count={user.additionalSections?.length || 0} />
-            </div>
+      {/* ─── MAIN CONTENT ─── */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+
+        {/* Top bar */}
+        <header className="flex-shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between shadow-sm">
+          <div>
+            <h1 className="text-lg font-bold text-gray-800 dark:text-white">{getGreeting()} 👋</h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
           </div>
 
-          {/* Profile Summary */}
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700 p-3 flex items-center">
-              <User className="w-4 h-4 mr-2 text-indigo-500 dark:text-indigo-400" />
-              Profile Summary
-            </h3>
-            <div className="p-3 space-y-2">
-              <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50/80 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-700/80">
-                <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/60 flex items-center justify-center flex-shrink-0">
-                  <FileText className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                </div>
-                <div>
-                  <div className="font-bold text-lg text-gray-800 dark:text-white leading-none">{resumeList.length}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">Total Resumes</div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50/80 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-700/80">
-                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 flex items-center justify-center flex-shrink-0">
-                  <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <div>
-                  <div className="font-bold text-gray-800 dark:text-white text-sm">{getLastUpdatedDate()}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">Last Updated</div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50/80 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-700/80">
-                <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/60 flex items-center justify-center flex-shrink-0">
-                  <PieChart className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div>
-                  <button
-                    onClick={handleOpenATSChecker}
-                    disabled={isLoading || resumeList.length === 0}
-                    className="font-bold text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Check Score
-                  </button>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">ATS Compatibility</div>
-                </div>
-              </div>
+          {/* Toolbar: search + sort + view + dark mode toggle */}
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search resumes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 w-56 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-lg h-9 text-sm"
+              />
             </div>
-          </div>
 
-          {/* Quick Actions */}
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700 p-3 flex items-center">
-              <SlidersHorizontal className="w-4 h-4 mr-2 text-indigo-500 dark:text-indigo-400" />
-              Quick Actions
-            </h3>
-            <div className="p-3 space-y-2">
+            <div ref={sortDropdownRef} className="relative z-50">
               <Button
-                onClick={handleOpenATSChecker}
-                disabled={isLoading || resumeList.length === 0}
-                className="w-full rounded-lg text-sm py-2 h-auto bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 shadow-sm hover:shadow-md transition-all"
+                variant="outline"
+                onClick={() => setShowSortOptions(!showSortOptions)}
+                className="h-9 rounded-lg bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm flex items-center"
               >
-                <PieChart className="h-3.5 w-3.5 mr-1.5" />
-                ATS Checker
+                <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5" />
+                {sortOption === "newest" && "Newest first"}
+                {sortOption === "oldest" && "Oldest first"}
+                {sortOption === "alphabetical" && "A to Z"}
+                <ChevronDown className="h-3.5 w-3.5 ml-1.5" />
               </Button>
-              <Button
-                onClick={() => document.querySelector('.add-resume-trigger')?.click()}
-                className="w-full rounded-lg text-sm py-2 h-auto bg-gradient-to-r from-emerald-500 to-blue-600 text-white hover:from-emerald-600 hover:to-blue-700 shadow-sm hover:shadow-md transition-all"
-              >
-                <Plus className="h-3.5 w-3.5 mr-1.5" />
-                New Resume
-              </Button>
-            </div>
-          </div>
-
-          {/* Recent Activity */}
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700 p-3 flex items-center">
-              <Calendar className="w-4 h-4 mr-2 text-indigo-500 dark:text-indigo-400" />
-              Recent Activity
-            </h3>
-            <div className="p-3 space-y-2">
-              {isLoading && (
-                <div className="text-center py-3">
-                  <LoaderCircle className="h-5 w-5 animate-spin text-indigo-500 mx-auto" />
-                </div>
-              )}
-              {!isLoading && resumeList.length === 0 && (
-                <div className="text-center py-3 text-gray-500 dark:text-gray-400 text-sm">
-                  No resume activity yet
-                </div>
-              )}
-              {!isLoading && resumeList
-                .slice()
-                .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
-                .slice(0, 2)
-                .map((resume, idx) => (
-                  <div key={idx} className="flex items-center p-2 rounded-lg bg-gray-50/80 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-700/80">
-                    <div className="w-7 h-7 rounded-md bg-indigo-100 dark:bg-indigo-900/60 flex items-center justify-center mr-2 flex-shrink-0">
-                      <FileText className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-gray-800 dark:text-white truncate">{resume.title}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {new Date(resume.updatedAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <ChevronRight className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
-                  </div>
-                ))}
-              {!isLoading && resumeList.length > 2 && (
-                <div className="text-center pt-1">
-                  <button className="text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300">
-                    View more...
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </motion.aside>
-
-        {/* ─── MAIN CONTENT AREA ─── */}
-        <motion.main
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2, duration: 0.4 }}
-          className="flex-1 flex flex-col overflow-hidden pb-4 min-w-0"
-        >
-          {/* Search & Filter Toolbar Row */}
-          <div className="flex items-center gap-3 mb-4 flex-shrink-0 relative z-30">
-
-            {/* Toolbar Card */}
-            <div className="flex-1 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-xl shadow-md border border-gray-100 dark:border-gray-700 p-3">
-              <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-                {/* Search */}
-                <div className="relative w-full sm:w-auto flex-grow">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
-                  <Input
-                    placeholder="Search resumes..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 w-full bg-gray-50 dark:bg-gray-700/60 border-gray-200 dark:border-gray-600 rounded-lg h-9"
-                  />
-                </div>
-
-                {/* Sort + View Toggle */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {/* Sort Dropdown */}
-                  <div ref={sortDropdownRef} className="relative z-50">
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowSortOptions(!showSortOptions)}
-                      className="h-8 rounded-lg bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 whitespace-nowrap flex items-center text-sm"
-                    >
-                      <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5" />
-                      {sortOption === "newest" && "Newest first"}
-                      {sortOption === "oldest" && "Oldest first"}
-                      {sortOption === "alphabetical" && "A to Z"}
-                      <ChevronDown className="h-3.5 w-3.5 ml-1.5" />
-                    </Button>
-                    {showSortOptions && (
-                      <div className="absolute z-[9999] mt-1 right-0 w-44 rounded-md shadow-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 ring-1 ring-black ring-opacity-5">
-                        <div className="py-1">
-                          {[
-                            { value: "newest", label: "Newest first" },
-                            { value: "oldest", label: "Oldest first" },
-                            { value: "alphabetical", label: "A to Z" },
-                          ].map(({ value, label }) => (
-                            <button
-                              key={value}
-                              onClick={() => { setSortOption(value); setShowSortOptions(false); }}
-                              className={`w-full text-left px-3 py-2 text-sm transition-colors ${sortOption === value ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"}`}
-                            >
-                              <div className="flex items-center">
-                                {sortOption === value && (
-                                  <svg className="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                  </svg>
-                                )}
-                                <span className={sortOption === value ? "" : "ml-6"}>{label}</span>
-                              </div>
-                            </button>
-                          ))}
+              {showSortOptions && (
+                <div className="absolute z-[9999] mt-1 right-0 w-44 rounded-md shadow-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600">
+                  <div className="py-1">
+                    {[
+                      { value: "newest", label: "Newest first" },
+                      { value: "oldest", label: "Oldest first" },
+                      { value: "alphabetical", label: "A to Z" },
+                    ].map(({ value, label }) => (
+                      <button
+                        key={value}
+                        onClick={() => { setSortOption(value); setShowSortOptions(false); }}
+                        className={`w-full text-left px-3 py-2 text-sm ${sortOption === value ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"}`}
+                      >
+                        <div className="flex items-center">
+                          {sortOption === value && <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+                          <span className={sortOption === value ? "" : "ml-6"}>{label}</span>
                         </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Grid / List Toggle */}
-                  <div className="bg-gray-100 dark:bg-gray-700 rounded-lg flex p-1">
-                    <button
-                      onClick={() => setViewMode("grid")}
-                      className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-white dark:bg-gray-600 text-emerald-500 shadow-sm" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"}`}
-                    >
-                      <Grid className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => setViewMode("list")}
-                      className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-white dark:bg-gray-600 text-emerald-500 shadow-sm" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"}`}
-                    >
-                      <List className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* User Profile Avatar — outside the card */}
-            <div ref={userDropdownRef} className="relative flex-shrink-0">
-              <button
-                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="w-10 h-10 rounded-full bg-gradient-to-r from-emerald-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm cursor-pointer hover:shadow-lg transition-shadow"
-              >
-                {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
-              </button>
-              {userDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-[9999] py-2 text-left">
-                  <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-                    <div className="text-gray-900 dark:text-gray-100 font-medium text-sm">User Profile</div>
-                  </div>
-                  <div className="px-4 py-3 space-y-2">
-                    <div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Full Name</div>
-                      <div className="text-sm font-medium text-gray-800 dark:text-gray-200">{user.fullName || "Not Available"}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">ID</div>
-                      <div className="text-sm font-medium text-gray-800 dark:text-gray-200 font-mono">{user.niatId || "Not Available"}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Email</div>
-                      <div className="text-sm font-medium text-gray-800 dark:text-gray-200 break-all">{user.email || "Not Available"}</div>
-                    </div>
-                    <button
-                      onClick={() => { navigate('/profile'); setUserDropdownOpen(false); }}
-                      className="w-full text-left text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-700"
-                    >
-                      <FaEdit className="w-3 h-3" /> Edit Profile
-                    </button>
-                    <button
-                      onClick={() => { setIsChangePasswordOpen(true); setUserDropdownOpen(false); }}
-                      className="w-full text-left text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center gap-2"
-                    >
-                      <FaKey className="w-3 h-3" /> Change Password
-                    </button>
-                  </div>
-                  <div className="border-t border-gray-100 dark:border-gray-700 px-4 py-2">
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 flex items-center gap-2"
-                    >
-                      <FaSignOutAlt className="w-3 h-3" /> Sign out
-                    </button>
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
             </div>
 
-          </div>
+            <div className="bg-gray-100 dark:bg-gray-700 rounded-lg flex p-1">
+              <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-white dark:bg-gray-600 text-emerald-500 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"}`}>
+                <Grid className="h-4 w-4" />
+              </button>
+              <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-white dark:bg-gray-600 text-emerald-500 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"}`}>
+                <List className="h-4 w-4" />
+              </button>
+            </div>
 
-          {/* Resume Cards Area */}
-          <div className="overflow-y-auto pr-1 custom-scrollbar flex-1 rounded-xl bg-gray-50/50 dark:bg-gray-900/30 backdrop-blur-sm shadow-inner border border-gray-100 dark:border-gray-800 p-3">
-            {isLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <LoaderCircle className="h-10 w-10 animate-spin text-indigo-500 mx-auto mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">Loading your resumes...</p>
-                </div>
+            <Button onClick={toggleDarkMode} variant="outline" size="icon" className="h-9 w-9 border-gray-200 dark:border-gray-600">
+              {darkMode ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-indigo-600" />}
+            </Button>
+          </div>
+        </header>
+
+        {/* Stats row */}
+        <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-6 py-3 flex items-center gap-4">
+          {[
+            { icon: <FileText  className="h-4 w-4 text-indigo-500"  />, label: "Resumes",    value: resumeList.length },
+            { icon: <Briefcase className="h-4 w-4 text-blue-500"    />, label: "Experience", value: user.experience?.length    || 0 },
+            { icon: <BadgePlus className="h-4 w-4 text-emerald-500" />, label: "Skills",     value: user.skills?.length        || 0 },
+            { icon: <Award     className="h-4 w-4 text-amber-500"   />, label: "Certs",      value: user.certifications?.length || 0 },
+            { icon: <FolderGit className="h-4 w-4 text-purple-500"  />, label: "Projects",   value: user.projects?.length      || 0 },
+            { icon: <Clock     className="h-4 w-4 text-gray-400"    />, label: "Last Updated", value: getLastUpdatedDate() },
+          ].map(({ icon, label, value }) => (
+            <div key={label} className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700/50 px-3 py-1.5 rounded-lg border border-gray-100 dark:border-gray-700">
+              {icon}
+              <span className="text-sm font-bold text-gray-800 dark:text-white">{value}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Resume cards — only this scrolls */}
+        <main className="flex-1 overflow-y-auto custom-scrollbar p-6">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <LoaderCircle className="h-10 w-10 animate-spin text-indigo-500 mx-auto mb-3" />
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Loading your resumes...</p>
               </div>
-            ) : (
-              <AnimatePresence>
-                <motion.div
-                  key={viewMode}
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" : "flex flex-col space-y-3"}
-                >
-                  {!searchQuery && (
-                    <motion.div variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
-                      <AddResume viewMode={viewMode} />
-                    </motion.div>
-                  )}
-                  {filteredList.map((resume) => (
-                    <motion.div key={resume._id} variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
-                      <ResumeCard resume={resume} refreshData={fetchAllResumeData} viewMode={viewMode} />
-                    </motion.div>
-                  ))}
-
-                  {filteredList.length === 0 && searchQuery && (
-                    <div className="col-span-full text-center py-10">
-                      <Search className="h-10 w-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                      <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300">No matches found</h3>
-                      <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Try adjusting your search query</p>
-                    </div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            )}
-          </div>
-        </motion.main>
+            </div>
+          ) : (
+            <AnimatePresence>
+              <motion.div
+                key={viewMode}
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4" : "flex flex-col space-y-3"}
+              >
+                {!searchQuery && (
+                  <motion.div variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
+                    <AddResume viewMode={viewMode} />
+                  </motion.div>
+                )}
+                {filteredList.map((resume) => (
+                  <motion.div key={resume._id} variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
+                    <ResumeCard resume={resume} refreshData={fetchAllResumeData} viewMode={viewMode} />
+                  </motion.div>
+                ))}
+                {filteredList.length === 0 && searchQuery && (
+                  <div className="col-span-full text-center py-16">
+                    <Search className="h-10 w-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                    <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300">No matches found</h3>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Try adjusting your search query</p>
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          )}
+        </main>
       </div>
 
-      {/* ATS Score Checker Modal */}
       <ATSScoreChecker isOpen={showATSModal} onClose={() => setShowATSModal(false)} resumes={resumeList} />
-
-      {/* Change Password Modal */}
-      <ChangePasswordModal isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />
     </div>
   );
 }
