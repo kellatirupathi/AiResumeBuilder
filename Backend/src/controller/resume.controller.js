@@ -3,41 +3,15 @@
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import Resume from "../models/resume.model.js";
-import { generatePDF } from '../services/pdf.service.js';
-import { uploadOrUpdatePdf } from '../services/drive.service.js';
+import { generateAndUploadResumeDriveLink } from "../services/resumeDrive.service.js";
 
-// MODIFIED: Helper to handle PDF generation and upload
 const generateAndUpload = async (resume) => {
-    try {
-        // MODIFIED: Populate the user's full name before proceeding
-        await resume.populate('user', 'fullName');
-        const userFullName = resume.user?.fullName;
-
-        if (!userFullName) {
-            console.error(`Could not find user's full name for resume ${resume._id}`);
-            return; // Exit if user name can't be found
-        }
-        
-        console.log(`Generating PDF for resume: ${resume._id}`);
-        const pdfBuffer = await generatePDF(resume.toObject());
-        
-        console.log(`Uploading/Updating PDF to Google Drive for resume: ${resume._id}`);
-        // MODIFIED: Pass the user's full name to the upload service
-        const { fileId, webViewLink } = await uploadOrUpdatePdf(
-            resume._id.toString(), 
-            userFullName,
-            pdfBuffer, 
-            resume.googleDriveFileId
-        );
-
-        // Update the resume document with the new Drive info
-        resume.googleDriveFileId = fileId;
-        resume.googleDriveLink = webViewLink;
-        await resume.save();
-        console.log(`Saved Google Drive link for resume: ${resume._id}`);
-    } catch (error) {
-        console.error(`Failed to generate or upload PDF for resume ${resume._id}:`, error);
-    }
+  try {
+    await generateAndUploadResumeDriveLink(resume);
+    console.log(`Saved Google Drive link for resume: ${resume._id}`);
+  } catch (error) {
+    console.error(`Failed to generate or upload PDF for resume ${resume._id}:`, error);
+  }
 };
 
 const start = async (req, res) => {

@@ -75,7 +75,11 @@ function App() {
   const isEditResumePage = location.pathname.includes('/dashboard/edit-resume');
   const isProfilePage = location.pathname === '/profile';
   const isDashboardPage = location.pathname === '/dashboard';
-  const shouldHideHeader = isEditResumePage || isProfilePage || isDashboardPage;
+  const isDocumentationPage = location.pathname === '/documentation';
+  const isATSPage     = location.pathname === '/ats-checker';
+  const isResumesPage        = location.pathname === '/resumes';
+  const isChangePasswordPage = location.pathname === '/change-password';
+  const shouldHideHeader = isEditResumePage || isProfilePage || isDashboardPage || isDocumentationPage || isATSPage || isResumesPage || isChangePasswordPage;
 
   if (loading) {
     return (

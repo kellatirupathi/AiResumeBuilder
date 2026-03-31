@@ -18,6 +18,10 @@ import ProfilePage from "./pages/profile/ProfilePage.jsx";
 import NiatManagementPage from "./pages/admin/NiatManagementPage.jsx";
 import ResetPasswordPage from "./pages/auth/customAuth/ResetPasswordPage.jsx";
 import CompleteProfilePage from "./pages/onboarding/CompleteProfilePage.jsx"; // <-- MODIFIED: IMPORTED NEW PAGE
+import Documentation from "./pages/documentation/Documentation.jsx";
+import ATSCheckerPage from "./pages/ats/ATSCheckerPage.jsx";
+import ResumesPage from "./pages/resumes/ResumesPage.jsx";
+import ChangePasswordPage from "./pages/change-password/ChangePasswordPage.jsx";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { VITE_GOOGLE_CLIENT_ID } from './config/config.js';
 
@@ -40,6 +44,22 @@ const router = createBrowserRouter([
       {
         path: "/profile",
         element: <ProfilePage />
+      },
+      {
+        path: "/documentation",
+        element: <Documentation />
+      },
+      {
+        path: "/ats-checker",
+        element: <ATSCheckerPage />
+      },
+      {
+        path: "/resumes",
+        element: <ResumesPage />
+      },
+      {
+        path: "/change-password",
+        element: <ChangePasswordPage />
       }
     ],
   },

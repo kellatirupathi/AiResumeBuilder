@@ -80,7 +80,7 @@ const ConfirmDialog = ({ isOpen, onClose, onConfirm, title, message }) => {
   );
 };
 
-function NiatManagementPage() {
+function NiatManagementPage({ embedded = false }) {
     const [niatIds, setNiatIds] = useState([]);
     const [filteredIds, setFilteredIds] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -122,8 +122,12 @@ function NiatManagementPage() {
     };
     
     useEffect(() => {
-        checkAdminSession().then(fetchIds).catch(() => navigate('/admin/login'));
-    }, [navigate]);
+        if (embedded) {
+            fetchIds();
+        } else {
+            checkAdminSession().then(fetchIds).catch(() => navigate('/admin/login'));
+        }
+    }, [navigate, embedded]);
     
     // Filter IDs when search query changes
     useEffect(() => {
@@ -271,62 +275,64 @@ function NiatManagementPage() {
     };
     
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4 sm:p-8">
+        <div className={embedded ? "p-0" : "min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4 sm:p-8"}>
             <header className="mb-8">
-                <div className="flex justify-between items-center">
-                    <Button 
-                        variant="outline" 
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
+                    {!embedded && (
+                    <Button
+                        variant="outline"
                         onClick={() => navigate('/admin/dashboard')}
                         className="border-gray-300 text-gray-700 hover:bg-gray-100"
                     >
                         <ArrowLeft className="h-4 w-4 mr-2" /> Back to Dashboard
                     </Button>
+                    )}
                     
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            onClick={handleRefresh}
-                            disabled={isRefreshing}
-                            className="border-gray-300 text-gray-700 hover:bg-gray-100"
-                        >
-                            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                            Refresh
-                        </Button>
-                        
-                        <Button
-                            variant="outline"
-                            onClick={exportToCSV}
-                            className="border-indigo-200 text-indigo-600 hover:bg-indigo-50"
-                        >
-                            <Download className="h-4 w-4 mr-2" />
-                            Export CSV
-                        </Button>
-                    </div>
-                </div>
-                
-                <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div className="w-full sm:w-auto flex gap-4">
-                        <div className="flex items-center px-4 py-2 bg-indigo-50 rounded-lg">
-                            <div className="mr-3">
-                                <div className="text-xs text-indigo-500 uppercase font-semibold">Total IDs</div>
-                                <div className="text-2xl font-bold text-indigo-700">{stats.total}</div>
+                    <div className="flex flex-1 flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                        <div className="relative w-full sm:w-72 xl:max-w-sm">
+                            <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                            <Input
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search Student ID..."
+                                className="pl-9 pr-4 py-2 bg-white border-gray-300"
+                            />
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-end gap-3">
+                            <div className="flex items-center gap-2">
+                                <div className="min-w-[96px] rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-2">
+                                    <div className="text-[11px] text-indigo-500 uppercase font-semibold tracking-wide">Total IDs</div>
+                                    <div className="text-xl font-bold text-indigo-700 leading-tight">{stats.total}</div>
+                                </div>
+
+                                <div className="min-w-[110px] rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-2">
+                                    <div className="text-[11px] text-indigo-500 uppercase font-semibold tracking-wide">Added Today</div>
+                                    <div className="text-xl font-bold text-indigo-700 leading-tight">{stats.today}</div>
+                                </div>
                             </div>
-                            <div className="h-8 w-px bg-indigo-200 mx-2"></div>
-                            <div>
-                                <div className="text-xs text-indigo-500 uppercase font-semibold">Added Today</div>
-                                <div className="text-2xl font-bold text-indigo-700">{stats.today}</div>
+
+                            <div className="flex items-center gap-2 xl:ml-6">
+                                <Button
+                                    variant="outline"
+                                    onClick={handleRefresh}
+                                    disabled={isRefreshing}
+                                    className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                                >
+                                    <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                    Refresh
+                                </Button>
+                                
+                                <Button
+                                    variant="outline"
+                                    onClick={exportToCSV}
+                                    className="border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                                >
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Export CSV
+                                </Button>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div className="w-full sm:w-64 relative">
-                        <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <Input
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search Student ID..."
-                            className="pl-9 pr-4 py-2 bg-white border-gray-300"
-                        />
                     </div>
                 </div>
             </header>

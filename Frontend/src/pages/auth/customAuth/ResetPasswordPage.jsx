@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { resetPassword } from '@/Services/login';
 import { FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { Loader2 } from "lucide-react";
-import logo from '/logo.svg';
+import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
 
 function ResetPasswordPage() {
     const [searchParams] = useSearchParams();
@@ -60,7 +60,8 @@ function ResetPasswordPage() {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <header className="p-4">
-                <Link to="/" className="flex items-center space-x-2">
+                <Link to="/" className="flex items-center gap-3">
+                    <NxtResumeLogoMark className="h-11 w-11" />
                     <span className="text-2xl font-bold">NxtResume</span>
                 </Link>
             </header>

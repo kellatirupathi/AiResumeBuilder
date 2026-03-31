@@ -57,6 +57,15 @@ export const getAllResumes = async () => {
   }
 };
 
+export const processPendingResumeLinks = async () => {
+  try {
+    const response = await adminAxios.post('/resumes/process-pending-links');
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to process pending resume links.');
+  }
+};
+
 // --- NEW FUNCTIONS FOR NIAT ID MANAGEMENT ---
 export const getNiatIds = async () => {
   try {

@@ -11,6 +11,7 @@ import { startUser } from "../../Services/login.js";
 import { useDispatch, useSelector } from "react-redux";
 import { addUserData } from "@/features/user/userFeatures.js";
 import { motion } from "framer-motion";
+import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
 
 function HomePage() {
   const user = useSelector((state) => state.editUser.userData);
@@ -757,8 +758,11 @@ function HomePage() {
       <footer className="mt-auto bg-white dark:bg-gray-800/30 border-t border-gray-100 dark:border-gray-700 py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
           <div className="flex flex-col items-center md:items-start">
-            <div className="text-2xl font-bold bg-gradient-to-r from-emerald-500 to-indigo-600 bg-clip-text text-transparent mb-2">
-              NxtResume
+            <div className="flex items-center gap-3 mb-2">
+              <NxtResumeLogoMark className="h-11 w-11" />
+              <div className="text-2xl font-bold bg-gradient-to-r from-emerald-500 to-indigo-600 bg-clip-text text-transparent">
+                NxtResume
+              </div>
             </div>
             <p className="text-gray-600 dark:text-gray-300 text-sm text-center md:text-left">Building futures, one resume at a time.</p>
           </div>

@@ -21,6 +21,7 @@ import { GoogleLogin } from '@react-oauth/google'; // <-- NEW: Import GoogleLogi
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ForgotPasswordModal from "./ForgotPasswordModal";
+import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
 
 // Toast component for displaying notifications
 const Toast = ({ message, type, onClose }) => {
@@ -198,9 +199,7 @@ function AuthPage() {
             <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px)", backgroundSize: "20px 20px" }}></div>
             <div className="relative">
               <div className="flex items-center mb-4">
-                <div className="bg-white rounded-lg p-2 mr-3">
-                  <FaRegFileAlt className="text-emerald-500 text-xl" />
-                </div>
+                <NxtResumeLogoMark className="h-14 w-14 mr-3" />
                 <h1 className="text-3xl font-bold">NxtResume</h1>
               </div>
               <p className="text-white/90 mb-10">
