@@ -115,7 +115,7 @@ function NiatManagementPage() {
                 today: ids.filter(id => new Date(id.createdAt) >= today).length
             });
         } catch (error) {
-            toast.error("Failed to fetch NIAT IDs.", { description: error.message });
+            toast.error("Failed to fetch Student IDs.", { description: error.message });
         } finally {
             setIsLoading(false);
         }
@@ -144,7 +144,7 @@ function NiatManagementPage() {
         setIsSingleSubmitting(true);
         try {
             await addSingleNiatId(singleIdInput.trim());
-            toast.success("NIAT ID added successfully.");
+            toast.success("Student ID added successfully.");
             setSingleIdInput('');
             fetchIds();
         } catch (error) {
@@ -235,7 +235,7 @@ function NiatManagementPage() {
         
         try {
             await deleteNiatId(idToDelete);
-            toast.success("NIAT ID deleted successfully.");
+            toast.success("Student ID deleted successfully.");
             fetchIds();
         } catch (error) {
             toast.error("Failed to delete ID.", { description: error.message });
@@ -250,7 +250,7 @@ function NiatManagementPage() {
     
     const exportToCSV = () => {
         // Create CSV content
-        const headers = "NIAT ID,Date Added\n";
+        const headers = "Student ID,Date Added\n";
         const rows = filteredIds.map(id => 
             `${id.niatId},"${format(new Date(id.createdAt), 'PPpp')}"`
         ).join('\n');
@@ -324,7 +324,7 @@ function NiatManagementPage() {
                         <Input
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search NIAT ID..."
+                            placeholder="Search Student ID..."
                             className="pl-9 pr-4 py-2 bg-white border-gray-300"
                         />
                     </div>
@@ -372,7 +372,7 @@ function NiatManagementPage() {
                         <div className="flex flex-col sm:flex-row gap-3 items-start">
                             <div className="w-full">
                                 <div className="flex items-center mb-2">
-                                    <label htmlFor="single-id" className="text-sm font-medium text-gray-700 mr-2">NIAT ID</label>
+                                    <label htmlFor="single-id" className="text-sm font-medium text-gray-700 mr-2">Student ID</label>
                                     <Tooltip text="Enter any ID — no specific format required">
                                         <HelpCircle className="h-4 w-4 text-gray-400" />
                                     </Tooltip>
@@ -404,7 +404,7 @@ function NiatManagementPage() {
                     {activeTab === 'bulk' && (
                         <div>
                             <div className="flex items-center mb-2">
-                                <label htmlFor="bulk-ids" className="text-sm font-medium text-gray-700 mr-2">Multiple NIAT IDs</label>
+                                <label htmlFor="bulk-ids" className="text-sm font-medium text-gray-700 mr-2">Multiple Student IDs</label>
                                 <Tooltip text="Enter one ID per line. Any format is accepted.">
                                     <HelpCircle className="h-4 w-4 text-gray-400" />
                                 </Tooltip>
@@ -435,7 +435,7 @@ function NiatManagementPage() {
                         <div>
                             <div className="flex items-center mb-2">
                                 <label htmlFor="file-upload" className="text-sm font-medium text-gray-700 mr-2">Upload CSV File</label>
-                                <Tooltip text="Upload a CSV file containing one NIAT ID per row">
+                                <Tooltip text="Upload a CSV file containing one Student ID per row">
                                     <HelpCircle className="h-4 w-4 text-gray-400" />
                                 </Tooltip>
                             </div>
@@ -466,7 +466,7 @@ function NiatManagementPage() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="p-6 border-b border-gray-200">
                     <div className="flex justify-between items-center">
-                        <h2 className="text-xl font-semibold text-gray-800">Registered NIAT IDs</h2>
+                        <h2 className="text-xl font-semibold text-gray-800">Registered Student IDs</h2>
                         <div className="flex items-center gap-2 text-sm text-gray-500">
                             <Filter className="h-4 w-4" />
                             <span>
@@ -481,7 +481,7 @@ function NiatManagementPage() {
                 {isLoading ? (
                     <div className="flex justify-center items-center p-12">
                         <LoaderCircle className="h-8 w-8 animate-spin text-indigo-500 mr-3" />
-                        <span className="text-lg text-gray-600">Loading NIAT IDs...</span>
+                        <span className="text-lg text-gray-600">Loading Student IDs...</span>
                     </div>
                 ) : (
                     <>
@@ -496,8 +496,8 @@ function NiatManagementPage() {
                                 ) : (
                                     <div className="flex flex-col items-center justify-center text-gray-500">
                                         <Fingerprint className="h-12 w-12 text-gray-300 mb-3" />
-                                        <p className="text-lg font-medium">No NIAT IDs registered yet</p>
-                                        <p className="text-sm">Add your first NIAT ID using the tools above</p>
+                                        <p className="text-lg font-medium">No Student IDs registered yet</p>
+                                        <p className="text-sm">Add your first Student ID using the tools above</p>
                                     </div>
                                 )}
                             </div>
@@ -506,7 +506,7 @@ function NiatManagementPage() {
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50 sticky top-0 z-10">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIAT ID</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student ID</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Added</th>
                                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                         </tr>
@@ -545,8 +545,8 @@ function NiatManagementPage() {
                 isOpen={confirmDialogOpen}
                 onClose={() => setConfirmDialogOpen(false)}
                 onConfirm={handleDelete}
-                title="Delete NIAT ID"
-                message="Are you sure you want to delete this NIAT ID? This action cannot be undone."
+                title="Delete Student ID"
+                message="Are you sure you want to delete this Student ID? This action cannot be undone."
             />
         </div>
     );

@@ -84,7 +84,7 @@ function Header({ user, darkMode, toggleDarkMode }) {
                       <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700"><div className="text-gray-900 dark:text-gray-100 font-medium">User Profile</div></div>
                       <div className="px-4 py-3">
                         <div className="mb-2"><div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Full Name</div><div className="text-sm font-medium text-gray-800 dark:text-gray-200">{user.fullName || "Not Available"}</div></div>
-                        <div className="mb-2"><div className="text-xs text-gray-500 dark:text-gray-400 mb-1">NIAT ID</div><div className="text-sm font-medium text-gray-800 dark:text-gray-200 font-mono">{user.niatId || "Not Available"}</div></div>
+                        <div className="mb-2"><div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Student ID</div><div className="text-sm font-medium text-gray-800 dark:text-gray-200 font-mono">{user.niatId || "Not Available"}</div></div>
                         <div className="mb-2"><div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Email</div><div className="text-sm font-medium text-gray-800 dark:text-gray-200 break-all">{user.email || "Not Available"}</div></div>
                         
                         {/* --- NEW EDIT PROFILE BUTTON --- */}
