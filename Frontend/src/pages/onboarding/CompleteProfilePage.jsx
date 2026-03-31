@@ -50,7 +50,7 @@ function CompleteProfilePage() {
             });
             navigate('/dashboard');
         } catch (err) {
-            setError(err.message || "Failed to update profile. Please check the NIAT ID and try again.");
+            setError(err.message || "Failed to update profile. Please check the Student ID and try again.");
             toast.error("Update failed", { description: err.message });
         } finally {
             setLoading(false);
@@ -87,13 +87,13 @@ function CompleteProfilePage() {
             <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-xl border border-gray-100">
                 <div className="text-center mb-8">
                     <h2 className="text-2xl font-bold text-gray-800 mb-2">One Last Step</h2>
-                    <p className="text-gray-600">To complete your registration, please provide your NIAT ID.</p>
+                    <p className="text-gray-600">To complete your registration, please provide your Student ID.</p>
                 </div>
                 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-2">
                         <label htmlFor="niatId" className="block text-sm font-medium text-gray-700">
-                            NIAT ID
+                            Student ID
                         </label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -132,7 +132,7 @@ function CompleteProfilePage() {
                 
                 <div className="mt-6 text-center">
                     <p className="text-xs text-gray-500">
-                        Need help? Contact support for assistance with your NIAT ID.
+                        Need help? Contact support for assistance with your Student ID.
                     </p>
                 </div>
             </div>

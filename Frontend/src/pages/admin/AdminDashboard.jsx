@@ -108,7 +108,7 @@ function AdminDashboard() {
     if (activeTab === 'users') {
       const headers = [
           { key: "fullName", label: "Full Name" }, 
-          { key: "niatId", label: "NIAT ID" },
+          { key: "niatId", label: "Student ID" },
           { key: "email", label: "Email" },
           { key: "resumeCount", label: "Resume Count"},
           { key: "createdAt", label: "Created At" }, 
@@ -182,7 +182,7 @@ function AdminDashboard() {
             <div className="flex items-center gap-4">
               <Button onClick={() => navigate('/admin/niat-ids')} variant="outline" size="sm" className="border-indigo-200 hover:bg-indigo-50 transition-all">
                 <Fingerprint className="h-4 w-4 mr-2 text-indigo-600"/>
-                Niat ID's
+                Student ID's
               </Button>
               <Button onClick={handleLogout} variant="outline" size="sm" className="border-red-200 hover:bg-red-50 transition-all">
                 <LogOut className="h-4 w-4 mr-2 text-red-500" />
@@ -423,7 +423,7 @@ const getFlattenedResumeData = (resumes) => {
     const baseHeaders = [
         { key: "title", label: "Resume Title" }, 
         { key: "userName", label: "User Name" },
-        { key: "userNiatId", label: "User NIAT ID" },
+        { key: "userNiatId", label: "User Student ID" },
         { key: "googleDriveLink", label: "Resume Link (Google Drive)"}, 
         { key: "userEmail", label: "User Email" },
         { key: "createdAt", label: "Created At" }, { key: "updatedAt", label: "Last Updated" }, 
@@ -472,7 +472,7 @@ const UsersTable = ({ users, onViewResumes }) => {
             <thead className="bg-gradient-to-r from-indigo-50 to-blue-50 sticky top-0 z-10">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Full Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">NIAT ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Student ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Email</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Resumes Count</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-indigo-700 uppercase tracking-wider">Created At</th>

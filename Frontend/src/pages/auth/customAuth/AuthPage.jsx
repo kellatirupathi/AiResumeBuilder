@@ -177,7 +177,7 @@ function AuthPage() {
     } catch (error) {
       // This is the specific NIAT ID error we want to show as a toast
       if (error.message && error.message.includes("NIAT ID")) {
-        showToast("Your NIAT ID is not registered in our system. Please crosscheck and enter the correct NIAT ID.", "error");
+        showToast("Your Student ID is not registered in our system. Please crosscheck and enter the correct Student ID.", "error");
       } else {
         showToast(error.message || "Registration failed. Please try again.", "error");
       }
@@ -261,7 +261,7 @@ function AuthPage() {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="niatId" className="block text-gray-700 font-medium mb-1">NIAT ID</label>
+                    <label htmlFor="niatId" className="block text-gray-700 font-medium mb-1">Student ID</label>
                     <div className={`flex items-center border rounded-lg px-3 py-2 border-gray-300 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500`}>
                       <FaIdBadge className="text-gray-400 mr-2" />
                       <input id="niatId" type="text" className="w-full outline-none" placeholder="Enter your ID" value={niatId} onChange={handleNiatIdChange} required/>
