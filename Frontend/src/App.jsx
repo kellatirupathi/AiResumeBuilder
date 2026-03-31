@@ -74,7 +74,8 @@ function App() {
   
   const isEditResumePage = location.pathname.includes('/dashboard/edit-resume');
   const isProfilePage = location.pathname === '/profile';
-  const shouldHideHeader = isEditResumePage || isProfilePage;
+  const isDashboardPage = location.pathname === '/dashboard';
+  const shouldHideHeader = isEditResumePage || isProfilePage || isDashboardPage;
 
   if (loading) {
     return (

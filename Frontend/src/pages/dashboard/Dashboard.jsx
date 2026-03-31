@@ -1,12 +1,16 @@
 // C:\Users\NxtWave\Downloads\AiResumeBuilder-3\Frontend\src\pages\dashboard\Dashboard.jsx
 
 import React, { useEffect, useState, useRef } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { getAllResumeData } from "@/Services/resumeAPI";
+import { logoutUser } from "@/Services/login";
+import { addUserData } from "@/features/user/userFeatures";
 import AddResume from "./components/AddResume";
 import ResumeCard from "./components/ResumeCard";
 import ATSScoreChecker from "./components/ATSScoreChecker";
+import ChangePasswordModal from "@/components/custom/ChangePasswordModal";
 import { motion, AnimatePresence } from "framer-motion";
+import { FaEdit, FaKey, FaSignOutAlt } from "react-icons/fa";
 import {
   Search,
   Grid,
@@ -99,6 +103,7 @@ const StatCard = ({ icon, label, count, className = "" }) => (
 function Dashboard() {
   const { darkMode, toggleDarkMode } = useOutletContext();
   const user = useSelector((state) => state.editUser.userData);
+  const dispatch = useDispatch();
   const [resumeList, setResumeList] = useState([]);
   const [filteredList, setFilteredList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -107,7 +112,10 @@ function Dashboard() {
   const [showSortOptions, setShowSortOptions] = useState(false);
   const [sortOption, setSortOption] = useState("newest");
   const [showATSModal, setShowATSModal] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const sortDropdownRef = useRef(null);
+  const userDropdownRef = useRef(null);
   const navigate = useNavigate();
 
   const isDarkMode = document.documentElement.classList.contains('dark');
@@ -138,10 +146,25 @@ function Dashboard() {
 
   useEffect(() => { fetchAllResumeData(); }, [user]);
 
+  const handleLogout = async () => {
+    try {
+      const response = await logoutUser();
+      if (response.statusCode === 200) {
+        dispatch(addUserData(""));
+        navigate("/");
+      }
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target)) {
         setShowSortOptions(false);
+      }
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
+        setUserDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -194,7 +217,7 @@ function Dashboard() {
       </div>
 
       {/* Main Layout: Full height, side-by-side */}
-      <div className="relative z-10 h-screen flex pt-16 px-4 gap-4 max-w-full mx-auto overflow-hidden">
+      <div className="relative z-10 h-screen flex pt-4 px-4 gap-4 max-w-full mx-auto overflow-hidden">
 
         {/* ─── LEFT SIDEBAR ─── */}
         <motion.aside
@@ -371,80 +394,136 @@ function Dashboard() {
           transition={{ delay: 0.2, duration: 0.4 }}
           className="flex-1 flex flex-col overflow-hidden pb-4 min-w-0"
         >
-          {/* Search & Filter Toolbar */}
-          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-xl shadow-md border border-gray-100 dark:border-gray-700 p-3 mb-4 relative z-30 flex-shrink-0">
-            <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-              {/* Search */}
-              <div className="relative w-full sm:w-auto flex-grow">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
-                <Input
-                  placeholder="Search resumes..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 w-full bg-gray-50 dark:bg-gray-700/60 border-gray-200 dark:border-gray-600 rounded-lg h-9"
-                />
-              </div>
+          {/* Search & Filter Toolbar Row */}
+          <div className="flex items-center gap-3 mb-4 flex-shrink-0 relative z-30">
 
-              {/* Sort + View Toggle */}
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {/* Sort Dropdown */}
-                <div ref={sortDropdownRef} className="relative z-50">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowSortOptions(!showSortOptions)}
-                    className="h-8 rounded-lg bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 whitespace-nowrap flex items-center text-sm"
-                  >
-                    <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5" />
-                    {sortOption === "newest" && "Newest first"}
-                    {sortOption === "oldest" && "Oldest first"}
-                    {sortOption === "alphabetical" && "A to Z"}
-                    <ChevronDown className="h-3.5 w-3.5 ml-1.5" />
-                  </Button>
-                  {showSortOptions && (
-                    <div className="absolute z-[9999] mt-1 right-0 w-44 rounded-md shadow-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 ring-1 ring-black ring-opacity-5">
-                      <div className="py-1">
-                        {[
-                          { value: "newest", label: "Newest first" },
-                          { value: "oldest", label: "Oldest first" },
-                          { value: "alphabetical", label: "A to Z" },
-                        ].map(({ value, label }) => (
-                          <button
-                            key={value}
-                            onClick={() => { setSortOption(value); setShowSortOptions(false); }}
-                            className={`w-full text-left px-3 py-2 text-sm transition-colors ${sortOption === value ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"}`}
-                          >
-                            <div className="flex items-center">
-                              {sortOption === value && (
-                                <svg className="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                              )}
-                              <span className={sortOption === value ? "" : "ml-6"}>{label}</span>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+            {/* Toolbar Card */}
+            <div className="flex-1 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-xl shadow-md border border-gray-100 dark:border-gray-700 p-3">
+              <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+                {/* Search */}
+                <div className="relative w-full sm:w-auto flex-grow">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  <Input
+                    placeholder="Search resumes..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 w-full bg-gray-50 dark:bg-gray-700/60 border-gray-200 dark:border-gray-600 rounded-lg h-9"
+                  />
                 </div>
 
-                {/* Grid / List Toggle */}
-                <div className="bg-gray-100 dark:bg-gray-700 rounded-lg flex p-1">
-                  <button
-                    onClick={() => setViewMode("grid")}
-                    className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-white dark:bg-gray-600 text-emerald-500 shadow-sm" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"}`}
-                  >
-                    <Grid className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode("list")}
-                    className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-white dark:bg-gray-600 text-emerald-500 shadow-sm" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"}`}
-                  >
-                    <List className="h-4 w-4" />
-                  </button>
+                {/* Sort + View Toggle */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {/* Sort Dropdown */}
+                  <div ref={sortDropdownRef} className="relative z-50">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowSortOptions(!showSortOptions)}
+                      className="h-8 rounded-lg bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 whitespace-nowrap flex items-center text-sm"
+                    >
+                      <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5" />
+                      {sortOption === "newest" && "Newest first"}
+                      {sortOption === "oldest" && "Oldest first"}
+                      {sortOption === "alphabetical" && "A to Z"}
+                      <ChevronDown className="h-3.5 w-3.5 ml-1.5" />
+                    </Button>
+                    {showSortOptions && (
+                      <div className="absolute z-[9999] mt-1 right-0 w-44 rounded-md shadow-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 ring-1 ring-black ring-opacity-5">
+                        <div className="py-1">
+                          {[
+                            { value: "newest", label: "Newest first" },
+                            { value: "oldest", label: "Oldest first" },
+                            { value: "alphabetical", label: "A to Z" },
+                          ].map(({ value, label }) => (
+                            <button
+                              key={value}
+                              onClick={() => { setSortOption(value); setShowSortOptions(false); }}
+                              className={`w-full text-left px-3 py-2 text-sm transition-colors ${sortOption === value ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"}`}
+                            >
+                              <div className="flex items-center">
+                                {sortOption === value && (
+                                  <svg className="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                )}
+                                <span className={sortOption === value ? "" : "ml-6"}>{label}</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Grid / List Toggle */}
+                  <div className="bg-gray-100 dark:bg-gray-700 rounded-lg flex p-1">
+                    <button
+                      onClick={() => setViewMode("grid")}
+                      className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-white dark:bg-gray-600 text-emerald-500 shadow-sm" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"}`}
+                    >
+                      <Grid className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode("list")}
+                      className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-white dark:bg-gray-600 text-emerald-500 shadow-sm" : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"}`}
+                    >
+                      <List className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* User Profile Avatar — outside the card */}
+            <div ref={userDropdownRef} className="relative flex-shrink-0">
+              <button
+                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                className="w-10 h-10 rounded-full bg-gradient-to-r from-emerald-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm cursor-pointer hover:shadow-lg transition-shadow"
+              >
+                {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
+              </button>
+              {userDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-[9999] py-2 text-left">
+                  <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                    <div className="text-gray-900 dark:text-gray-100 font-medium text-sm">User Profile</div>
+                  </div>
+                  <div className="px-4 py-3 space-y-2">
+                    <div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Full Name</div>
+                      <div className="text-sm font-medium text-gray-800 dark:text-gray-200">{user.fullName || "Not Available"}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">ID</div>
+                      <div className="text-sm font-medium text-gray-800 dark:text-gray-200 font-mono">{user.niatId || "Not Available"}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Email</div>
+                      <div className="text-sm font-medium text-gray-800 dark:text-gray-200 break-all">{user.email || "Not Available"}</div>
+                    </div>
+                    <button
+                      onClick={() => { navigate('/profile'); setUserDropdownOpen(false); }}
+                      className="w-full text-left text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-700"
+                    >
+                      <FaEdit className="w-3 h-3" /> Edit Profile
+                    </button>
+                    <button
+                      onClick={() => { setIsChangePasswordOpen(true); setUserDropdownOpen(false); }}
+                      className="w-full text-left text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center gap-2"
+                    >
+                      <FaKey className="w-3 h-3" /> Change Password
+                    </button>
+                  </div>
+                  <div className="border-t border-gray-100 dark:border-gray-700 px-4 py-2">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 flex items-center gap-2"
+                    >
+                      <FaSignOutAlt className="w-3 h-3" /> Sign out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
           </div>
 
           {/* Resume Cards Area */}
@@ -493,6 +572,9 @@ function Dashboard() {
 
       {/* ATS Score Checker Modal */}
       <ATSScoreChecker isOpen={showATSModal} onClose={() => setShowATSModal(false)} resumes={resumeList} />
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />
     </div>
   );
 }
