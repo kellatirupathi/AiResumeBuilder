@@ -6,7 +6,7 @@ import Header from "./components/custom/Header";
 import { Toaster } from "./components/ui/sonner";
 import { useDispatch, useSelector } from "react-redux";
 import { addUserData } from "./features/user/userFeatures";
-import { startUser } from "./Services/login";
+import { getSessionUser } from "./Services/login";
 import { resumeStore } from "./store/store";
 import { Provider } from "react-redux";
 import { LoaderCircle } from "lucide-react";
@@ -23,9 +23,10 @@ function App() {
     // Auth check logic
     const fetchResponse = async () => {
       try {
-        const response = await startUser();
-        if (response.statusCode === 200) {
-          const userData = response.data;
+        const response = await getSessionUser();
+        const userData = response.data;
+
+        if (userData) {
           dispatch(addUserData(userData));
           
           // --- MODIFIED: ADDED ONBOARDING REDIRECT LOGIC ---
@@ -40,7 +41,7 @@ function App() {
           navigate("/");
         }
       } catch (error) {
-        console.log("Auth check failed:", error.message);
+        console.log("Session check failed:", error.message);
         dispatch(addUserData(""));
         navigate("/");
       } finally {

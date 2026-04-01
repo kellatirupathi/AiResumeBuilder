@@ -21,6 +21,17 @@ const startUser = async () => {
   }
 };
 
+const getSessionUser = async () => {
+  try {
+    const response = await axiosInstance.get("users/session");
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error?.response?.data?.message || error?.message || "Something Went Wrong"
+    );
+  }
+};
+
 const registerUser = async (data) => {
   try {
     const response = await axiosInstance.post("users/register", data);
@@ -145,6 +156,7 @@ const completeProfile = async (data) => {
 
 export {
   startUser,
+  getSessionUser,
   registerUser,
   loginUser,
   googleLogin,

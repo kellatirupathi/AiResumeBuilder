@@ -90,12 +90,54 @@ handlebars.registerHelper('contains', function(str, searchTerms) {
 });
 // --- END: REGISTER HANDLEBARS HELPERS ---
 
+const sanitizeUserPayload = (userDocument) => {
+  const userObject = userDocument?.toObject ? userDocument.toObject() : userDocument;
+
+  if (!userObject) {
+    return null;
+  }
+
+  delete userObject.password;
+  delete userObject.forgotPasswordToken;
+  delete userObject.forgotPasswordTokenExpiry;
+
+  return userObject;
+};
 
 const start = async (req, res) => {
   if (req.user) {
-    return res.status(200).json(new ApiResponse(200, req.user, "User Found"));
+    return res.status(200).json(new ApiResponse(200, sanitizeUserPayload(req.user), "User Found"));
   } else {
     return res.status(404).json(new ApiResponse(404, null, "User Not Found"));
+  }
+};
+
+const getSession = async (req, res) => {
+  const { token } = req.cookies;
+
+  if (!token) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, null, "No active session."));
+  }
+
+  try {
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    const user = await User.findById(decodedToken.id);
+
+    if (!user) {
+      return res
+        .status(200)
+        .json(new ApiResponse(200, null, "No active session."));
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, sanitizeUserPayload(user), "Active session found."));
+  } catch (error) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, null, "No active session."));
   }
 };
 
@@ -543,6 +585,7 @@ const completeProfile = async (req, res) => {
 // <-- FIX: ADD completeProfile TO THIS EXPORT LIST -->
 export {
   start,
+  getSession,
   loginUser,
   logoutUser,
   registerUser,

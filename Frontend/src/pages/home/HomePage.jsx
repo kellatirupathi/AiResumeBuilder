@@ -7,7 +7,7 @@ import heroSnapshot4 from "@/assets/heroSnapshot4.png";
 import { useNavigate } from "react-router-dom";
 import { FaArrowRight, FaRegLightbulb, FaRegFileAlt, FaRegStar, FaRegClock, FaRegChartBar, FaCheck, FaPlay, FaExpand, FaVideo } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
-import { startUser } from "../../Services/login.js";
+import { getSessionUser } from "../../Services/login.js";
 import { useDispatch, useSelector } from "react-redux";
 import { addUserData } from "@/features/user/userFeatures.js";
 import { motion } from "framer-motion";
@@ -66,8 +66,8 @@ function HomePage() {
     const fetchResponse = async () => {
       setIsLoading(true);
       try {
-        const response = await startUser();
-        dispatch(addUserData(response.statusCode === 200 ? response.data : ""));
+        const response = await getSessionUser();
+        dispatch(addUserData(response.data || ""));
       } catch (error) {
         dispatch(addUserData(""));
       } finally {
