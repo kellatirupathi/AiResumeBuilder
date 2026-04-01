@@ -412,7 +412,7 @@ function Dashboard() {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4" : "flex flex-col space-y-3"}
+                className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4" : "flex flex-col space-y-3"}
               >
                 {!searchQuery && (
                   <motion.div variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
