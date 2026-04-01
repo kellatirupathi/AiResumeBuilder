@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogDescription
 } from '@/components/ui/dialog';
-import { VITE_APP_URL } from '@/config/config';
+import { getApiUrl } from '@/config/config';
 
 // Helper function to calculate scores for different sections of a resume.
 // This provides a quick glance at the completeness of each resume.
@@ -184,7 +184,7 @@ function UserResumesModal({ isOpen, onClose, user }) {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <a 
-                        href={`${VITE_APP_URL.replace(/\/$/, '')}/api/pdf/public/${resume._id}`}
+                        href={getApiUrl(`pdf/public/${resume._id}`)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-indigo-600 hover:underline"

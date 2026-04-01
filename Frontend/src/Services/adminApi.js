@@ -1,14 +1,14 @@
 import axios from 'axios';
-import { VITE_APP_URL } from '@/config/config';
+import { getApiUrl } from '@/config/config';
 
 const adminAxios = axios.create({
-  baseURL: `${VITE_APP_URL.replace(/\/$/, '')}/api/admin/`,
+  baseURL: getApiUrl("admin/"),
   withCredentials: true,
 });
 
 // Create a separate instance for NIAT ID routes under the new base URL
 const niatAxios = axios.create({
-  baseURL: `${VITE_APP_URL.replace(/\/$/, '')}/api/niat-ids/`,
+  baseURL: getApiUrl("niat-ids/"),
   withCredentials: true,
 });
 
