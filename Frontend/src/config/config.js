@@ -9,6 +9,12 @@ const OPENAI_ENDPOINT = import.meta.env.VITE_OPENAI_ENDPOINT || "https://api.ope
 const VITE_APP_URL = import.meta.env.VITE_APP_URL;
 const VITE_PUBLIC_URL = import.meta.env.VITE_PUBLIC_URL;
 const VITE_GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const API_BASE_URL = "/api/";
+
+const getApiUrl = (path = "") => {
+  const normalizedPath = String(path).replace(/^\/+/, "");
+  return `${API_BASE_URL}${normalizedPath}`;
+};
 
 export {
   AUTH_KEY,
@@ -22,4 +28,6 @@ export {
   VITE_PUBLIC_URL,
   VITE_APP_URL,
   VITE_GOOGLE_CLIENT_ID,
+  API_BASE_URL,
+  getApiUrl,
 };
