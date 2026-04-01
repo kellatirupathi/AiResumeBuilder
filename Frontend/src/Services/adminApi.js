@@ -48,12 +48,66 @@ export const getAllUsers = async () => {
   }
 };
 
+export const createAdminUser = async (payload) => {
+  try {
+    const response = await adminAxios.post("/users", payload);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to create user.");
+  }
+};
+
+export const updateAdminUser = async (userId, payload) => {
+  try {
+    const response = await adminAxios.put(`/users/${userId}`, payload);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to update user.");
+  }
+};
+
+export const deleteAdminUser = async (userId) => {
+  try {
+    const response = await adminAxios.delete(`/users/${userId}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to delete user.");
+  }
+};
+
 export const getAllResumes = async () => {
   try {
     const response = await adminAxios.get('/resumes');
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to fetch resumes.');
+  }
+};
+
+export const createAdminResume = async (payload) => {
+  try {
+    const response = await adminAxios.post("/resumes", payload);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to create resume.");
+  }
+};
+
+export const updateAdminResume = async (resumeId, payload) => {
+  try {
+    const response = await adminAxios.put(`/resumes/${resumeId}`, payload);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to update resume.");
+  }
+};
+
+export const deleteAdminResume = async (resumeId) => {
+  try {
+    const response = await adminAxios.delete(`/resumes/${resumeId}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to delete resume.");
   }
 };
 
