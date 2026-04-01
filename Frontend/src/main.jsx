@@ -17,6 +17,7 @@ import PublicResumeView from "./pages/public/PublicResumeView.jsx";
 import ProfilePage from "./pages/profile/ProfilePage.jsx";
 import NiatManagementPage from "./pages/admin/NiatManagementPage.jsx";
 import ResetPasswordPage from "./pages/auth/customAuth/ResetPasswordPage.jsx";
+import ForgotPasswordPage from "./pages/auth/customAuth/ForgotPasswordPage.jsx";
 import CompleteProfilePage from "./pages/onboarding/CompleteProfilePage.jsx"; // <-- MODIFIED: IMPORTED NEW PAGE
 import Documentation from "./pages/documentation/Documentation.jsx";
 import ATSCheckerPage from "./pages/ats/ATSCheckerPage.jsx";
@@ -74,6 +75,10 @@ const router = createBrowserRouter([
   {
     path: "/reset-password",
     element: <ResetPasswordPage />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPasswordPage />,
   },
   {
     path: "/public/resume/:resume_id",

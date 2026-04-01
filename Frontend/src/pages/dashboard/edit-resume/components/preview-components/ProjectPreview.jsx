@@ -1,5 +1,6 @@
 // Updated ProjectPreview Component
 import React from "react";
+import DOMPurify from "dompurify";
 
 function ProjectPreview({ resumeInfo }) {
   // Helper function to format URLs
@@ -81,7 +82,7 @@ function ProjectPreview({ resumeInfo }) {
           
           <div
             className="text-xs mt-1 rsw-ce"
-            dangerouslySetInnerHTML={{ __html: project?.projectSummary }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(project?.projectSummary || "") }}
           />
         </div>
       ))}

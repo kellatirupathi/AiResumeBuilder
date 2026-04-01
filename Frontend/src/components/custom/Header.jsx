@@ -22,6 +22,7 @@ function Header({ user, darkMode, toggleDarkMode }) {
   const userDropdownRef = useRef(null);
 
   const isDashboardPage = location.pathname === '/dashboard';
+  const isHomePage = location.pathname === '/';
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -114,13 +115,15 @@ function Header({ user, darkMode, toggleDarkMode }) {
                     <FaUser className="w-3 h-3" />Get Started
                   </Button>
                 </Link>
-                 <button
-                  onClick={toggleDarkMode}
-                  className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-sm transition-colors"
-                  aria-label="Toggle dark mode"
-                >
-                  {darkMode ? <Sun className="h-5 w-5 text-amber-300" /> : <Moon className="h-5 w-5 text-indigo-600" />}
-                </button>
+                {!isHomePage && (
+                  <button
+                    onClick={toggleDarkMode}
+                    className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-sm transition-colors"
+                    aria-label="Toggle dark mode"
+                  >
+                    {darkMode ? <Sun className="h-5 w-5 text-amber-300" /> : <Moon className="h-5 w-5 text-indigo-600" />}
+                  </button>
+                )}
               </div>
             )}
           </div>

@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from "react-redux";
 import { Button } from '@/components/ui/button';
 import { 
-  LoaderCircle, 
-  Save, 
-  ArrowLeft, 
-  CheckCircle, 
-  User, 
-  FileText, 
-  Briefcase, 
-  FolderGit, 
-  GraduationCap, 
-  BadgePlus, 
-  Award, 
+  LoaderCircle,
+  Save,
+  ArrowLeft,
+  CheckCircle,
+  User,
+  FileText,
+  Briefcase,
+  FolderGit,
+  GraduationCap,
+  BadgePlus,
+  Award,
   PlusCircle,
   ArrowRight,
   ChevronDown,
@@ -21,7 +21,8 @@ import {
   Layers,
   Github,
   ExternalLink,
-  Copy
+  Copy,
+  AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -50,7 +51,10 @@ function ProfilePage() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [expandedSections, setExpandedSections] = useState({});
     const [showMobileNav, setShowMobileNav] = useState(false);
-    const [isTemplateModalOpen, setTemplateModalOpen] = useState(false); // <-- NEW STATE FOR MODAL
+    const [isTemplateModalOpen, setTemplateModalOpen] = useState(false);
+    const [isDirty, setIsDirty] = useState(false);
+    const lastSavedData = useRef(null);
+    const isInitialLoad = useRef(true);
 
     const sections = [
       { id: 'details', name: 'Personal Details', icon: User, component: ProfilePersonalDetails },
@@ -78,8 +82,9 @@ function ProfilePage() {
                   additionalSections: fetchedData.additionalSections || []
                 };
                 dispatch(addUserData(profileWithDefaults));
-                
-                // Initialize expanded sections
+                lastSavedData.current = JSON.stringify(profileWithDefaults);
+                isInitialLoad.current = false;
+
                 const initialExpandedSections = {};
                 sections.forEach(section => {
                   initialExpandedSections[section.id] = true;
@@ -90,11 +95,20 @@ function ProfilePage() {
             .finally(() => setIsLoading(false));
     }, [dispatch]);
 
+    // Track unsaved changes
+    useEffect(() => {
+        if (isInitialLoad.current) return;
+        const currentData = JSON.stringify(profileData);
+        setIsDirty(currentData !== lastSavedData.current);
+    }, [profileData]);
+
     const handleSaveProfile = async () => {
         setIsSaving(true);
         try {
             const response = await updateProfile(profileData);
             dispatch(addUserData(response.data));
+            lastSavedData.current = JSON.stringify(response.data);
+            setIsDirty(false);
             toast.success("Profile saved successfully!");
         } catch (error) {
             toast.error("Failed to save profile.", { description: error.message });
@@ -316,23 +330,47 @@ function ProfilePage() {
                        Generate Portfolio
                    </Button>
 
-                  <Button 
-                    onClick={handleSaveProfile} 
-                    disabled={isSaving} 
+                  <Button
+                    onClick={handleSaveProfile}
+                    disabled={isSaving}
                     size="sm"
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                    className={`text-white transition-all ${
+                      isDirty
+                        ? 'bg-amber-500 hover:bg-amber-600 shadow-md shadow-amber-200 animate-pulse'
+                        : 'bg-indigo-600 hover:bg-indigo-700'
+                    }`}
                   >
                     {isSaving ? (
                       <LoaderCircle className="h-4 w-4 mr-2 animate-spin" />
                     ) : (
                       <Save className="h-4 w-4 mr-2" />
                     )}
-                    Save Profile
+                    {isDirty ? 'Save Changes' : 'Save Profile'}
                   </Button>
                 </div>
               </div>
             </div>
             
+            {/* Unsaved changes banner */}
+            {isDirty && (
+              <div className="bg-amber-50 border-b border-amber-200 px-4 py-2">
+                <div className="max-w-5xl mx-auto flex items-center justify-between">
+                  <span className="text-sm text-amber-800 flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                    You have unsaved changes. Click <strong>Save Changes</strong> to keep them.
+                  </span>
+                  <Button
+                    size="sm"
+                    onClick={handleSaveProfile}
+                    disabled={isSaving}
+                    className="bg-amber-500 hover:bg-amber-600 text-white h-7 text-xs px-3"
+                  >
+                    {isSaving ? <LoaderCircle className="h-3 w-3 animate-spin" /> : 'Save now'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Main scrollable content */}
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
               {sections.map((section) => {

@@ -1,4 +1,5 @@
 import React from "react";
+import DOMPurify from "dompurify";
 
 function ExperiencePreview({ resumeInfo }) {
   // Helper function to properly check if currentlyWorking is true
@@ -88,7 +89,7 @@ function ExperiencePreview({ resumeInfo }) {
           </h2>
           <div
             className="text-xs mt-1 rsw-ce"
-            dangerouslySetInnerHTML={{ __html: experience?.workSummary || "" }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(experience?.workSummary || "") }}
           />
         </div>
       ))}
