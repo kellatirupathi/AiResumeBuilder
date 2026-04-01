@@ -1,6 +1,7 @@
 // C:\Users\NxtWave\Downloads\code\Backend\src\routes\user.routes.js
 import {
   start,
+  getSession,
   loginUser,
   logoutUser,
   registerUser,
@@ -18,6 +19,7 @@ import { isUserAvailable } from "../middleware/auth.js";
 
 const router = Router();
 
+router.get("/session", getSession);
 router.get("/", isUserAvailable, start);
 router.post("/register", registerUser);
 router.post("/login", loginUser);
