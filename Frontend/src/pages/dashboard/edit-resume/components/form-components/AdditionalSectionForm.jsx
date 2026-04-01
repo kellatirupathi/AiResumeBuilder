@@ -1,17 +1,17 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Trash2, Save } from 'lucide-react';
+import { Trash2, Save, GripVertical } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { updateThisResume } from '@/Services/resumeAPI';
 import { toast } from 'sonner';
-import GenericRichTextEditor from '@/components/custom/GenericRichTextEditor'; // <-- Use the new generic editor
+import GenericRichTextEditor from '@/components/custom/GenericRichTextEditor';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 function AdditionalSectionForm({ resumeInfo, onUpdate }) {
   const { resume_id } = useParams();
 
   const handleContentChange = (index, newContent) => {
     const originalList = resumeInfo.additionalSections || [];
-    // Create a new array and new object to avoid mutating Redux state
     const newList = originalList.map((item, i) => {
       if (i === index) {
         return { ...item, content: newContent };
@@ -24,19 +24,21 @@ function AdditionalSectionForm({ resumeInfo, onUpdate }) {
   const handleRemove = async (index) => {
     const originalList = [...(resumeInfo.additionalSections || [])];
     const newList = originalList.filter((_, i) => i !== index);
-    onUpdate(newList); // Optimistic UI update
-    
-    // Persist removal to the backend
+    onUpdate(newList);
+
+    if (!resume_id) return;
+
     try {
       await updateThisResume(resume_id, { data: { additionalSections: newList } });
       toast.success("Section removed successfully.");
     } catch {
       toast.error("Failed to remove section. Reverting change.");
-      onUpdate(originalList); // Revert on error
+      onUpdate(originalList);
     }
   };
-  
+
   const onSave = async () => {
+    if (!resume_id) return;
     try {
       await updateThisResume(resume_id, { data: { additionalSections: resumeInfo.additionalSections } });
       toast.success("Additional sections saved successfully.");
@@ -45,31 +47,74 @@ function AdditionalSectionForm({ resumeInfo, onUpdate }) {
     }
   };
 
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+    const items = Array.from(resumeInfo.additionalSections);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    onUpdate(items);
+  };
+
   if (!resumeInfo.additionalSections || resumeInfo.additionalSections.length === 0) {
     return null;
   }
-  
+
   return (
     <div className="space-y-4 mt-6">
-      {resumeInfo.additionalSections.map((section, index) => (
-        <div key={index} className="p-4 bg-white rounded-lg shadow-sm border">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-lg font-semibold text-gray-700">{section.title}</h3>
-            <Button variant="ghost" size="sm" onClick={() => handleRemove(index)}>
-              <Trash2 className="h-4 w-4 text-red-500" />
-            </Button>
-          </div>
-          {/* Use the new GenericRichTextEditor component */}
-          <GenericRichTextEditor
-            defaultValue={section.content}
-            onUpdate={(val) => handleContentChange(index, val)}
-          />
-        </div>
-      ))}
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="additional-sections">
+          {(provided) => (
+            <div
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+              className="space-y-4"
+            >
+              {resumeInfo.additionalSections.map((section, index) => (
+                <Draggable
+                  key={`${section.title}-${index}`}
+                  draggableId={`${section.title}-${index}`}
+                  index={index}
+                >
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      className={`p-4 bg-white rounded-lg shadow-sm border transition-shadow ${
+                        snapshot.isDragging ? 'shadow-lg border-primary' : ''
+                      }`}
+                    >
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center gap-2">
+                          <div
+                            {...provided.dragHandleProps}
+                            className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+                            title="Drag to reorder"
+                          >
+                            <GripVertical className="h-5 w-5" />
+                          </div>
+                          <h3 className="text-lg font-semibold text-gray-700">{section.title}</h3>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => handleRemove(index)}>
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                      <GenericRichTextEditor
+                        defaultValue={section.content}
+                        onUpdate={(val) => handleContentChange(index, val)}
+                      />
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
       <div className="flex justify-end">
-          <Button onClick={onSave} className="flex items-center gap-2">
-            <Save className="h-4 w-4" /> Save Sections
-          </Button>
+        <Button onClick={onSave} className="flex items-center gap-2">
+          <Save className="h-4 w-4" /> Save Sections
+        </Button>
       </div>
     </div>
   );

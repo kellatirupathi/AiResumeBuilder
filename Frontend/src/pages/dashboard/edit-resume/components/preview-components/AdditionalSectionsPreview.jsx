@@ -1,4 +1,5 @@
 import React from 'react';
+import DOMPurify from 'dompurify';
 
 function AdditionalSectionsPreview({ resumeInfo }) {
   const { additionalSections, themeColor } = resumeInfo;
@@ -20,7 +21,7 @@ function AdditionalSectionsPreview({ resumeInfo }) {
           <hr style={{ borderColor: themeColor }} />
           <div
             className="text-xs mt-2 rsw-ce" // 'rsw-ce' applies basic WYSIWYG styles
-            dangerouslySetInnerHTML={{ __html: section.content }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(section.content || "") }}
           />
         </div>
       ))}

@@ -43,7 +43,7 @@ function ManageAdditionalSections({ resumeInfo }) {
           <div>
             <h4 className="font-semibold text-blue-900">Pro Tip</h4>
             <p className="text-sm">
-              Any sections you add here will appear at the bottom of your resume. Drag and drop functionality to reorder sections will be coming soon!
+              Any sections you add here will appear at the bottom of your resume. Drag the <strong>⠿</strong> handle on any section to reorder them.
             </p>
           </div>
         </div>

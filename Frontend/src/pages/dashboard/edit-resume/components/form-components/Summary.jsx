@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Sparkles, LoaderCircle, BookOpen, FileText, CheckCircle, ThumbsUp, Lightbulb as LightbulbIcon, AlertTriangle, X, Wand2 } from "lucide-react";
+import { Sparkles, LoaderCircle, BookOpen, FileText, CheckCircle, ThumbsUp, Lightbulb as LightbulbIcon, X, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useDispatch } from "react-redux";
@@ -195,7 +195,19 @@ function Summary({ resumeInfo, enanbledNext, enanbledPrev }) {
       }
       // END OF UPDATED CODE
       
-      setSummary(enhancedText.trim());
+      const cleanText = enhancedText
+        .trim()
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/\*(.*?)\*/g, '$1')
+        .replace(/__(.*?)__/g, '$1')
+        .replace(/_(.*?)_/g, '$1')
+        .replace(/~~(.*?)~~/g, '$1')
+        .replace(/`(.*?)`/g, '$1')
+        .replace(/#+\s/g, '')
+        .replace(/>\s/g, '')
+        .trim();
+
+      setSummary(cleanText);
       toast.success("Summary enhanced by AI!", {
         description: "Your summary has been improved with AI.",
       });
