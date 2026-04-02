@@ -26,6 +26,16 @@ const MONTHS = [
 ];
 const YEARS = Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - i);
 
+function FieldLabel({ icon: Icon, label, required }) {
+  return (
+    <label className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-gray-600">
+      <Icon className="h-3.5 w-3.5 text-gray-400" />
+      {label}
+      {required && <span className="text-[10px] text-red-400">*</span>}
+    </label>
+  );
+}
+
 // DatePicker sub-component for Month/Year selection
 function DatePicker({ index, field, value, onChange, isDisabled, label }) {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -216,89 +226,107 @@ function CertificationsForm({ resumeInfo, enanbledNext, enanbledPrev }) {
   const getCertificateDescription = (cert) => cert.name || cert.issuer || `Certification ${localCertificatesList.indexOf(cert) + 1}`;
   
   return (
-    <div className="animate-fadeIn">
-      <div className="p-8 bg-white rounded-xl shadow-md border-t-4 border-t-primary mt-10 transition-all duration-300 hover:shadow-lg">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <Award className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-bold text-gray-800">
-              Professional Certifications
-              {hasUnsavedChanges && <span className="ml-2 text-sm text-orange-500 font-normal">(Unsaved changes)</span>}
-            </h2>
+    <div className="bg-white overflow-hidden">
+      <div className="flex items-center justify-between gap-3 border-b border-gray-100 bg-gradient-to-r from-amber-50 to-white px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100">
+            <Award className="h-4 w-4 text-amber-600" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-800">Professional Certifications</p>
+            <p className="text-xs text-gray-400">Add credentials, issue dates, and verification links</p>
           </div>
         </div>
-        
+        {hasUnsavedChanges && (
+          <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-0.5 text-xs font-medium text-orange-500">
+            Unsaved
+          </span>
+        )}
+      </div>
+
+      <div className="space-y-4 px-5 py-5">
         {localCertificatesList.length === 0 ? (
-          <div className="text-center py-10 border border-dashed border-gray-300 rounded-lg mb-6 hover:border-primary transition-all duration-300">
-            <Award className="h-10 w-10 text-gray-400 mx-auto mb-3" />
-            <h3 className="text-gray-500 font-medium mb-2">No certifications added yet</h3>
-            <p className="text-gray-400 mb-4">Add your professional certifications to enhance your resume</p>
-            <Button onClick={AddNewCertificate} className="bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all duration-300">
-              <Plus className="h-4 w-4 mr-2" /> Add Certification
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
+              <Award className="h-6 w-6 text-amber-400" />
+            </div>
+            <h3 className="mb-1 text-sm font-medium text-gray-600">No certifications added yet</h3>
+            <p className="mb-4 text-xs text-gray-400">Add professional certifications to strengthen trust and credibility</p>
+            <Button onClick={AddNewCertificate} className="h-8 gap-1.5 bg-amber-600 px-4 text-xs text-white hover:bg-amber-700">
+              <Plus className="h-3.5 w-3.5" /> Add Certification
             </Button>
           </div>
         ) : (
-          <div className="space-y-8">
-            <div className="flex space-x-2 overflow-x-auto pb-2 mb-4">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
               {localCertificatesList.map((item, index) => (
-                <Button key={`tab-${index}`} variant={activeCertificate === index ? 'default' : 'outline'} className={`flex items-center gap-2 whitespace-nowrap ${activeCertificate === index ? 'bg-primary' : 'border-primary text-primary'}`} onClick={() => setActiveCertificate(index)}>
-                  <span className={`flex items-center justify-center ${activeCertificate === index ? "bg-white/20 text-white" : "bg-primary/10 text-primary"} h-5 w-5 rounded-full text-xs font-bold`}>{index + 1}</span>
+                <button
+                  key={`tab-${index}`}
+                  type="button"
+                  onClick={() => setActiveCertificate(index)}
+                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs transition-colors ${
+                    activeCertificate === index
+                      ? 'bg-amber-600 text-white'
+                      : 'border border-gray-200 text-gray-600 hover:border-amber-300 hover:text-amber-600'
+                  }`}
+                >
                   {getCertificateDescription(item)}
-                </Button>
+                </button>
               ))}
-              <Button variant="ghost" className="border border-dashed border-gray-300 text-gray-500 hover:bg-gray-100 hover:text-gray-700 whitespace-nowrap" onClick={AddNewCertificate}>
-                <Plus className="h-4 w-4 mr-2" /> Add More
-              </Button>
+              <button
+                type="button"
+                onClick={AddNewCertificate}
+                className="flex items-center gap-1 whitespace-nowrap rounded-full border border-dashed border-gray-300 px-3 py-1.5 text-xs text-gray-400 transition-colors hover:border-amber-300 hover:text-amber-500"
+              >
+                <Plus className="h-3 w-3" /> Add More
+              </button>
             </div>
 
             {localCertificatesList.map((item, index) => (
-              <div key={`content-${index}`} className={`border border-gray-200 rounded-lg overflow-hidden transition-all duration-300 ${activeCertificate === index ? "block" : "hidden"}`}>
-                <div className="bg-gray-50 px-5 py-3 flex justify-between items-center">
-                  <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                    <span className="flex items-center justify-center bg-primary/10 text-primary h-6 w-6 rounded-full text-xs font-bold">{index + 1}</span>
-                    <span>{getCertificateDescription(item)}</span>
-                  </h3>
-                  <Button variant="ghost" size="sm" className="text-red-500 hover:text-white hover:bg-red-500 transition-colors duration-300" onClick={() => RemoveCertificate(index)}>
-                    <Trash2 className="h-4 w-4" />
+              <div key={`content-${index}`} className={`${activeCertificate === index ? "block" : "hidden"} overflow-hidden rounded-lg border border-gray-100`}>
+                <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-4 py-2.5">
+                  <span className="text-xs font-medium text-gray-700">
+                    {getCertificateDescription(item)}
+                  </span>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500" onClick={() => RemoveCertificate(index)}>
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 p-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2"><Award className="h-4 w-4 text-primary" />Certification Name*</label>
-                    <Input name="name" onChange={(e) => handleChange(e, index)} value={item?.name || ""} className="border-gray-300 focus:border-primary" placeholder="e.g. AWS Certified Solutions Architect"/>
+                <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2">
+                  <div>
+                    <FieldLabel icon={Award} label="Certification Name" required />
+                    <Input name="name" onChange={(e) => handleChange(e, index)} value={item?.name || ""} className="h-9 border-gray-200 text-sm focus:border-amber-400" placeholder="e.g. AWS Certified Solutions Architect"/>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2"><Building2 className="h-4 w-4 text-primary" />Issuing Organization*</label>
-                    <Input name="issuer" onChange={(e) => handleChange(e, index)} value={item?.issuer || ""} className="border-gray-300 focus:border-primary" placeholder="e.g. Amazon Web Services"/>
+                  <div>
+                    <FieldLabel icon={Building2} label="Issuing Organization" required />
+                    <Input name="issuer" onChange={(e) => handleChange(e, index)} value={item?.issuer || ""} className="h-9 border-gray-200 text-sm focus:border-amber-400" placeholder="e.g. Amazon Web Services"/>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2"><Calendar className="h-4 w-4 text-primary" />Date Received</label>
+                  <div>
+                    <FieldLabel icon={Calendar} label="Date Received" />
                     <DatePicker index={index} field="date" value={item?.date || ""} onChange={(e) => handleChange(e, index)} label="Select date"/>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2"><LinkIcon className="h-4 w-4 text-primary" />Credential Link</label>
-                    <Input name="credentialLink" onChange={(e) => handleChange(e, index)} value={item?.credentialLink || ""} className="border-gray-300 focus:border-primary" placeholder="e.g. https://www.credential.net/abc123"/>
+                  <div>
+                    <FieldLabel icon={LinkIcon} label="Credential Link" />
+                    <Input name="credentialLink" onChange={(e) => handleChange(e, index)} value={item?.credentialLink || ""} className="h-9 border-gray-200 text-sm focus:border-amber-400" placeholder="https://www.credential.net/abc123"/>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         )}
-        
-        <div className="flex justify-between mt-8">
-          {localCertificatesList.length > 0 && (
-            <Button variant="outline" onClick={AddNewCertificate} className="border-primary text-primary hover:bg-primary hover:text-white transition-colors duration-300 flex items-center gap-2">
-              <Plus className="h-4 w-4" /> Add {localCertificatesList.length > 0 ? "Another" : ""} Certification
-            </Button>
-          )}
-          {localCertificatesList.length > 0 && (
-            <Button disabled={loading} onClick={onSave} className="px-6 py-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary transition-all duration-300 flex items-center gap-2">
-              {loading ? <><LoaderCircle className="h-4 w-4 animate-spin mr-2" /> Saving...</> : "Save Certifications"}
-            </Button>
-          )}
-        </div>
       </div>
+        
+      {localCertificatesList.length > 0 && (
+        <div className="flex items-center justify-between border-t border-gray-100 px-5 py-4">
+          <Button variant="outline" onClick={AddNewCertificate} className="h-8 gap-1.5 border-amber-200 px-3 text-xs text-amber-600 hover:bg-amber-50">
+            <Plus className="h-3.5 w-3.5" /> Add Another Certification
+          </Button>
+          <Button disabled={loading} onClick={onSave} className="h-8 gap-2 bg-amber-600 px-4 text-xs text-white hover:bg-amber-700">
+            {loading ? <><LoaderCircle className="h-3.5 w-3.5 animate-spin" /> Saving...</> : "Save Certifications"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

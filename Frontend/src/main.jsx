@@ -16,6 +16,7 @@ import AdminResumesPage from "./pages/admin/AdminResumesPage.jsx";
 import AdminUserDetailPage from "./pages/admin/AdminUserDetailPage.jsx";
 import AdminUserResumesPage from "./pages/admin/AdminUserResumesPage.jsx";
 import AdminStudentIdsPage from "./pages/admin/AdminStudentIdsPage.jsx";
+import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage.jsx";
 import AuthPage from "./pages/auth/customAuth/AuthPage.jsx";
 import { resumeStore } from "./store/store";
 import { Provider } from "react-redux";
@@ -110,6 +111,7 @@ const router = createBrowserRouter([
       { path: "resumes", element: <AdminResumesPage /> },
       { path: "resumes/:userId", element: <AdminUserResumesPage /> },
       { path: "student-ids", element: <AdminStudentIdsPage /> },
+      { path: "notifications", element: <AdminNotificationsPage /> },
     ],
   },
 ]);

@@ -4,7 +4,8 @@ import userRouter from "./routes/user.routes.js";
 import resumeRouter from "./routes/resume.routes.js";
 import pdfRouter from "./routes/pdf.routes.js";
 import adminRouter from "./routes/admin.routes.js";
-import niatIdRouter from "./routes/niatId.routes.js"; // <-- ADDED IMPORT
+import niatIdRouter from "./routes/niatId.routes.js";
+import cronRouter from "./routes/cron.routes.js";
 import cors from "cors";
 import { config } from "dotenv";
 config();
@@ -42,7 +43,8 @@ app.use("/api/users", userRouter);
 app.use("/api/resumes", resumeRouter);
 app.use("/api/pdf", pdfRouter);
 app.use("/api/admin", adminRouter);
-app.use("/api/niat-ids", niatIdRouter); // <-- ADDED ROUTE
+app.use("/api/niat-ids", niatIdRouter);
+app.use("/api/cron", cronRouter);
 
 // Simple status endpoint
 app.get("/api/status", (req, res) => {

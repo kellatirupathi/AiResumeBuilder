@@ -171,28 +171,56 @@ function ProfileCompletionDistribution({ data, averageCompletion, fieldCount }) 
   );
 }
 
-// ─── Completion Rate Card ─────────────────────────────────────────────────────
+// ─── Resume Completion Donut ──────────────────────────────────────────────────
 
-function CompletionRateCard({ rate, usersWithResumes, totalUsers }) {
+const RESUME_COMPLETION_COLORS = ["#6366f1", "#e5e7eb"];
+
+function ResumeCompletionDonut({ rate, usersWithResumes, totalUsers }) {
+  const without = totalUsers - usersWithResumes;
+  const data = [
+    { _id: "With Resume", count: usersWithResumes },
+    { _id: "Without Resume", count: without },
+  ];
+  const { total, segments } = buildDonutSegments(data, RESUME_COMPLETION_COLORS);
+
+  const label =
+    rate >= 80
+      ? "Excellent engagement"
+      : rate >= 50
+      ? "Good engagement"
+      : "Low engagement";
+
+  if (total === 0) {
+    return <div className="flex h-full min-h-[240px] items-center justify-center text-xs text-gray-400">No user data yet</div>;
+  }
+
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-end justify-between">
-        <span className="text-3xl font-bold text-indigo-600">{rate}%</span>
-        <span className="text-xs text-gray-400">{usersWithResumes} / {totalUsers} users</span>
+    <div className="flex h-full flex-col gap-5 md:flex-row md:items-center md:gap-6">
+      <div className="flex flex-col items-center md:w-44 md:flex-shrink-0">
+        <svg viewBox="0 0 120 120" className="h-32 w-32 flex-shrink-0">
+          {segments.map((seg, i) => (
+            <path key={i} d={seg.path} fill={seg.color} className="hover:opacity-80 transition-opacity cursor-pointer">
+              <title>{seg._id}: {seg.count} users ({seg.pct}%)</title>
+            </path>
+          ))}
+          <circle cx="60" cy="60" r="24" fill="white" />
+          <text x="60" y="58" textAnchor="middle" fontSize="14" fill="#111827" fontWeight="700">{rate}%</text>
+          <text x="60" y="69" textAnchor="middle" fontSize="6" fill="#6b7280" fontWeight="600">completed</text>
+        </svg>
+        <p className="mt-2 text-center text-xs text-gray-400">{label}</p>
       </div>
-      <div className="h-3 w-full rounded-full bg-gray-100 overflow-hidden">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-700"
-          style={{ width: `${rate}%` }}
-        />
+
+      <div className="flex-1 space-y-2.5">
+        {segments.map((seg, i) => (
+          <div key={i} className="flex items-center gap-3 rounded-lg border border-gray-100 bg-gray-50 px-3 py-3">
+            <span className="h-2.5 w-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: seg.color }} />
+            <p className="min-w-0 flex-1 text-sm font-medium text-gray-700">
+              {seg._id} <span className="text-gray-400">&rarr;</span> <span className="font-semibold text-gray-800">{seg.count} users</span>
+            </p>
+          </div>
+        ))}
+        <p className="text-xs text-gray-400 pt-1">{usersWithResumes} out of {totalUsers} users have at least 1 resume</p>
       </div>
-      <p className="text-xs text-gray-500">
-        {rate >= 80
-          ? "Excellent engagement — most users have created a resume."
-          : rate >= 50
-          ? "Good engagement — over half of users have a resume."
-          : "Low engagement — encourage more users to create resumes."}
-      </p>
     </div>
   );
 }
@@ -216,7 +244,7 @@ function CompletionInsightsCard({ stats }) {
 
       <TabsContent value="resume" className="mt-0 flex-1">
         <p className="mb-4 text-xs text-gray-400">Users who have created at least 1 resume</p>
-        <CompletionRateCard
+        <ResumeCompletionDonut
           rate={stats?.completionRate ?? 0}
           usersWithResumes={stats?.usersWithResumes ?? 0}
           totalUsers={stats?.totalUsers ?? 0}

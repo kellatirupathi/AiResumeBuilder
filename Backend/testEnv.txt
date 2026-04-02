@@ -6,3 +6,14 @@ JWT_SECRET_KEY={Some Random String for Authentication}
 JWT_SECRET_EXPIRES_IN="1d"
 NODE_ENV=Dev
 ALLOWED_SITE=http://localhost:5173
+
+# Cron job secret — set this in your cloud environment and in cron-job.org header
+CRON_SECRET={A long random secret string}
+
+# Optional: use Browserless for remote PDF generation in production
+# If BROWSERLESS_WS_ENDPOINT is set, it is used directly.
+# Otherwise set BROWSERLESS_TOKEN and optionally BROWSERLESS_REGION.
+BROWSERLESS_TOKEN=
+BROWSERLESS_REGION=production-sfo.browserless.io
+# Example:
+# BROWSERLESS_WS_ENDPOINT=wss://production-sfo.browserless.io/?token=YOUR_API_TOKEN

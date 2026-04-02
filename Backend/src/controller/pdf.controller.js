@@ -1,6 +1,7 @@
-// C:\Users\NxtWave\Downloads\code\Backend\src\controller\pdf.controller.js
 import { generatePDF } from '../services/pdf.service.js';
 import Resume from '../models/resume.model.js';
+import Notification from '../models/notification.model.js';
+import { sendDriveLinkEmail } from '../services/email.service.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 
@@ -34,9 +35,36 @@ export const generateResumePDF = async (req, res) => {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${resume.title || 'resume'}.pdf"`);
     res.setHeader('Content-Length', pdfBuffer.length);
-    
-    // Send the PDF
+
+    // Send the PDF first, then fire Drive link email in background
     res.send(pdfBuffer);
+
+    // Fire-and-forget: send Drive link email after response is sent
+    const user = req.user;
+    const driveLink = resume.googleDriveLink;
+    if (driveLink) {
+      (async () => {
+        let status = "sent";
+        let errorMessage = "";
+        try {
+          await sendDriveLinkEmail(user.fullName, user.email, resume.title || "Resume", driveLink);
+        } catch (emailErr) {
+          status = "failed";
+          errorMessage = emailErr.message;
+          console.error("Drive link email failed:", emailErr.message);
+        }
+        await Notification.create({
+          userId: user._id,
+          userEmail: user.email,
+          userName: user.fullName,
+          type: "download-link",
+          resumeId: resume._id,
+          resumeTitle: resume.title || "",
+          status,
+          errorMessage,
+        }).catch((e) => console.error("Notification log failed:", e.message));
+      })();
+    }
   } catch (error) {
     console.error("Error generating PDF:", error);
     return res.status(500).json(

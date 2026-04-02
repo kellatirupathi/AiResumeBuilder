@@ -164,6 +164,34 @@ export const getResumesByUser = async (userId) => {
   }
 };
 
+// --- NOTIFICATION FUNCTIONS ---
+export const getNotifications = async ({ page = 1, limit = 20, type = '', status = '', search = '' } = {}) => {
+  try {
+    const response = await adminAxios.get('/notifications', { params: { page, limit, type, status, search } });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch notifications.');
+  }
+};
+
+export const resendNotification = async (id) => {
+  try {
+    const response = await adminAxios.post(`/notifications/${id}/resend`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to resend notification.');
+  }
+};
+
+export const cancelNotification = async (id) => {
+  try {
+    const response = await adminAxios.patch(`/notifications/${id}/cancel`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to cancel notification.');
+  }
+};
+
 // --- NEW FUNCTIONS FOR NIAT ID MANAGEMENT ---
 export const getNiatIds = async () => {
   try {

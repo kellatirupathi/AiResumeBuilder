@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Trash2, Code, LoaderCircle, Plus } from "lucide-react";
+import { Trash2, Code, LoaderCircle, Plus, Github, Globe, Save, Wrench } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import SimpleRichTextEditor from "@/components/custom/SimpleRichTextEditor";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,6 +11,15 @@ import { updateThisResume } from "@/Services/resumeAPI";
 import { debounce } from "lodash-es";
 
 const emptyProject = { projectName: "", techStack: "", projectSummary: "", githubLink: "", deployedLink: "" };
+
+function FieldLabel({ icon: Icon, label }) {
+  return (
+    <label className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-gray-600">
+      <Icon className="h-3.5 w-3.5 text-gray-400" />
+      {label}
+    </label>
+  );
+}
 
 function Project({ resumeInfo, setEnabledNext, setEnabledPrev }) {
   const dispatch = useDispatch();
@@ -112,134 +121,137 @@ function Project({ resumeInfo, setEnabledNext, setEnabledPrev }) {
   };
 
   return (
-    <div className="animate-fadeIn">
-      <div className="p-8 bg-white rounded-xl shadow-md border-t-4 border-t-primary mt-10 transition-all duration-300 hover:shadow-lg">
-        <div className="flex items-center gap-2 mb-2">
-          <Code className="h-6 w-6 text-primary" />
-          <h2 className="text-2xl font-bold text-gray-800">
-            Projects
-            {hasUnsavedChanges && (
-              <span className="ml-2 text-sm text-orange-500 font-normal">
-                (Unsaved changes)
-              </span>
-            )}
-          </h2>
+    <div className="bg-white overflow-hidden">
+      <div className="flex items-center justify-between gap-3 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-white px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100">
+            <Code className="h-4 w-4 text-emerald-600" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-800">Projects</p>
+            <p className="text-xs text-gray-400">Highlight your strongest builds, repos, and live demos</p>
+          </div>
         </div>
-        
+        {hasUnsavedChanges && (
+          <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-0.5 text-xs font-medium text-orange-500">
+            Unsaved
+          </span>
+        )}
+      </div>
+
+      <div className="space-y-4 px-5 py-5">
         {localProjectList.length === 0 && (
-          <div className="text-center py-10 border border-dashed border-gray-300 rounded-lg mb-6 hover:border-primary transition-all duration-300">
-            <Code className="h-10 w-10 text-gray-400 mx-auto mb-3" />
-            <h3 className="text-gray-500 font-medium mb-2">No projects added yet</h3>
-            <p className="text-gray-400 mb-4">Add your projects to showcase your technical skills</p>
-            <Button 
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50">
+              <Code className="h-6 w-6 text-emerald-400" />
+            </div>
+            <h3 className="mb-1 text-sm font-medium text-gray-600">No projects added yet</h3>
+            <p className="mb-4 text-xs text-gray-400">Add projects to show real product work, code ownership, and results</p>
+            <Button
               onClick={addProject}
-              className="bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all duration-300"
+              className="h-8 gap-1.5 bg-emerald-600 px-4 text-xs text-white hover:bg-emerald-700"
             >
-              <Plus className="h-4 w-4 mr-2" /> Add Project
+              <Plus className="h-3.5 w-3.5" /> Add Project
             </Button>
           </div>
         )}
-        
+
         {localProjectList.length > 0 && (
-          <div className="space-y-8">
-            <div className="flex space-x-2 overflow-x-auto pb-2 mb-4">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
               {localProjectList.map((project, index) => (
-                <Button
+                <button
                   key={`tab-${index}`}
-                  variant={activeProject === index ? "default" : "outline"}
-                  className={`flex items-center gap-2 whitespace-nowrap ${
-                    activeProject === index ? "bg-primary" : "border-primary text-primary"
-                  }`}
+                  type="button"
                   onClick={() => setActiveProject(index)}
+                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs transition-colors ${
+                    activeProject === index
+                      ? "bg-emerald-600 text-white"
+                      : "border border-gray-200 text-gray-600 hover:border-emerald-300 hover:text-emerald-600"
+                  }`}
                 >
-                  <span className={`flex items-center justify-center ${activeProject === index ? "bg-white/20 text-white" : "bg-primary/10 text-primary"} h-5 w-5 rounded-full text-xs font-bold`}>
-                    {index + 1}
-                  </span>
                   {project.projectName || `Project ${index + 1}`}
-                </Button>
+                </button>
               ))}
-              <Button
-                variant="ghost"
-                className="border border-dashed border-gray-300 text-gray-500 hover:bg-gray-100 hover:text-gray-700 whitespace-nowrap"
+              <button
+                type="button"
                 onClick={addProject}
+                className="flex items-center gap-1 whitespace-nowrap rounded-full border border-dashed border-gray-300 px-3 py-1.5 text-xs text-gray-400 transition-colors hover:border-emerald-300 hover:text-emerald-500"
               >
-                <Plus className="h-4 w-4 mr-2" /> Add More
-              </Button>
+                <Plus className="h-3 w-3" /> Add More
+              </button>
             </div>
-            
+
             {localProjectList.map((project, index) => (
               <div
                 key={`content-${index}`}
-                className={`border border-gray-200 rounded-lg overflow-hidden transition-all duration-300 ${activeProject === index ? "block" : "hidden"}`}
+                className={`overflow-hidden rounded-lg border border-gray-100 ${activeProject === index ? "block" : "hidden"}`}
               >
-                <div className="bg-gray-50 px-5 py-3 flex justify-between items-center">
-                  <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                    <span className="flex items-center justify-center bg-primary/10 text-primary h-6 w-6 rounded-full text-xs font-bold">
-                      {index + 1}
-                    </span>
-                    <span>{project.projectName || `Project ${index + 1}`}</span>
-                  </h3>
+                <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-4 py-2.5">
+                  <span className="text-xs font-medium text-gray-700">
+                    {project.projectName || `Project ${index + 1}`}
+                  </span>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-red-500 hover:text-white hover:bg-red-500 transition-colors duration-300"
+                    className="h-7 w-7 p-0 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
                     onClick={() => removeProject(index)}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 p-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Project Name</label>
+
+                <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2">
+                  <div>
+                    <FieldLabel icon={Code} label="Project Name" />
                     <Input
                       type="text"
                       name="projectName"
                       value={project?.projectName || ""}
                       onChange={(e) => handleChange(e, index)}
-                      className="border-gray-300 focus:border-primary focus:ring focus:ring-primary/20 transition-all"
+                      className="h-9 border-gray-200 text-sm focus:border-emerald-400"
                       placeholder="e.g. E-commerce Website"
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Tech Stack</label>
+
+                  <div>
+                    <FieldLabel icon={Wrench} label="Tech Stack" />
                     <Input
                       type="text"
                       name="techStack"
                       value={project?.techStack || ""}
-                      placeholder="e.g. React, Node.js, MongoDB"
                       onChange={(e) => handleChange(e, index)}
-                      className="border-gray-300 focus:border-primary focus:ring focus:ring-primary/20 transition-all"
+                      className="h-9 border-gray-200 text-sm focus:border-emerald-400"
+                      placeholder="e.g. React, Node.js, MongoDB"
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">GitHub Repository URL</label>
+
+                  <div>
+                    <FieldLabel icon={Github} label="GitHub Repository URL" />
                     <Input
                       type="text"
                       name="githubLink"
                       value={project?.githubLink || ""}
-                      placeholder="e.g. github.com/username/project"
                       onChange={(e) => handleChange(e, index)}
-                      className="border-gray-300 focus:border-primary focus:ring focus:ring-primary/20 transition-all"
+                      className="h-9 border-gray-200 text-sm focus:border-emerald-400"
+                      placeholder="github.com/username/project"
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Live Demo URL</label>
+
+                  <div>
+                    <FieldLabel icon={Globe} label="Live Demo URL" />
                     <Input
                       type="text"
                       name="deployedLink"
                       value={project?.deployedLink || ""}
-                      placeholder="e.g. myproject.com"
                       onChange={(e) => handleChange(e, index)}
-                      className="border-gray-300 focus:border-primary focus:ring focus:ring-primary/20 transition-all"
+                      className="h-9 border-gray-200 text-sm focus:border-emerald-400"
+                      placeholder="myproject.com"
                     />
                   </div>
-                  
-                  <div className="col-span-full mt-4">
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Project Description</label>
+
+                  <div className="md:col-span-2">
+                    <FieldLabel icon={Code} label="Project Description" />
                     <SimpleRichTextEditor
                       index={index}
                       defaultValue={project?.projectSummary}
@@ -254,34 +266,32 @@ function Project({ resumeInfo, setEnabledNext, setEnabledPrev }) {
             ))}
           </div>
         )}
-        
-        <div className="flex justify-between mt-8">
-          {localProjectList.length > 0 && (
-            <Button
-              onClick={addProject}
-              variant="outline"
-              className="border-primary text-primary hover:bg-primary hover:text-white transition-colors duration-300 flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" /> 
-              Add {localProjectList.length > 0 ? "Another Project" : " Project"}
-            </Button>
-          )}
-          
-          {localProjectList.length > 0 && (
-            <Button 
-              onClick={onSave}
-              disabled={loading}
-              className="px-6 py-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary transition-all duration-300 flex items-center gap-2"
-            >
-              {loading ? (
-                <><LoaderCircle className="h-4 w-4 animate-spin" /> Saving...</>
-              ) : (
-                "Save Projects"
-              )}
-            </Button>
-          )}
-        </div>
       </div>
+
+      {localProjectList.length > 0 && (
+        <div className="flex items-center justify-between border-t border-gray-100 px-5 py-4">
+          <Button
+            onClick={addProject}
+            variant="outline"
+            className="h-8 gap-1.5 border-emerald-200 px-3 text-xs text-emerald-600 hover:bg-emerald-50"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add Another Project
+          </Button>
+
+          <Button
+            onClick={onSave}
+            disabled={loading}
+            className="h-8 gap-2 bg-emerald-600 px-4 text-xs text-white hover:bg-emerald-700"
+          >
+            {loading ? (
+              <><LoaderCircle className="h-3.5 w-3.5 animate-spin" /> Saving...</>
+            ) : (
+              <><Save className="h-3.5 w-3.5" /> Save Projects</>
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
