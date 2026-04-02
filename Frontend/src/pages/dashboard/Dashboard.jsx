@@ -10,7 +10,7 @@ import AddResume from "./components/AddResume";
 import ResumeCard from "./components/ResumeCard";
 import ATSScoreChecker from "./components/ATSScoreChecker";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaEdit, FaKey, FaSignOutAlt } from "react-icons/fa";
+import { FaEdit, FaKey, FaSignOutAlt, FaBell } from "react-icons/fa";
 import {
   Search,
   Grid,
@@ -285,6 +285,12 @@ function Dashboard() {
                   className="w-full text-left text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 flex items-center gap-2 py-1.5"
                 >
                   <FaEdit className="w-3 h-3" /> Edit Profile
+                </button>
+                <button
+                  onClick={() => { navigate('/notifications'); setUserDropdownOpen(false); }}
+                  className="w-full text-left text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 flex items-center gap-2 py-1.5"
+                >
+                  <FaBell className="w-3 h-3" /> Notifications
                 </button>
                 <button
                   onClick={() => { navigate('/change-password'); setUserDropdownOpen(false); }}

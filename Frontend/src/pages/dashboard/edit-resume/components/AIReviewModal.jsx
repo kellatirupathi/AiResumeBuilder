@@ -427,40 +427,29 @@ function AIReviewPanel({ resumeInfo, onClose }) {
   };
 
   const renderLoader = () => (
-    <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex items-start gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600">
-            <Sparkles className="h-7 w-7" />
+    <div className="space-y-4">
+      {/* Progress card */}
+      <div className="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white p-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-100">
+            <Sparkles className="h-4 w-4 text-indigo-600 animate-pulse" />
           </div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium uppercase tracking-[0.2em] text-indigo-600">
-              AI review in progress
-            </p>
-            <h3 className="mt-2 text-2xl font-semibold text-slate-900">
-              Checking each section of your resume
-            </h3>
-            <p className="mt-2 text-sm text-slate-600">
-              The review runs section by section, then compiles strengths, gaps, and practical fixes.
-            </p>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-indigo-500">Analyzing</p>
+            <p className="text-sm font-semibold text-slate-800">Checking each section…</p>
           </div>
+          <span className="ml-auto text-sm font-bold text-indigo-600">{progressPercent}%</span>
         </div>
-
-        <div className="mt-6 space-y-3">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-medium text-slate-600">Analysis progress</span>
-            <span className="font-semibold text-slate-900">{progressPercent}%</span>
-          </div>
-          <div className="h-2.5 overflow-hidden rounded-full bg-slate-200">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-blue-500 to-cyan-400 transition-all duration-500 ease-out"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-indigo-100">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-blue-500 to-cyan-400 transition-all duration-500 ease-out"
+            style={{ width: `${progressPercent}%` }}
+          />
         </div>
       </div>
 
-      <div className="space-y-3">
+      {/* Stage list */}
+      <div className="space-y-1.5">
         {ANALYSIS_STAGES.map((stage, index) => {
           const Icon = stage.icon;
           const isComplete = index < completedStageCount;
@@ -469,51 +458,39 @@ function AIReviewPanel({ resumeInfo, onClose }) {
           return (
             <div
               key={stage.key}
-              className={`flex items-center gap-4 rounded-2xl border px-4 py-4 transition-all duration-300 ${
+              className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-all duration-300 ${
                 isComplete
-                  ? "border-emerald-200 bg-emerald-50"
+                  ? "border-emerald-100 bg-emerald-50"
                   : isActive
-                    ? "border-indigo-200 bg-indigo-50 shadow-sm"
-                    : "border-slate-200 bg-white"
+                  ? "border-indigo-100 bg-indigo-50 shadow-sm"
+                  : "border-gray-100 bg-white"
               }`}
             >
               <div
-                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${
                   isComplete
-                    ? "bg-emerald-100 text-emerald-700"
+                    ? "bg-emerald-100 text-emerald-600"
                     : isActive
-                      ? "bg-indigo-100 text-indigo-700"
-                      : "bg-slate-100 text-slate-500"
+                    ? "bg-indigo-100 text-indigo-600"
+                    : "bg-gray-100 text-gray-400"
                 }`}
               >
-                <Icon className={`h-5 w-5 ${isActive ? "animate-pulse" : ""}`} />
+                <Icon className={`h-3.5 w-3.5 ${isActive ? "animate-pulse" : ""}`} />
               </div>
 
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-semibold text-slate-900">{stage.title}</p>
-                  <span
-                    className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${
-                      isComplete
-                        ? "border-emerald-200 bg-white text-emerald-700"
-                        : isActive
-                          ? "border-indigo-200 bg-white text-indigo-700"
-                          : "border-slate-200 bg-slate-50 text-slate-500"
-                    }`}
-                  >
-                    {isComplete ? "Done" : isActive ? "Analyzing" : "Waiting"}
-                  </span>
-                </div>
-                <p className="mt-1 text-sm text-slate-600">{stage.description}</p>
-              </div>
+              <p className={`flex-1 text-xs font-medium truncate ${
+                isComplete ? "text-emerald-800" : isActive ? "text-indigo-800" : "text-gray-500"
+              }`}>
+                {stage.title}
+              </p>
 
               <div className="shrink-0">
                 {isComplete ? (
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                 ) : isActive ? (
-                  <LoaderCircle className="h-5 w-5 animate-spin text-indigo-600" />
+                  <LoaderCircle className="h-4 w-4 animate-spin text-indigo-500" />
                 ) : (
-                  <div className="h-2.5 w-2.5 rounded-full bg-slate-300" />
+                  <div className="h-1.5 w-1.5 rounded-full bg-gray-300" />
                 )}
               </div>
             </div>
@@ -531,118 +508,118 @@ function AIReviewPanel({ resumeInfo, onClose }) {
     const suggestions = safeArray(result?.suggestions);
 
     return (
-      <div className="space-y-6">
-        <div className="rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-6 text-white shadow-lg">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-sm font-medium uppercase tracking-[0.2em] text-indigo-200">
-                AI review complete
-              </p>
-              <h3 className="mt-2 text-3xl font-semibold">Your resume scorecard</h3>
-              <p className="mt-2 max-w-xl text-sm text-slate-300">
-                The review combines content quality, completeness, and impact signals across the
-                main resume sections.
-              </p>
-            </div>
+      <div className="space-y-4">
 
-            <div className="rounded-3xl bg-white/10 px-6 py-5 backdrop-blur">
-              <p className="text-sm text-slate-300">Overall score</p>
-              <p className={`mt-2 text-5xl font-bold ${overallScoreStyles.text}`}>{overallScore}</p>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/15">
-                <div
-                  className={`h-full rounded-full bg-gradient-to-r ${overallScoreStyles.bar}`}
-                  style={{ width: `${overallScore}%` }}
-                />
-              </div>
+        {/* ── Overall score card ── */}
+        <div className="rounded-xl bg-gradient-to-br from-slate-900 to-indigo-950 p-4 text-white">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-indigo-300">AI Review Complete</p>
+              <h3 className="mt-1 text-base font-bold">Resume Scorecard</h3>
+              <p className="mt-0.5 text-xs text-slate-400 leading-relaxed">Completeness · Quality · Impact</p>
             </div>
+            <div className="flex-shrink-0 rounded-lg bg-white/10 px-5 py-3 text-center backdrop-blur-sm">
+              <p className="text-[10px] text-slate-400 uppercase tracking-widest">Score</p>
+              <p className={`text-4xl font-extrabold leading-none mt-1 ${overallScoreStyles.text}`}>{overallScore}</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">/ 100</p>
+            </div>
+          </div>
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+            <div
+              className={`h-full rounded-full bg-gradient-to-r ${overallScoreStyles.bar} transition-all duration-700`}
+              style={{ width: `${overallScore}%` }}
+            />
           </div>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {/* ── Section scores ── */}
+        <div className="rounded-xl border border-gray-100 bg-white p-4 space-y-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-3">Section Breakdown</p>
           {SCORE_SECTIONS.map((section) => {
             const Icon = section.icon;
             const score = result?.scores?.[section.key] ?? 0;
             const scoreStyles = getScoreColorClasses(score);
 
             return (
-              <div key={section.key} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">{section.label}</p>
-                      <p className={`text-2xl font-bold ${scoreStyles.text}`}>{score}%</p>
-                    </div>
-                  </div>
-                  <span className={`rounded-full border px-2.5 py-1 text-xs font-medium ${scoreStyles.badge}`}>
-                    {score >= 85 ? "Strong" : score >= 70 ? "Good" : score >= 50 ? "Average" : "Needs work"}
-                  </span>
+              <div key={section.key} className="flex items-center gap-3">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-500">
+                  <Icon className="h-3.5 w-3.5" />
                 </div>
+                <span className="w-24 shrink-0 text-xs font-medium text-gray-600 truncate">{section.label}</span>
+                <div className="flex-1 h-1.5 overflow-hidden rounded-full bg-gray-100">
+                  <div
+                    className={`h-full rounded-full bg-gradient-to-r ${scoreStyles.bar} transition-all duration-500`}
+                    style={{ width: `${score}%` }}
+                  />
+                </div>
+                <span className={`w-9 shrink-0 text-right text-xs font-bold ${scoreStyles.text}`}>{score}%</span>
               </div>
             );
           })}
         </div>
 
-        <div className="grid gap-4 xl:grid-cols-2">
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-            <div className="flex items-center gap-2">
-              <ThumbsUp className="h-5 w-5 text-emerald-700" />
-              <h4 className="text-lg font-semibold text-emerald-900">Strengths</h4>
+        {/* ── Strengths ── */}
+        <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-100">
+              <ThumbsUp className="h-3.5 w-3.5 text-emerald-600" />
             </div>
-            <ul className="mt-4 space-y-3">
-              {strengths.length > 0 ? (
-                strengths.map((item, index) => (
-                  <li key={`${item}-${index}`} className="rounded-xl bg-white/70 px-4 py-3 text-sm text-emerald-900">
-                    {item}
-                  </li>
-                ))
-              ) : (
-                <li className="rounded-xl bg-white/70 px-4 py-3 text-sm text-emerald-900">
-                  The AI review did not return specific strengths for this resume yet.
-                </li>
-              )}
-            </ul>
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-emerald-700">Strengths</h4>
           </div>
-
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-700" />
-              <h4 className="text-lg font-semibold text-amber-900">Weaknesses</h4>
-            </div>
-            <ul className="mt-4 space-y-3">
-              {weaknesses.length > 0 ? (
-                weaknesses.map((item, index) => (
-                  <li key={`${item}-${index}`} className="rounded-xl bg-white/70 px-4 py-3 text-sm text-amber-900">
-                    {item}
-                  </li>
-                ))
-              ) : (
-                <li className="rounded-xl bg-white/70 px-4 py-3 text-sm text-amber-900">
-                  The AI review did not return specific weaknesses for this resume yet.
-                </li>
-              )}
-            </ul>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
-          <div className="flex items-center gap-2">
-            <Lightbulb className="h-5 w-5 text-blue-700" />
-            <h4 className="text-lg font-semibold text-blue-900">Suggestions</h4>
-          </div>
-          <ul className="mt-4 space-y-3">
-            {suggestions.length > 0 ? (
-              suggestions.map((item, index) => (
-                <li key={`${item}-${index}`} className="rounded-xl bg-white/80 px-4 py-3 text-sm text-blue-900">
-                  {item}
+          <ul className="space-y-2">
+            {strengths.length > 0 ? (
+              strengths.map((item, index) => (
+                <li key={`s-${index}`} className="flex items-start gap-2.5 rounded-lg bg-white/70 px-3 py-2.5">
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5 text-emerald-500" />
+                  <span className="text-xs text-emerald-900 leading-relaxed">{item}</span>
                 </li>
               ))
             ) : (
-              <li className="rounded-xl bg-white/80 px-4 py-3 text-sm text-blue-900">
-                The AI review completed without improvement suggestions.
-              </li>
+              <li className="rounded-lg bg-white/70 px-3 py-2.5 text-xs text-emerald-800">No specific strengths returned.</li>
+            )}
+          </ul>
+        </div>
+
+        {/* ── Weaknesses ── */}
+        <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-100">
+              <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+            </div>
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-amber-700">Weaknesses</h4>
+          </div>
+          <ul className="space-y-2">
+            {weaknesses.length > 0 ? (
+              weaknesses.map((item, index) => (
+                <li key={`w-${index}`} className="flex items-start gap-2.5 rounded-lg bg-white/70 px-3 py-2.5">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-500" />
+                  <span className="text-xs text-amber-900 leading-relaxed">{item}</span>
+                </li>
+              ))
+            ) : (
+              <li className="rounded-lg bg-white/70 px-3 py-2.5 text-xs text-amber-800">No weaknesses identified.</li>
+            )}
+          </ul>
+        </div>
+
+        {/* ── Suggestions ── */}
+        <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-100">
+              <Lightbulb className="h-3.5 w-3.5 text-blue-600" />
+            </div>
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-blue-700">Suggestions</h4>
+          </div>
+          <ul className="space-y-2">
+            {suggestions.length > 0 ? (
+              suggestions.map((item, index) => (
+                <li key={`sg-${index}`} className="flex items-start gap-2.5 rounded-lg bg-white/80 px-3 py-2.5">
+                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-600 mt-0.5">{index + 1}</span>
+                  <span className="text-xs text-blue-900 leading-relaxed">{item}</span>
+                </li>
+              ))
+            ) : (
+              <li className="rounded-lg bg-white/80 px-3 py-2.5 text-xs text-blue-800">No suggestions returned.</li>
             )}
           </ul>
         </div>
@@ -651,101 +628,122 @@ function AIReviewPanel({ resumeInfo, onClose }) {
   };
 
   const renderEmptyState = () => (
-    <div className="space-y-6">
-      <div className="rounded-3xl bg-gradient-to-br from-slate-950 via-indigo-950 to-blue-900 p-6 text-white shadow-lg">
-        <div className="flex items-start gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10">
-            <Sparkles className="h-7 w-7 text-cyan-200" />
+    <div className="space-y-4">
+      {/* Hero banner */}
+      <div className="rounded-xl bg-gradient-to-br from-slate-900 to-indigo-950 p-5 text-white">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10">
+            <Sparkles className="h-5 w-5 text-cyan-300" />
           </div>
           <div>
-            <p className="text-sm font-medium uppercase tracking-[0.2em] text-cyan-200">
-              Split-view AI review
-            </p>
-            <h3 className="mt-2 text-3xl font-semibold">Analyze your resume without leaving the editor</h3>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-              Start the analysis to review every major section on the right side while your resume
-              editor stays visible on the left.
-            </p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-indigo-300">Split-view AI Review</p>
+            <h3 className="text-sm font-bold text-white">Instant resume feedback</h3>
           </div>
         </div>
+        <p className="text-xs text-slate-400 leading-relaxed">
+          Analyze every section — scores, strengths, weaknesses, and actionable suggestions — while keeping your editor open on the left.
+        </p>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        {ANALYSIS_STAGES.slice(0, 6).map((stage) => {
-          const Icon = stage.icon;
-
-          return (
-            <div key={stage.key} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
-                  <Icon className="h-5 w-5" />
+      {/* What we check */}
+      <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-3">What we review</p>
+        <div className="space-y-1.5">
+          {ANALYSIS_STAGES.slice(0, 7).map((stage) => {
+            const Icon = stage.icon;
+            return (
+              <div key={stage.key} className="flex items-center gap-3 rounded-lg bg-gray-50 px-3 py-2">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-indigo-50 text-indigo-500">
+                  <Icon className="h-3.5 w-3.5" />
                 </div>
-                <div>
-                  <p className="font-semibold text-slate-900">{stage.title}</p>
-                  <p className="text-sm text-slate-600">{stage.description}</p>
-                </div>
+                <span className="text-xs font-medium text-gray-700">{stage.title}</span>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-slate-50">
-      <div className="flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-6 py-5">
-        <div>
-          <div className="flex items-center gap-2 text-indigo-600">
-            <Sparkles className="h-5 w-5" />
-            <span className="text-sm font-semibold uppercase tracking-[0.18em]">AI Resume Review</span>
-          </div>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-900">Right-side review panel</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Run the analysis here while keeping the resume editor visible on the left.
-          </p>
-        </div>
+    <div className="flex h-full min-h-0 flex-col bg-gray-50">
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="shrink-0 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+      {/* ── Header ── */}
+      <div className="flex-shrink-0 flex items-center justify-between gap-3 border-b border-gray-100 bg-white px-4 py-3">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100">
+            <Sparkles className="h-4 w-4 text-indigo-600" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-indigo-500">AI Review</p>
+            <p className="text-sm font-semibold text-gray-800 leading-tight">Resume Analysis</p>
+          </div>
+        </div>
+        <button
           onClick={onClose}
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
         >
-          <X className="h-5 w-5" />
-        </Button>
+          <X className="h-4 w-4" />
+        </button>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+      {/* ── Scrollable content ── */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
         {loading ? renderLoader() : error ? (
-          <div className="rounded-3xl border border-rose-200 bg-rose-50 p-6">
+          <div className="rounded-xl border border-rose-100 bg-rose-50 p-4">
             <div className="flex items-start gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-rose-700">
-                <AlertTriangle className="h-5 w-5" />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-100">
+                <AlertTriangle className="h-4 w-4 text-rose-600" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-rose-900">Analysis failed</h3>
-                <p className="mt-2 text-sm text-rose-800">{error}</p>
+                <p className="text-sm font-semibold text-rose-800">Analysis failed</p>
+                <p className="mt-1 text-xs text-rose-700 leading-relaxed">{error}</p>
               </div>
             </div>
           </div>
         ) : result ? renderResults() : renderEmptyState()}
       </div>
 
-      <div className="border-t border-slate-200 bg-white px-6 py-4">
+      {/* ── Footer ── */}
+      <div className="flex-shrink-0 border-t border-gray-100 bg-white px-4 py-3">
         {result ? (
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
-            <Button variant="outline" onClick={resetReviewState}>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetReviewState}
+              className="flex-1 h-9 text-xs border-gray-200 text-gray-600 hover:bg-gray-50"
+            >
               Analyze Again
             </Button>
-            <Button onClick={onClose}>Back to Preview</Button>
+            <Button
+              size="sm"
+              onClick={onClose}
+              className="flex-1 h-9 text-xs bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              Back to Preview
+            </Button>
           </div>
         ) : (
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Button className="flex-1" onClick={handleAnalysis} disabled={loading}>
-              {loading ? "Analyzing Resume..." : "Start AI Analysis"}
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={handleAnalysis}
+              disabled={loading}
+              className="flex-1 h-9 text-xs bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-60"
+            >
+              {loading ? (
+                <><LoaderCircle className="h-3.5 w-3.5 animate-spin mr-1.5" />Analyzing…</>
+              ) : (
+                <><Sparkles className="h-3.5 w-3.5 mr-1.5" />Start AI Analysis</>
+              )}
             </Button>
-            <Button variant="outline" onClick={onClose}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onClose}
+              className="h-9 text-xs border-gray-200 text-gray-600 hover:bg-gray-50 px-3"
+            >
               Close
             </Button>
           </div>

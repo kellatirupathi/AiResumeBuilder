@@ -18,7 +18,13 @@ import {
   deleteResume,
   processPendingResumeLinks,
 } from "../controller/admin.controller.js";
-import { getNotifications, resendNotification, cancelNotification } from "../controller/notification.controller.js";
+import {
+  getNotifications,
+  resendNotification,
+  cancelNotification,
+  sendReminderNotification,
+  cancelReminderNotification,
+} from "../controller/notification.controller.js";
 import { isAdmin } from "../middleware/adminAuth.js";
 
 const router = Router();
@@ -48,6 +54,11 @@ router.post("/resumes/process-pending-links", processPendingResumeLinks);
 
 // Notification routes
 router.get("/notifications", getNotifications);
+router.post("/notifications/reminders/:userId/send", sendReminderNotification);
+router.patch(
+  "/notifications/reminders/:userId/cancel",
+  cancelReminderNotification
+);
 router.post("/notifications/:id/resend", resendNotification);
 router.patch("/notifications/:id/cancel", cancelNotification);
 

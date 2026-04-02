@@ -12,7 +12,9 @@ import {
   updateUserProfile,
   generatePortfolio,
   googleLogin,
-  completeProfile, // <-- MODIFIED: IMPORTED NEW CONTROLLER
+  completeProfile,
+  getNotificationPreferences,
+  updateNotificationPreferences,
 } from "../controller/user.controller.js";
 import { Router } from "express";
 import { isUserAvailable } from "../middleware/auth.js";
@@ -36,5 +38,9 @@ router.post("/profile/generate-portfolio", isUserAvailable, generatePortfolio);
 
 // <-- MODIFIED: ADDED NEW ROUTE -->
 router.post("/complete-profile", isUserAvailable, completeProfile);
+
+// --- NOTIFICATION PREFERENCE ROUTES ---
+router.get("/notification-preferences", isUserAvailable, getNotificationPreferences);
+router.patch("/notification-preferences", isUserAvailable, updateNotificationPreferences);
 
 export default router;

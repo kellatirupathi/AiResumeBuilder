@@ -42,7 +42,8 @@ export const generateResumePDF = async (req, res) => {
     // Fire-and-forget: send Drive link email after response is sent
     const user = req.user;
     const driveLink = resume.googleDriveLink;
-    if (driveLink) {
+    const downloadLinkEnabled = user.notificationPreferences?.downloadLink !== false;
+    if (driveLink && downloadLinkEnabled) {
       (async () => {
         let status = "sent";
         let errorMessage = "";

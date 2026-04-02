@@ -4,7 +4,7 @@ import React from "react";
 function SkillsPreview({ resumeInfo }) {
   return (
     <div className="my-3">
-      {resumeInfo?.skills.length > 0 && (
+      {resumeInfo?.skills?.length > 0 && (
         <div>
           <h2
             className="text-center font-bold text-sm mb-1"

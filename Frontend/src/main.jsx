@@ -18,8 +18,9 @@ import AdminUserResumesPage from "./pages/admin/AdminUserResumesPage.jsx";
 import AdminStudentIdsPage from "./pages/admin/AdminStudentIdsPage.jsx";
 import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage.jsx";
 import AuthPage from "./pages/auth/customAuth/AuthPage.jsx";
-import { resumeStore } from "./store/store";
+import { resumeStore, persistor } from "./store/store";
 import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
 import PublicResumeView from "./pages/public/PublicResumeView.jsx"; 
 import ProfilePage from "./pages/profile/ProfilePage.jsx";
 import NiatManagementPage from "./pages/admin/NiatManagementPage.jsx";
@@ -30,6 +31,7 @@ import Documentation from "./pages/documentation/Documentation.jsx";
 import ATSCheckerPage from "./pages/ats/ATSCheckerPage.jsx";
 import ResumesPage from "./pages/resumes/ResumesPage.jsx";
 import ChangePasswordPage from "./pages/change-password/ChangePasswordPage.jsx";
+import UserNotificationsPage from "./pages/notifications/UserNotificationsPage.jsx";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { VITE_GOOGLE_CLIENT_ID } from './config/config.js';
 import { HelmetProvider } from 'react-helmet-async';
@@ -69,6 +71,10 @@ const router = createBrowserRouter([
       {
         path: "/change-password",
         element: <ChangePasswordPage />
+      },
+      {
+        path: "/notifications",
+        element: <UserNotificationsPage />
       }
     ],
   },
@@ -120,9 +126,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <HelmetProvider>
     <GoogleOAuthProvider clientId={VITE_GOOGLE_CLIENT_ID}>
       <Provider store={resumeStore}>
-        <React.StrictMode>
-          <RouterProvider router={router} />
-        </React.StrictMode>
+        <PersistGate loading={null} persistor={persistor}>
+          <React.StrictMode>
+            <RouterProvider router={router} />
+          </React.StrictMode>
+        </PersistGate>
       </Provider>
     </GoogleOAuthProvider>
   </HelmetProvider>

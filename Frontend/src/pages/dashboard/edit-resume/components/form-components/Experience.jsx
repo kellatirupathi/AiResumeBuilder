@@ -150,9 +150,9 @@ function DatePicker({ name, value, onChange, min, isDisabled, label }) {
         <div className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-primary" />
           {selectedMonth !== "" && selectedYear ? (
-            <span className="text-gray-800">{MONTHS[selectedMonth]}, {selectedYear}</span>
+            <span className="text-xs text-gray-800">{MONTHS[selectedMonth]}, {selectedYear}</span>
           ) : (
-            <span className="text-gray-400">{label}</span>
+            <span className="text-xs text-gray-400">{label}</span>
           )}
         </div>
         <div className="flex items-center">
@@ -211,7 +211,7 @@ function DatePicker({ name, value, onChange, min, isDisabled, label }) {
                     key={year}
                     type="button"
                     onClick={() => handleYearChange(year)}
-                    className={`px-2 py-2 text-sm rounded-md transition-colors duration-200 ${selectedYear === year.toString() ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}
+                    className={`px-2 py-2 text-xs rounded-md transition-colors duration-200 ${selectedYear === year.toString() ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}
                   >
                     {year}
                   </button>
@@ -232,7 +232,7 @@ function DatePicker({ name, value, onChange, min, isDisabled, label }) {
                     key={month}
                     type="button"
                     onClick={() => handleMonthChange(index)}
-                    className={`px-2 py-2 text-sm rounded-md transition-colors duration-200 ${selectedMonth === index ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}
+                    className={`px-2 py-2 text-xs rounded-md transition-colors duration-200 ${selectedMonth === index ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}
                   >
                     {month.substring(0, 3)}
                   </button>
@@ -511,7 +511,7 @@ function Experience({ resumeInfo, enanbledNext, enanbledPrev }) {
                       name="title"
                       value={experience?.title || ""}
                       onChange={(e) => handleChange(e, index)}
-                      className="h-9 text-sm border-gray-200 focus:border-sky-400"
+                      className="h-9 text-xs border-gray-200 focus:border-sky-400"
                       placeholder="e.g. Software Engineer"
                     />
                   </div>
@@ -527,7 +527,7 @@ function Experience({ resumeInfo, enanbledNext, enanbledPrev }) {
                       name="companyName"
                       value={experience?.companyName || ""}
                       onChange={(e) => handleChange(e, index)}
-                      className="h-9 text-sm border-gray-200 focus:border-sky-400"
+                      className="h-9 text-xs border-gray-200 focus:border-sky-400"
                       placeholder="e.g. Acme Corporation"
                     />
                   </div>
@@ -543,7 +543,7 @@ function Experience({ resumeInfo, enanbledNext, enanbledPrev }) {
                       name="city"
                       value={experience?.city || ""}
                       onChange={(e) => handleChange(e, index)}
-                      className="h-9 text-sm border-gray-200 focus:border-sky-400"
+                      className="h-9 text-xs border-gray-200 focus:border-sky-400"
                       placeholder="e.g. San Francisco"
                     />
                   </div>
@@ -559,7 +559,7 @@ function Experience({ resumeInfo, enanbledNext, enanbledPrev }) {
                       name="state"
                       value={experience?.state || ""}
                       onChange={(e) => handleChange(e, index)}
-                      className="h-9 text-sm border-gray-200 focus:border-sky-400"
+                      className="h-9 text-xs border-gray-200 focus:border-sky-400"
                       placeholder="e.g. California"
                     />
                   </div>

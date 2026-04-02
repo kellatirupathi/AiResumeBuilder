@@ -562,7 +562,7 @@ const completeProfile = async (req, res) => {
     // Check if another user has already taken this NIAT ID
     const existingNiatUser = await User.findOne({ niatId });
     if (existingNiatUser && existingNiatUser._id.toString() !== userId.toString()) {
-      return res.status(409).json(new ApiError(409, "This NIAT ID is already associated with another account."));
+      return res.status(409).json(new ApiError(409, "This ID is already associated with another account."));
     }
     
     // Update the user
@@ -582,6 +582,46 @@ const completeProfile = async (req, res) => {
 };
 
 
+const getNotificationPreferences = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("notificationPreferences");
+    if (!user) return res.status(404).json(new ApiError(404, "User not found."));
+
+    const prefs = user.notificationPreferences ?? { reminder: true, downloadLink: true };
+    return res.status(200).json(new ApiResponse(200, prefs, "Notification preferences fetched."));
+  } catch (err) {
+    console.error("getNotificationPreferences error:", err);
+    return res.status(500).json(new ApiError(500, "Internal Server Error.", [], err.stack));
+  }
+};
+
+const updateNotificationPreferences = async (req, res) => {
+  try {
+    const { reminder, downloadLink } = req.body;
+    const update = {};
+    if (typeof reminder === "boolean") update["notificationPreferences.reminder"] = reminder;
+    if (typeof downloadLink === "boolean") update["notificationPreferences.downloadLink"] = downloadLink;
+
+    if (Object.keys(update).length === 0) {
+      return res.status(400).json(new ApiError(400, "No valid preference fields provided."));
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: update },
+      { new: true, select: "notificationPreferences" }
+    );
+    if (!user) return res.status(404).json(new ApiError(404, "User not found."));
+
+    return res.status(200).json(
+      new ApiResponse(200, user.notificationPreferences, "Notification preferences updated.")
+    );
+  } catch (err) {
+    console.error("updateNotificationPreferences error:", err);
+    return res.status(500).json(new ApiError(500, "Internal Server Error.", [], err.stack));
+  }
+};
+
 // <-- FIX: ADD completeProfile TO THIS EXPORT LIST -->
 export {
   start,
@@ -596,5 +636,7 @@ export {
   getUserProfile,
   updateUserProfile,
   generatePortfolio,
-  completeProfile
+  completeProfile,
+  getNotificationPreferences,
+  updateNotificationPreferences,
 };

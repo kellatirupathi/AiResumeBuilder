@@ -183,6 +183,24 @@ export const resendNotification = async (id) => {
   }
 };
 
+export const sendReminderNotification = async (userId) => {
+  try {
+    const response = await adminAxios.post(`/notifications/reminders/${userId}/send`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to send reminder notification.');
+  }
+};
+
+export const cancelReminderNotification = async (userId) => {
+  try {
+    const response = await adminAxios.patch(`/notifications/reminders/${userId}/cancel`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to cancel reminder notification.');
+  }
+};
+
 export const cancelNotification = async (id) => {
   try {
     const response = await adminAxios.patch(`/notifications/${id}/cancel`);

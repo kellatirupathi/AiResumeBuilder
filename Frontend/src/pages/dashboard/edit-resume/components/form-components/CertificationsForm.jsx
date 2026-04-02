@@ -111,7 +111,7 @@ function DatePicker({ index, field, value, onChange, isDisabled, label }) {
         <div className="grid grid-cols-3 gap-2">
           {MONTHS.map((month, monthIndex) => (
             <button key={month} type="button" onClick={() => handleDateSelection(currentYear, monthIndex)}
-              className={`px-2 py-1.5 text-sm rounded-md transition-colors ${initialMonth === monthIndex && initialYear === currentYear ? 'bg-primary text-white' : 'hover:bg-primary/10'}`}>
+              className={`px-2 py-1.5 text-xs rounded-md transition-colors ${initialMonth === monthIndex && initialYear === currentYear ? 'bg-primary text-white' : 'hover:bg-primary/10'}`}>
               {month.substring(0, 3)}
             </button>
           ))}
@@ -124,7 +124,7 @@ function DatePicker({ index, field, value, onChange, isDisabled, label }) {
     <div className="w-full">
       <div ref={triggerRef} onClick={() => !isDisabled && setShowDropdown(!showDropdown)}
         className={`flex items-center w-full justify-between p-3 border rounded-md ${isDisabled ? 'bg-gray-50' : 'bg-white'} ${showDropdown ? 'border-primary ring-2 ring-primary/20' : 'border-gray-300'} cursor-pointer transition-all`}>
-        <span className={value ? 'text-gray-800' : 'text-gray-400'}>{value || label}</span>
+        <span className={`text-xs ${value ? 'text-gray-800' : 'text-gray-400'}`}>{value || label}</span>
         <Calendar className="h-4 w-4 text-primary ml-auto" />
       </div>
       {showDropdown && ReactDOM.createPortal(dropdownJsx, document.body)}
@@ -296,11 +296,11 @@ function CertificationsForm({ resumeInfo, enanbledNext, enanbledPrev }) {
                 <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2">
                   <div>
                     <FieldLabel icon={Award} label="Certification Name" required />
-                    <Input name="name" onChange={(e) => handleChange(e, index)} value={item?.name || ""} className="h-9 border-gray-200 text-sm focus:border-amber-400" placeholder="e.g. AWS Certified Solutions Architect"/>
+                    <Input name="name" onChange={(e) => handleChange(e, index)} value={item?.name || ""} className="h-9 border-gray-200 text-xs focus:border-amber-400" placeholder="e.g. AWS Certified Solutions Architect"/>
                   </div>
                   <div>
                     <FieldLabel icon={Building2} label="Issuing Organization" required />
-                    <Input name="issuer" onChange={(e) => handleChange(e, index)} value={item?.issuer || ""} className="h-9 border-gray-200 text-sm focus:border-amber-400" placeholder="e.g. Amazon Web Services"/>
+                    <Input name="issuer" onChange={(e) => handleChange(e, index)} value={item?.issuer || ""} className="h-9 border-gray-200 text-xs focus:border-amber-400" placeholder="e.g. Amazon Web Services"/>
                   </div>
                   <div>
                     <FieldLabel icon={Calendar} label="Date Received" />
@@ -308,7 +308,7 @@ function CertificationsForm({ resumeInfo, enanbledNext, enanbledPrev }) {
                   </div>
                   <div>
                     <FieldLabel icon={LinkIcon} label="Credential Link" />
-                    <Input name="credentialLink" onChange={(e) => handleChange(e, index)} value={item?.credentialLink || ""} className="h-9 border-gray-200 text-sm focus:border-amber-400" placeholder="https://www.credential.net/abc123"/>
+                    <Input name="credentialLink" onChange={(e) => handleChange(e, index)} value={item?.credentialLink || ""} className="h-9 border-gray-200 text-xs focus:border-amber-400" placeholder="https://www.credential.net/abc123"/>
                   </div>
                 </div>
               </div>
