@@ -25,6 +25,7 @@ import ResumesPage from "./pages/resumes/ResumesPage.jsx";
 import ChangePasswordPage from "./pages/change-password/ChangePasswordPage.jsx";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { VITE_GOOGLE_CLIENT_ID } from './config/config.js';
+import { HelmetProvider } from 'react-helmet-async';
 
 const router = createBrowserRouter([
   {
@@ -104,11 +105,13 @@ const router = createBrowserRouter([
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <GoogleOAuthProvider clientId={VITE_GOOGLE_CLIENT_ID}>
-    <Provider store={resumeStore}>
-      <React.StrictMode>
-        <RouterProvider router={router} />
-      </React.StrictMode>
-    </Provider>
-  </GoogleOAuthProvider>
+  <HelmetProvider>
+    <GoogleOAuthProvider clientId={VITE_GOOGLE_CLIENT_ID}>
+      <Provider store={resumeStore}>
+        <React.StrictMode>
+          <RouterProvider router={router} />
+        </React.StrictMode>
+      </Provider>
+    </GoogleOAuthProvider>
+  </HelmetProvider>
 );

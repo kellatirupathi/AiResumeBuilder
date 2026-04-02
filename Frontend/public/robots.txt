@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+
+# Disallow admin and private routes
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /profile
+Disallow: /change-password
+Disallow: /complete-profile
+Disallow: /reset-password
+
+# Allow public pages
+Allow: /
+Allow: /auth/sign-in
+Allow: /forgot-password
+Allow: /public/resume/
+Allow: /ats-checker
+Allow: /resumes
+Allow: /documentation
+
+Sitemap: https://ai-resume-builder-ochre-five.vercel.app/sitemap.xml
