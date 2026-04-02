@@ -15,6 +15,7 @@ const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV !== "Dev",
   sameSite: process.env.NODE_ENV !== "Dev" ? "none" : "lax",
+  path: "/",
 };
 
 const USER_FIELDS = [
