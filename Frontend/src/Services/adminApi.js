@@ -119,6 +119,51 @@ export const processPendingResumeLinks = async () => {
   }
 };
 
+export const getDashboardStats = async (days = 30) => {
+  try {
+    const response = await adminAxios.get('/stats', { params: { days } });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch dashboard stats.');
+  }
+};
+
+export const getUsersPaginated = async ({ page = 1, limit = 20, search = '' } = {}) => {
+  try {
+    const response = await adminAxios.get('/users/paginated', { params: { page, limit, search } });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch users.');
+  }
+};
+
+export const getUserById = async (id) => {
+  try {
+    const response = await adminAxios.get(`/users/${id}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch user.');
+  }
+};
+
+export const getResumesPaginated = async ({ page = 1, limit = 20, search = '' } = {}) => {
+  try {
+    const response = await adminAxios.get('/resumes/paginated', { params: { page, limit, search } });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch resumes.');
+  }
+};
+
+export const getResumesByUser = async (userId) => {
+  try {
+    const response = await adminAxios.get(`/resumes/by-user/${userId}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch user resumes.');
+  }
+};
+
 // --- NEW FUNCTIONS FOR NIAT ID MANAGEMENT ---
 export const getNiatIds = async () => {
   try {
