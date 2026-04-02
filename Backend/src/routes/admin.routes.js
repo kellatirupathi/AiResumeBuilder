@@ -4,10 +4,15 @@ import {
   logoutAdmin,
   checkAdminSession,
   getAllUsers,
+  getUsersPaginated,
+  getUserById,
   createUser,
   updateUser,
   deleteUser,
   getAllResumes,
+  getResumesPaginated,
+  getResumesByUser,
+  getDashboardStats,
   createResume,
   updateResume,
   deleteResume,
@@ -25,11 +30,16 @@ router.use(isAdmin);
 
 router.get("/session", checkAdminSession);
 router.post("/logout", logoutAdmin);
+router.get("/stats", getDashboardStats);
 router.get("/users", getAllUsers);
+router.get("/users/paginated", getUsersPaginated);
+router.get("/users/:id", getUserById);
 router.post("/users", createUser);
 router.put("/users/:id", updateUser);
 router.delete("/users/:id", deleteUser);
 router.get("/resumes", getAllResumes);
+router.get("/resumes/paginated", getResumesPaginated);
+router.get("/resumes/by-user/:userId", getResumesByUser);
 router.post("/resumes", createResume);
 router.put("/resumes/:id", updateResume);
 router.delete("/resumes/:id", deleteResume);

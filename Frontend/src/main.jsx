@@ -9,7 +9,13 @@ import Dashboard from "./pages/dashboard/Dashboard.jsx";
 import { EditResume } from "./pages/dashboard/edit-resume/[resume_id]/EditResume.jsx";
 import ViewResume from "./pages/dashboard/view-resume/[resume_id]/ViewResume.jsx";
 import AdminLoginPage from "./pages/auth/admin/AdminLoginPage.jsx";
+import AdminLayout from "./pages/admin/AdminLayout.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+import AdminUsersPage from "./pages/admin/AdminUsersPage.jsx";
+import AdminResumesPage from "./pages/admin/AdminResumesPage.jsx";
+import AdminUserDetailPage from "./pages/admin/AdminUserDetailPage.jsx";
+import AdminUserResumesPage from "./pages/admin/AdminUserResumesPage.jsx";
+import AdminStudentIdsPage from "./pages/admin/AdminStudentIdsPage.jsx";
 import AuthPage from "./pages/auth/customAuth/AuthPage.jsx";
 import { resumeStore } from "./store/store";
 import { Provider } from "react-redux";
@@ -95,12 +101,16 @@ const router = createBrowserRouter([
     element: <AdminLoginPage />,
   },
   {
-    path: "/admin/dashboard",
-    element: <AdminDashboard />,
-  },
-  {
-    path: "/admin/niat-ids",
-    element: <NiatManagementPage />,
+    path: "/admin",
+    element: <AdminLayout />,
+    children: [
+      { path: "dashboard", element: <AdminDashboard /> },
+      { path: "users", element: <AdminUsersPage /> },
+      { path: "users/:userId", element: <AdminUserDetailPage /> },
+      { path: "resumes", element: <AdminResumesPage /> },
+      { path: "resumes/:userId", element: <AdminUserResumesPage /> },
+      { path: "student-ids", element: <AdminStudentIdsPage /> },
+    ],
   },
 ]);
 
