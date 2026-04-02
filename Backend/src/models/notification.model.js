@@ -10,6 +10,7 @@ const notificationSchema = new mongoose.Schema(
       enum: ["reminder", "download-link"],
       required: true,
     },
+    reminderStage: { type: Number, default: null }, // 1, 2, or 3 for reminder emails
     resumeId: { type: mongoose.Schema.Types.ObjectId, ref: "Resume", default: null },
     resumeTitle: { type: String, default: "" },
     status: {

@@ -6,7 +6,7 @@ import { useDispatch } from "react-redux";
 import { logoutUser } from "@/Services/login";
 import { addUserData } from "@/features/user/userFeatures";
 import { motion } from "framer-motion";
-import { FaUser, FaSignOutAlt, FaTachometerAlt, FaKey, FaEdit } from "react-icons/fa"; // Import FaEdit
+import { FaUser, FaSignOutAlt, FaTachometerAlt, FaKey, FaEdit, FaBell } from "react-icons/fa";
 import { Moon, Sun } from "lucide-react";
 import ChangePasswordModal from "./ChangePasswordModal";
 import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
@@ -94,7 +94,11 @@ function Header({ user, darkMode, toggleDarkMode }) {
                         <button onClick={() => { navigate('/profile'); setUserDropdownOpen(false); }} className="w-full text-left text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center gap-2 mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
                           <FaEdit className="w-3 h-3" /> Edit Profile
                         </button>
-                        
+
+                        <button onClick={() => { navigate('/notifications'); setUserDropdownOpen(false); }} className="w-full text-left text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center gap-2 mt-2">
+                          <FaBell className="w-3 h-3" /> Notifications
+                        </button>
+
                         <button onClick={() => { setChangePasswordOpen(true); setUserDropdownOpen(false); }} className="w-full text-left text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center gap-2 mt-2">
                           <FaKey className="w-3 h-3" /> Change Password
                         </button>

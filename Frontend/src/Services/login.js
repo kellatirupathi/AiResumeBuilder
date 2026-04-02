@@ -142,6 +142,28 @@ export const generatePortfolio = async (templateName) => {
     }
 };
 
+const getNotificationPreferences = async () => {
+  try {
+    const response = await axiosInstance.get("users/notification-preferences");
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error?.response?.data?.message || error?.message || "Failed to fetch notification preferences"
+    );
+  }
+};
+
+const updateNotificationPreferences = async (prefs) => {
+  try {
+    const response = await axiosInstance.patch("users/notification-preferences", prefs);
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error?.response?.data?.message || error?.message || "Failed to update notification preferences"
+    );
+  }
+};
+
 // <-- MODIFIED: ADDED NEW FUNCTION -->
 const completeProfile = async (data) => {
   try {
@@ -166,5 +188,7 @@ export {
   changePassword,
   getProfile,
   updateProfile,
-  completeProfile, // <-- MODIFIED: EXPORTED NEW FUNCTION
+  completeProfile,
+  getNotificationPreferences,
+  updateNotificationPreferences,
 };

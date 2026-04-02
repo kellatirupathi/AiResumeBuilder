@@ -95,7 +95,12 @@ const userSchema = new Schema({
     },
   ],
   certifications: [certificationSchema],
-  additionalSections: [additionalSectionSchema]
+  additionalSections: [additionalSectionSchema],
+
+  notificationPreferences: {
+    reminder: { type: Boolean, default: true },
+    downloadLink: { type: Boolean, default: true },
+  },
 }, { timestamps: true });
 
 // Pre-save middleware to hash password

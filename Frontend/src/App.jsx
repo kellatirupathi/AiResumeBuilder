@@ -81,7 +81,8 @@ function App() {
   const isATSPage     = location.pathname === '/ats-checker';
   const isResumesPage        = location.pathname === '/resumes';
   const isChangePasswordPage = location.pathname === '/change-password';
-  const shouldHideHeader = isEditResumePage || isViewResumePage || isProfilePage || isDashboardPage || isDocumentationPage || isATSPage || isResumesPage || isChangePasswordPage;
+  const isNotificationsPage = location.pathname === '/notifications';
+  const shouldHideHeader = isEditResumePage || isViewResumePage || isProfilePage || isDashboardPage || isDocumentationPage || isATSPage || isResumesPage || isChangePasswordPage || isNotificationsPage;
 
   if (loading) {
     return (

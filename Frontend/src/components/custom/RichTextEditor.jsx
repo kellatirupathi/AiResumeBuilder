@@ -249,24 +249,26 @@ function RichTextEditor({ onRichTextEditorChange, index, resumeInfo }) {
           </Button>
         </div>
       </div>
-      <EditorProvider>
-        <Editor
-          value={value}
-          onChange={handleEditorChange}
-        >
-          <Toolbar>
-            <BtnBold />
-            <BtnItalic />
-            <BtnUnderline />
-            <BtnStrikeThrough />
-            <Separator />
-            <BtnNumberedList />
-            <BtnBulletList />
-            <Separator />
-            <BtnLink />
-          </Toolbar>
-        </Editor>
-      </EditorProvider>
+      <div className="text-xs">
+        <EditorProvider>
+          <Editor
+            value={value}
+            onChange={handleEditorChange}
+          >
+            <Toolbar>
+              <BtnBold />
+              <BtnItalic />
+              <BtnUnderline />
+              <BtnStrikeThrough />
+              <Separator />
+              <BtnNumberedList />
+              <BtnBulletList />
+              <Separator />
+              <BtnLink />
+            </Toolbar>
+          </Editor>
+        </EditorProvider>
+      </div>
     </div>
   );
 }

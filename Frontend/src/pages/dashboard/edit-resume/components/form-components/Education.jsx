@@ -105,7 +105,7 @@ function DatePicker({ index, field, value, onChange, isDisabled, label }) {
         </div>
         <div className="grid grid-cols-3 gap-2">
           {MONTHS.map((month, monthIndex) => (
-            <button key={month} type="button" onClick={() => handleDateSelection(currentYear, monthIndex)} className={`px-2 py-1.5 text-sm rounded-md transition-colors ${currentMonth === monthIndex && initialDate.getFullYear() === currentYear ? 'bg-primary text-white' : 'hover:bg-primary/10'}`}>
+            <button key={month} type="button" onClick={() => handleDateSelection(currentYear, monthIndex)} className={`px-2 py-1.5 text-xs rounded-md transition-colors ${currentMonth === monthIndex && initialDate.getFullYear() === currentYear ? 'bg-primary text-white' : 'hover:bg-primary/10'}`}>
               {month}
             </button>
           ))}
@@ -121,7 +121,7 @@ function DatePicker({ index, field, value, onChange, isDisabled, label }) {
         className={`flex items-center w-full justify-between p-3 border rounded-md ${isDisabled ? 'bg-gray-50' : 'bg-white'} ${showDropdown ? 'border-primary ring-2 ring-primary/20' : 'border-gray-300'} cursor-pointer transition-all`}
         onClick={() => !isDisabled && setShowDropdown(!showDropdown)}
       >
-        <span className={value ? 'text-gray-800' : 'text-gray-400'}>{value || label}</span>
+        <span className={`text-xs ${value ? 'text-gray-800' : 'text-gray-400'}`}>{value || label}</span>
         <Calendar className="h-4 w-4 text-primary ml-auto" />
       </div>
       {showDropdown && ReactDOM.createPortal(dropdownJsx, document.body)}
@@ -344,7 +344,7 @@ function Education({ resumeInfo, enanbledNext, enanbledPrev }) {
                       name="universityName"
                       onChange={(e) => handleChange(e, index)}
                       value={item?.universityName || ""}
-                      className="h-9 border-gray-200 text-sm focus:border-indigo-400"
+                      className="h-9 border-gray-200 text-xs focus:border-indigo-400"
                       placeholder="e.g. Harvard University"
                     />
                   </div>
@@ -355,7 +355,7 @@ function Education({ resumeInfo, enanbledNext, enanbledPrev }) {
                       name="degree"
                       onChange={(e) => handleChange(e, index)}
                       value={item?.degree || ""}
-                      className="h-9 border-gray-200 text-sm focus:border-indigo-400"
+                      className="h-9 border-gray-200 text-xs focus:border-indigo-400"
                       placeholder="e.g. Bachelor of Science"
                     />
                   </div>
@@ -366,7 +366,7 @@ function Education({ resumeInfo, enanbledNext, enanbledPrev }) {
                       name="major"
                       onChange={(e) => handleChange(e, index)}
                       value={item?.major || ""}
-                      className="h-9 border-gray-200 text-sm focus:border-indigo-400"
+                      className="h-9 border-gray-200 text-xs focus:border-indigo-400"
                       placeholder="e.g. Computer Science"
                     />
                   </div>
@@ -386,7 +386,7 @@ function Education({ resumeInfo, enanbledNext, enanbledPrev }) {
                     <div className="flex gap-3">
                       <select
                         name="gradeType"
-                        className="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm focus:border-indigo-400 focus:outline-none"
+                        className="h-9 rounded-md border border-gray-200 bg-white px-3 text-xs focus:border-indigo-400 focus:outline-none"
                         onChange={(e) => handleChange(e, index)}
                         value={item?.gradeType || "CGPA"}
                       >
@@ -411,7 +411,7 @@ function Education({ resumeInfo, enanbledNext, enanbledPrev }) {
                       name="description"
                       onChange={(e) => handleChange(e, index)}
                       value={item?.description || ""}
-                      className="min-h-24 resize-y border-gray-200 text-sm focus:border-indigo-400"
+                      className="min-h-24 resize-y border-gray-200 text-xs focus:border-indigo-400"
                       placeholder="Describe relevant coursework, achievements, or academic activities"
                     />
                   </div>

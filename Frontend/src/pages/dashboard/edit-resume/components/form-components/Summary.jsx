@@ -311,7 +311,7 @@ function Summary({ resumeInfo, enanbledNext, enanbledPrev }) {
               name="summary"
               value={summary}
               onChange={handleInputChange}
-              className="min-h-36 resize-y text-sm border-gray-200 focus:border-violet-400 focus:ring-violet-100 transition-all leading-relaxed"
+              className="min-h-36 resize-y text-xs border-gray-200 focus:border-violet-400 focus:ring-violet-100 transition-all leading-relaxed"
               placeholder="Describe your professional background, key skills, and what makes you stand out. Aim for 300–600 characters."
             />
 

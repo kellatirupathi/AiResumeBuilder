@@ -209,7 +209,7 @@ function Project({ resumeInfo, setEnabledNext, setEnabledPrev }) {
                       name="projectName"
                       value={project?.projectName || ""}
                       onChange={(e) => handleChange(e, index)}
-                      className="h-9 border-gray-200 text-sm focus:border-emerald-400"
+                      className="h-9 border-gray-200 text-xs focus:border-emerald-400"
                       placeholder="e.g. E-commerce Website"
                     />
                   </div>
@@ -221,7 +221,7 @@ function Project({ resumeInfo, setEnabledNext, setEnabledPrev }) {
                       name="techStack"
                       value={project?.techStack || ""}
                       onChange={(e) => handleChange(e, index)}
-                      className="h-9 border-gray-200 text-sm focus:border-emerald-400"
+                      className="h-9 border-gray-200 text-xs focus:border-emerald-400"
                       placeholder="e.g. React, Node.js, MongoDB"
                     />
                   </div>
@@ -233,7 +233,7 @@ function Project({ resumeInfo, setEnabledNext, setEnabledPrev }) {
                       name="githubLink"
                       value={project?.githubLink || ""}
                       onChange={(e) => handleChange(e, index)}
-                      className="h-9 border-gray-200 text-sm focus:border-emerald-400"
+                      className="h-9 border-gray-200 text-xs focus:border-emerald-400"
                       placeholder="github.com/username/project"
                     />
                   </div>
@@ -245,7 +245,7 @@ function Project({ resumeInfo, setEnabledNext, setEnabledPrev }) {
                       name="deployedLink"
                       value={project?.deployedLink || ""}
                       onChange={(e) => handleChange(e, index)}
-                      className="h-9 border-gray-200 text-sm focus:border-emerald-400"
+                      className="h-9 border-gray-200 text-xs focus:border-emerald-400"
                       placeholder="myproject.com"
                     />
                   </div>

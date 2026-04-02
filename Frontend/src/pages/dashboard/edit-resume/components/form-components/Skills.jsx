@@ -36,14 +36,13 @@ function Skills({ resumeInfo }) {
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState(null);
-  
+  const isInitialMount = React.useRef(true);
+
   const dispatch = useDispatch();
   const { resume_id } = useParams();
   const hasSkills = skillLines.some((line) => line && line.trim() !== "");
 
-  // --- START OF THE FIX ---
-  // This useEffect hook synchronizes the local `skillLines` state with the `resumeInfo` from Redux.
-  // It runs whenever `resumeInfo` changes (e.g., after an import or initial load).
+  // Sync local skillLines from Redux whenever resumeInfo.skills changes (initial load or import).
   useEffect(() => {
     if (resumeInfo?.skills && resumeInfo.skills.length > 0) {
       const lines = Array(MAX_SKILL_LINES).fill("");
@@ -54,20 +53,21 @@ function Skills({ resumeInfo }) {
       });
       setSkillLines(lines);
     } else {
-      // If the resume has no skills, ensure the form is empty.
       setSkillLines(Array(MAX_SKILL_LINES).fill(""));
     }
-  }, [resumeInfo]);
-  
-  // This useEffect now only dispatches updates when the user types in the form.
+  }, [resumeInfo?.skills]);
+
+  // Dispatch to Redux only when the user actually changes skillLines (skip initial mount).
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     const skillsArray = skillLines
       .map((line) => ({ name: line }))
       .filter(skill => skill.name && skill.name.trim() !== "");
-    
     dispatch(addResumeData({ ...resumeInfo, skills: skillsArray }));
   }, [skillLines]);
-  // --- END OF THE FIX ---
 
   const handleLineChange = (index, value) => {
     const newLines = [...skillLines];

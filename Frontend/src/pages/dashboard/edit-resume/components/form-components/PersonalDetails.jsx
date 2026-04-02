@@ -114,7 +114,7 @@ function PersonalDetails({ resumeInfo, enanbledNext }) {
                 defaultValue={resumeInfo?.firstName}
                 required
                 onChange={handleInputChange}
-                className="h-9 text-sm border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
+                className="h-9 text-xs border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
                 placeholder="John"
               />
             </div>
@@ -125,7 +125,7 @@ function PersonalDetails({ resumeInfo, enanbledNext }) {
                 required
                 onChange={handleInputChange}
                 defaultValue={resumeInfo?.lastName}
-                className="h-9 text-sm border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
+                className="h-9 text-xs border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
                 placeholder="Doe"
               />
             </div>
@@ -139,7 +139,7 @@ function PersonalDetails({ resumeInfo, enanbledNext }) {
             name="jobTitle"
             defaultValue={resumeInfo?.jobTitle}
             onChange={handleInputChange}
-            className="h-9 text-sm border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
+            className="h-9 text-xs border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
             placeholder="e.g. Senior Software Engineer"
           />
         </div>
@@ -155,7 +155,7 @@ function PersonalDetails({ resumeInfo, enanbledNext }) {
                 required
                 defaultValue={resumeInfo?.address}
                 onChange={handleInputChange}
-                className="h-9 text-sm border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
+                className="h-9 text-xs border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
                 placeholder="City, State, Country"
               />
             </div>
@@ -167,7 +167,7 @@ function PersonalDetails({ resumeInfo, enanbledNext }) {
                   required
                   defaultValue={resumeInfo?.phone}
                   onChange={handleInputChange}
-                  className="h-9 text-sm border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
+                  className="h-9 text-xs border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
                   placeholder="+91 9876543210"
                 />
               </div>
@@ -179,7 +179,7 @@ function PersonalDetails({ resumeInfo, enanbledNext }) {
                   required
                   defaultValue={resumeInfo?.email}
                   onChange={handleInputChange}
-                  className="h-9 text-sm border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
+                  className="h-9 text-xs border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
                   placeholder="john@example.com"
                 />
               </div>
@@ -199,7 +199,7 @@ function PersonalDetails({ resumeInfo, enanbledNext }) {
                   placeholder="github.com/username"
                   defaultValue={resumeInfo?.githubUrl}
                   onChange={handleInputChange}
-                  className="h-9 text-sm border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
+                  className="h-9 text-xs border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
                 />
               </div>
               <div>
@@ -209,7 +209,7 @@ function PersonalDetails({ resumeInfo, enanbledNext }) {
                   placeholder="linkedin.com/in/profile"
                   defaultValue={resumeInfo?.linkedinUrl}
                   onChange={handleInputChange}
-                  className="h-9 text-sm border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
+                  className="h-9 text-xs border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
                 />
               </div>
             </div>
@@ -220,7 +220,7 @@ function PersonalDetails({ resumeInfo, enanbledNext }) {
                 placeholder="yourportfolio.com"
                 defaultValue={resumeInfo?.portfolioUrl}
                 onChange={handleInputChange}
-                className="h-9 text-sm border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
+                className="h-9 text-xs border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
               />
             </div>
           </div>
