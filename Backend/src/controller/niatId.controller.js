@@ -5,6 +5,7 @@ import { ApiError } from "../utils/ApiError.js";
 export const getAllNiatIds = async (req, res) => {
     try {
         const ids = await NiatId.find({}).sort({ createdAt: -1 });
+        res.setHeader('Cache-Control', 'no-store');
         return res.status(200).json(new ApiResponse(200, ids, "All NIAT IDs fetched successfully"));
     } catch (error) {
         return res.status(500).json(new ApiError(500, "Failed to fetch NIAT IDs", [], error.stack));
