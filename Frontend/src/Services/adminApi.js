@@ -6,9 +6,8 @@ const adminAxios = axios.create({
   withCredentials: true,
 });
 
-// Create a separate instance for NIAT ID routes under the new base URL
 const niatAxios = axios.create({
-  baseURL: getApiUrl("niat-ids/"),
+  baseURL: getApiUrl("niat-ids"),
   withCredentials: true,
 });
 
@@ -123,7 +122,7 @@ export const processPendingResumeLinks = async () => {
 // --- NEW FUNCTIONS FOR NIAT ID MANAGEMENT ---
 export const getNiatIds = async () => {
   try {
-    const response = await niatAxios.get('/');
+    const response = await niatAxios.get('');
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to fetch NIAT IDs.');
