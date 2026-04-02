@@ -1,5 +1,6 @@
 import Header from "@/components/custom/Header";
 import React, { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import heroSnapshot from "@/assets/heroSnapshot.png";
 import heroSnapshot2 from "@/assets/heroSnapshot2.png";
 import heroSnapshot3 from "@/assets/heroSnapshot3.png";
@@ -237,6 +238,21 @@ function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-950">
+      <Helmet>
+        <title>NxtResume – AI-Powered Resume Builder | ATS-Friendly Resumes in Minutes</title>
+        <meta name="description" content="Build a professional, ATS-optimized resume in minutes with NxtResume – the AI-powered resume builder. Get smart suggestions, premium templates, and download as PDF. Free to start." />
+        <meta name="keywords" content="AI resume builder, resume maker, ATS-friendly resume, professional resume, NxtResume, online resume builder, free resume builder, CV maker" />
+        <link rel="canonical" href="https://ai-resume-builder-ochre-five.vercel.app/" />
+        <meta property="og:title" content="NxtResume – AI-Powered Resume Builder" />
+        <meta property="og:description" content="Create a stunning, ATS-friendly resume in minutes with AI-powered suggestions. Free templates, PDF export, and more." />
+        <meta property="og:url" content="https://ai-resume-builder-ochre-five.vercel.app/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://ai-resume-builder-ochre-five.vercel.app/og-image.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="NxtResume – AI-Powered Resume Builder" />
+        <meta name="twitter:description" content="Create a stunning, ATS-friendly resume in minutes with AI-powered suggestions. Free to start." />
+        <meta name="twitter:image" content="https://ai-resume-builder-ochre-five.vercel.app/og-image.png" />
+      </Helmet>
       <Header user={user} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
 
       {/* ─── HERO ─── */}
