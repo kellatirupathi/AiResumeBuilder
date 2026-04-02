@@ -296,12 +296,11 @@ function ThemeColor({ resumeInfo }) {
               />
             </Button>
           </PopoverTrigger>
-        <PopoverContent 
+        <PopoverContent
           className="p-0 shadow-xl border rounded-xl overflow-hidden bg-white transition-all duration-300"
-          style={{ 
-            width: activeTab === 'template' ? '760px' : '400px',
+          style={{
+            width: activeTab === 'template' ? '680px' : '380px',
             maxWidth: '95vw',
-            transform: 'translateX(-17%) translateX(-10px)'
           }}
           side="bottom"
           align="start"
@@ -480,7 +479,7 @@ function ThemeColor({ resumeInfo }) {
                 </div>
 
                 {/* Template grid */}
-                <div className="p-6 pt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="p-6 pt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
                   {filteredTemplates.map((template) => (
                     <div
                       key={template.id}

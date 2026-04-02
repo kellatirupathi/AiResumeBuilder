@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Sparkles, LoaderCircle, BookOpen, FileText, CheckCircle, ThumbsUp, Lightbulb as LightbulbIcon, X, Wand2 } from "lucide-react";
+import {
+  Sparkles,
+  LoaderCircle,
+  BookOpen,
+  FileText,
+  CheckCircle,
+  ThumbsUp,
+  Lightbulb as LightbulbIcon,
+  X,
+  Wand2,
+  Save,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useDispatch } from "react-redux";
@@ -9,7 +20,6 @@ import { toast } from "sonner";
 import { AIChatSession } from "@/Services/AiModel";
 import { updateThisResume } from "@/Services/resumeAPI";
 
-// AI prompt for generating summaries based on job title
 const PROMPT_GENERATE = `Create a JSON object with 3 professional summaries for a {jobTitle} position, with the following structure:
 {
   "summaries": [
@@ -28,28 +38,32 @@ const PROMPT_GENERATE = `Create a JSON object with 3 professional summaries for 
   ]
 }
 
-Each summary should be 3-4 sentences, professionally written, and focused on key skills and achievements relevant to the role. 
+Each summary should be 3-4 sentences, professionally written, and focused on key skills and achievements relevant to the role.
 Avoid clichés and generic statements. Focus on specific, relevant technical skills and measurable accomplishments.`;
 
-// AI prompt for enhancing an existing summary - MODIFIED to request plain text only
-const PROMPT_ENHANCE = `You are a professional resume writer. Rephrase and enhance the following professional summary to be more impactful for a {jobTitle} role. Focus on highlighting key achievements and skills clearly. 
+const PROMPT_ENHANCE = `You are a professional resume writer. Rephrase and enhance the following professional summary to be more impactful for a {jobTitle} role. Focus on highlighting key achievements and skills clearly.
 IMPORTANT: Your response MUST be ONLY the enhanced summary text, NOT a JSON object. For example, if the original summary is 'I am a developer', a good response would be 'A skilled developer with experience in...'. Do NOT wrap your response in JSON.
 
-Original summary: 
+Original summary:
 "{summary}"
 
 Enhanced summary:
 `;
 
-// Tips for writing good summaries
 const SUMMARY_TIPS = [
   "Keep it concise (3-4 sentences)",
   "Focus on your most relevant skills and achievements",
   "Tailor it to the specific job you're applying for",
   "Include keywords from the job description",
   "Quantify accomplishments where possible",
-  "Avoid generic statements and clichés"
+  "Avoid generic statements and clichés",
 ];
+
+const LEVEL_COLORS = {
+  "Entry Level":  { bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200",   badge: "bg-blue-100 text-blue-700"   },
+  "Mid Level":    { bg: "bg-indigo-50",  text: "text-indigo-700", border: "border-indigo-200", badge: "bg-indigo-100 text-indigo-700" },
+  "Senior Level": { bg: "bg-purple-50",  text: "text-purple-700", border: "border-purple-200", badge: "bg-purple-100 text-purple-700" },
+};
 
 function Summary({ resumeInfo, enanbledNext, enanbledPrev }) {
   const dispatch = useDispatch();
@@ -62,27 +76,19 @@ function Summary({ resumeInfo, enanbledNext, enanbledPrev }) {
   const [showTips, setShowTips] = useState(false);
   const { resume_id } = useParams();
 
-  // Character count
   const charCount = summary ? summary.length : 0;
-  const idealCharRange = {min: 300, max: 600};
-  const charCountStatus = 
+  const idealCharRange = { min: 300, max: 600 };
+  const charCountStatus =
     charCount === 0 ? "empty" :
     charCount < idealCharRange.min ? "tooShort" :
     charCount > idealCharRange.max ? "tooLong" : "good";
 
-  // ADD THIS: useEffect to sync local state with props from Redux
   useEffect(() => {
     setSummary(resumeInfo?.summary || "");
   }, [resumeInfo?.summary]);
-  
-  // Update Redux when summary changes
+
   useEffect(() => {
-    dispatch(
-      addResumeData({
-        ...resumeInfo,
-        summary: summary,
-      })
-    );
+    dispatch(addResumeData({ ...resumeInfo, summary }));
   }, [summary]);
 
   const handleInputChange = (e) => {
@@ -94,23 +100,14 @@ function Summary({ resumeInfo, enanbledNext, enanbledPrev }) {
   const onSave = (e) => {
     e.preventDefault();
     setLoading(true);
-    
-    const data = {
-      data: { summary },
-    };
-    
+    const data = { data: { summary } };
     if (resume_id) {
       updateThisResume(resume_id, data)
         .then(() => {
-          toast("Summary Updated", { 
-            description: "Your professional summary has been saved successfully"
-          });
+          toast("Summary Updated", { description: "Your professional summary has been saved successfully" });
         })
         .catch((error) => {
-          toast("Update Failed", { 
-            description: error.message, 
-            variant: "destructive" 
-          });
+          toast("Update Failed", { description: error.message, variant: "destructive" });
         })
         .finally(() => {
           enanbledNext(true);
@@ -122,37 +119,23 @@ function Summary({ resumeInfo, enanbledNext, enanbledPrev }) {
 
   const generateSummariesFromAI = async () => {
     if (!resumeInfo?.jobTitle) {
-      toast("Job Title Required", {
-        description: "Please add a job title in the Personal Details section",
-        variant: "destructive"
-      });
+      toast("Job Title Required", { description: "Please add a job title in the Personal Details section", variant: "destructive" });
       return;
     }
-
     setAiGenerating(true);
     try {
       const prompt = PROMPT_GENERATE.replace(/\{jobTitle\}/g, resumeInfo?.jobTitle);
       const result = await AIChatSession.sendMessage(prompt);
       const responseText = result.response.text();
-      
       try {
         const parsedResponse = JSON.parse(responseText);
         setAiSummaries(parsedResponse.summaries);
-        
-        toast("AI Summaries Generated", {
-          description: `Generated summaries for ${resumeInfo?.jobTitle} position`,
-        });
-      } catch (error) {
-        toast("Parsing Error", {
-          description: "Error processing AI response",
-          variant: "destructive"
-        });
+        toast("AI Summaries Generated", { description: `Generated summaries for ${resumeInfo?.jobTitle} position` });
+      } catch {
+        toast("Parsing Error", { description: "Error processing AI response", variant: "destructive" });
       }
     } catch (error) {
-      toast("Generation Failed", {
-        description: error.message || "An error occurred while generating summaries",
-        variant: "destructive"
-      });
+      toast("Generation Failed", { description: error.message || "An error occurred while generating summaries", variant: "destructive" });
     } finally {
       setAiGenerating(false);
     }
@@ -167,56 +150,40 @@ function Summary({ resumeInfo, enanbledNext, enanbledPrev }) {
       toast("Not enough text", { description: "Please write a brief summary before enhancing.", variant: "destructive" });
       return;
     }
-
     setEnhanceLoading(true);
     try {
-      const prompt = PROMPT_ENHANCE.replace('{jobTitle}', resumeInfo?.jobTitle).replace('{summary}', summary);
+      const prompt = PROMPT_ENHANCE.replace("{jobTitle}", resumeInfo?.jobTitle).replace("{summary}", summary);
       const result = await AIChatSession.sendMessage(prompt);
       const responseText = result.response.text();
 
-      // START OF UPDATED CODE
       let enhancedText = responseText;
       try {
-        // Attempt to parse response as JSON
         const parsedJson = JSON.parse(responseText);
-
-        // Check if the parsed result is an array with at least one element
         if (Array.isArray(parsedJson) && parsedJson.length > 0) {
-          // Extract the first element from the array
           enhancedText = parsedJson[0];
-        } else if (typeof parsedJson === 'object' && parsedJson !== null) {
-          // Handle object responses as a fallback
+        } else if (typeof parsedJson === "object" && parsedJson !== null) {
           enhancedText = parsedJson.enhanced_summary || parsedJson.text || parsedJson.summary || responseText;
         }
-        
-      } catch (e) {
-        // If parsing fails, it's likely already plain text, so we use it directly.
+      } catch {
         console.log("Response is not JSON, treating as plain text.");
       }
-      // END OF UPDATED CODE
-      
+
       const cleanText = enhancedText
         .trim()
-        .replace(/\*\*(.*?)\*\*/g, '$1')
-        .replace(/\*(.*?)\*/g, '$1')
-        .replace(/__(.*?)__/g, '$1')
-        .replace(/_(.*?)_/g, '$1')
-        .replace(/~~(.*?)~~/g, '$1')
-        .replace(/`(.*?)`/g, '$1')
-        .replace(/#+\s/g, '')
-        .replace(/>\s/g, '')
+        .replace(/\*\*(.*?)\*\*/g, "$1")
+        .replace(/\*(.*?)\*/g, "$1")
+        .replace(/__(.*?)__/g, "$1")
+        .replace(/_(.*?)_/g, "$1")
+        .replace(/~~(.*?)~~/g, "$1")
+        .replace(/`(.*?)`/g, "$1")
+        .replace(/#+\s/g, "")
+        .replace(/>\s/g, "")
         .trim();
 
       setSummary(cleanText);
-      toast.success("Summary enhanced by AI!", {
-        description: "Your summary has been improved with AI.",
-      });
-
+      toast.success("Summary enhanced by AI!", { description: "Your summary has been improved with AI." });
     } catch (error) {
-      toast("Enhancement Failed", {
-        description: error.message || "An error occurred.",
-        variant: "destructive",
-      });
+      toast("Enhancement Failed", { description: error.message || "An error occurred.", variant: "destructive" });
     } finally {
       setEnhanceLoading(false);
     }
@@ -224,214 +191,212 @@ function Summary({ resumeInfo, enanbledNext, enanbledPrev }) {
 
   const applySummary = (text) => {
     setSummary(text);
-    toast("Summary Applied", {
-      description: "You can still edit the text to personalize it further"
-    });
+    toast("Summary Applied", { description: "You can still edit the text to personalize it further" });
   };
 
-  // Helper function to get character count styling
   const getCharCountStyle = () => {
     if (charCountStatus === "empty") return "text-gray-400";
     if (charCountStatus === "tooShort") return "text-amber-500";
     if (charCountStatus === "tooLong") return "text-red-500";
-    return "text-green-500";
+    return "text-emerald-500";
   };
 
+  const charBarColor =
+    charCountStatus === "empty" ? "bg-gray-300" :
+    charCountStatus === "tooShort" ? "bg-amber-400" :
+    charCountStatus === "tooLong" ? "bg-red-400" : "bg-emerald-500";
+
+  const charBarWidth =
+    charCount === 0 ? "0%" :
+    charCount < idealCharRange.min ? `${(charCount / idealCharRange.min) * 75}%` : "100%";
+
   return (
-    <div className="p-8 bg-white rounded-xl shadow-md border-t-4 border-primary mt-10 transition-all duration-300 hover:shadow-lg">
-      {/* Header section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
-            <span className="inline-block p-2 bg-primary/10 rounded-lg mr-2">
-              <FileText className="h-5 w-5 text-primary" />
-            </span>
-            Summary or About Me
-          </h2>
+    <div className="bg-white overflow-hidden">
+
+      {/* ── Section Header ── */}
+      <div className="flex items-center justify-between gap-3 border-b border-gray-100 bg-gradient-to-r from-violet-50 to-white px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-violet-100">
+            <FileText className="h-4 w-4 text-violet-600" />
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold text-gray-800">Professional Summary</h2>
+            <p className="text-xs text-gray-400">A 3–4 sentence snapshot of your career &amp; strengths</p>
+          </div>
         </div>
-        
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            size="sm"
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            type="button"
             onClick={() => setShowTips(!showTips)}
-            className="border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-800 transition-colors"
+            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+              showTips
+                ? "border-amber-300 bg-amber-50 text-amber-700"
+                : "border-gray-200 text-gray-500 hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700"
+            }`}
           >
-            <LightbulbIcon className="h-4 w-4 mr-1.5" /> Writing Tips
-          </Button>
+            <LightbulbIcon className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Tips</span>
+          </button>
+
           <Button
+            type="button"
+            size="sm"
             onClick={enhanceSummaryFromAI}
             disabled={aiGenerating || enhanceLoading || !summary.trim()}
-            className="bg-gradient-to-r from-blue-500 to-sky-600 hover:from-blue-600 hover:to-sky-700 text-white shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+            className="h-8 gap-1.5 bg-sky-500 hover:bg-sky-600 text-white text-xs px-3 shadow-sm disabled:opacity-50"
           >
-            {enhanceLoading ? (
-              <><LoaderCircle className="h-4 w-4 animate-spin" /> Enhancing...</>
-            ) : (
-              <><Wand2 className="h-4 w-4" /> Enhance</>
-            )}
+            {enhanceLoading ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">{enhanceLoading ? "Enhancing..." : "Enhance"}</span>
           </Button>
+
           <Button
+            type="button"
+            size="sm"
             onClick={generateSummariesFromAI}
             disabled={aiGenerating || enhanceLoading || !resumeInfo?.jobTitle}
-            className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+            className="h-8 gap-1.5 bg-violet-600 hover:bg-violet-700 text-white text-xs px-3 shadow-sm disabled:opacity-50"
           >
-            {aiGenerating ? (
-              <><LoaderCircle className="h-4 w-4 animate-spin" /> Generating...</>
-            ) : (
-              <><Sparkles className="h-4 w-4" /> Generate</>
-            )}
+            {aiGenerating ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">{aiGenerating ? "Generating..." : "Generate"}</span>
           </Button>
         </div>
       </div>
-      
-      {/* Writing tips */}
-      {showTips && (
-        <div className="mb-8 bg-amber-50 rounded-lg border border-amber-200 p-5">
-          <div className="flex items-start mb-3">
-            <LightbulbIcon className="h-5 w-5 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
-            <h3 className="font-semibold text-amber-800">Tips for Writing an Effective Summary</h3>
+
+      <div className="px-5 py-5 space-y-4">
+
+        {/* ── Writing Tips Panel ── */}
+        {showTips && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5 text-sm font-medium text-amber-800">
+                <LightbulbIcon className="h-4 w-4" />
+                Tips for an effective summary
+              </div>
+              <button onClick={() => setShowTips(false)} className="text-amber-500 hover:text-amber-700">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <ul className="space-y-1 pl-1">
+              {SUMMARY_TIPS.map((tip, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs text-amber-700">
+                  <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                  {tip}
+                </li>
+              ))}
+            </ul>
           </div>
-          
-          <ul className="space-y-2 pl-8">
-            {SUMMARY_TIPS.map((tip, index) => (
-              <li key={index} className="text-amber-700 text-sm list-disc">
-                {tip}
-              </li>
-            ))}
-          </ul>
-          
-          <div className="mt-4 flex justify-end">
-            <button 
-              onClick={() => setShowTips(false)}
-              className="text-amber-700 text-sm hover:text-amber-900 flex items-center"
-            >
-              <CheckCircle className="h-3.5 w-3.5 mr-1" /> Got it
-            </button>
-          </div>
-        </div>
-      )}
-      
-      {/* Main form */}
-      <form onSubmit={onSave} className="space-y-6">
-        {/* Summary input field */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <label className="block text-sm font-medium text-gray-700 flex items-center">
-              <BookOpen className="h-4 w-4 mr-1.5 text-gray-400" />
-              Your Professional Summary
-            </label>
-            
-            <div className={`text-xs ${getCharCountStyle()}`}>
-              {charCount} / {idealCharRange.min}-{idealCharRange.max} characters
-              {charCountStatus === "tooShort" && " (Add more detail)"}
-              {charCountStatus === "tooLong" && " (Consider shortening)"}
-              {charCountStatus === "good" && (
-                <span className="flex items-center ml-1">
-                  <ThumbsUp className="h-3 w-3 inline mr-1" /> Good length
-                </span>
-              )}
+        )}
+
+        {/* ── Textarea ── */}
+        <form onSubmit={onSave} className="space-y-3">
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-gray-600">
+                <BookOpen className="h-3.5 w-3.5 text-gray-400" />
+                Your Professional Summary
+              </label>
+              <span className={`text-xs font-medium ${getCharCountStyle()}`}>
+                {charCount} / {idealCharRange.min}–{idealCharRange.max}
+                {charCountStatus === "good" && (
+                  <span className="ml-1 inline-flex items-center gap-0.5">
+                    <ThumbsUp className="h-3 w-3" /> Good
+                  </span>
+                )}
+              </span>
+            </div>
+
+            <Textarea
+              name="summary"
+              value={summary}
+              onChange={handleInputChange}
+              className="min-h-36 resize-y text-sm border-gray-200 focus:border-violet-400 focus:ring-violet-100 transition-all leading-relaxed"
+              placeholder="Describe your professional background, key skills, and what makes you stand out. Aim for 300–600 characters."
+            />
+
+            {/* Character progress bar */}
+            <div className="mt-2 h-1 w-full rounded-full bg-gray-100 overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${charBarColor}`}
+                style={{ width: charBarWidth }}
+              />
             </div>
           </div>
-          
-          <Textarea
-            name="summary"
-            value={summary}
-            onChange={handleInputChange}
-            className="min-h-40 resize-y border-gray-300 focus:border-primary focus:ring focus:ring-primary/20 transition-all"
-            placeholder="Describe your professional background, key skills, and what makes you stand out in your field. For best results, keep this between 300-600 characters."
-          />
-        </div>
-        
-        {/* Character count indicator */}
-        <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-          <div 
-            className={`h-full rounded-full transition-all ${
-              charCountStatus === "empty" ? "bg-gray-400" :
-              charCountStatus === "tooShort" ? "bg-amber-500" :
-              charCountStatus === "tooLong" ? "bg-red-500" :
-              "bg-green-500"
-            }`}
-            style={{
-              width: charCount === 0 ? '0%' : 
-                    charCount < idealCharRange.min ? `${(charCount / idealCharRange.min) * 80}%` : 
-                    '100%'
-            }}
-          ></div>
-        </div>
-        
-        {/* Save button - now above AI suggestions */}
-        <div className="flex justify-end">
-          <Button 
-            type="submit"
-            disabled={loading || !summary.trim()}
-            className="px-8 py-2.5 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary transition-all shadow-md hover:shadow-lg text-white"
-          >
-            {loading ? (
-              <><LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
-            ) : (
-              "Save Summary"
-            )}
-          </Button>
-        </div>
-      </form>
-      
-      {/* AI Suggestions - now at the bottom, after the save button */}
-      {aiSummaries && (
-        <div className="mt-8">
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="text-base font-medium text-gray-800 flex items-center">
-              <Sparkles className="h-4 w-4 mr-2 text-purple-500" /> 
-              AI-Generated Summaries
-            </h3>
-            <button 
-              onClick={() => setAiSummaries(null)}
-              className="text-gray-400 hover:text-gray-600 p-1"
-              title="Dismiss suggestions"
+
+          {/* Save button */}
+          <div className="flex justify-end pt-1">
+            <Button
+              type="submit"
+              disabled={loading || !summary.trim()}
+              className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-5 h-9 text-sm shadow-sm disabled:opacity-50"
             >
-              <X className="h-4 w-4" />
-            </button>
+              {loading ? (
+                <><LoaderCircle className="h-4 w-4 animate-spin" /> Saving...</>
+              ) : (
+                <><Save className="h-4 w-4" /> Save Summary</>
+              )}
+            </Button>
           </div>
-          
-          <div className="space-y-3">
-            {aiSummaries.map((summaryItem, index) => (
-              <div 
-                key={index} 
-                className={`p-3 rounded-lg border transition-all ${
-                  selectedLevel === index 
-                    ? "border-purple-500 bg-purple-50" 
-                    : "border-gray-200 hover:border-purple-300 bg-white"
-                }`}
+        </form>
+
+        {/* ── AI Suggestions ── */}
+        {aiSummaries && (
+          <div className="border-t border-gray-100 pt-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-gray-400">
+                <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+                AI-Generated Suggestions
+              </h3>
+              <button
+                onClick={() => { setAiSummaries(null); setSelectedLevel(null); }}
+                className="text-gray-300 hover:text-gray-500 transition-colors"
               >
-                <div className="flex justify-between items-center mb-1.5">
-                  <div className="inline-flex items-center px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 text-xs font-medium">
-                    <BookOpen className="h-3 w-3 mr-1" />
-                    {summaryItem.level}
-                  </div>
-                  
-                  <Button 
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setSelectedLevel(index);
-                      applySummary(summaryItem.text);
-                    }}
-                    className="h-7 px-2 text-xs border-purple-300 text-purple-700 hover:bg-purple-100"
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {aiSummaries.map((summaryItem, index) => {
+                const colors = LEVEL_COLORS[summaryItem.level] || LEVEL_COLORS["Mid Level"];
+                const isSelected = selectedLevel === index;
+                return (
+                  <div
+                    key={index}
+                    className={`rounded-lg border p-3.5 transition-all ${
+                      isSelected ? `${colors.border} ${colors.bg}` : "border-gray-100 bg-gray-50 hover:border-gray-200"
+                    }`}
                   >
-                    {selectedLevel === index ? (
-                      <><CheckCircle className="h-3 w-3 mr-1.5" /> Applied</>
-                    ) : (
-                      "Use This"
-                    )}
-                  </Button>
-                </div>
-                <p className="text-sm text-gray-700 leading-relaxed">
-                  {summaryItem.text}
-                </p>
-              </div>
-            ))}
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${colors.badge}`}>
+                        <BookOpen className="h-3 w-3" />
+                        {summaryItem.level}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => { setSelectedLevel(index); applySummary(summaryItem.text); }}
+                        className={`h-7 px-2.5 text-xs transition-colors ${
+                          isSelected
+                            ? `${colors.border} ${colors.text} ${colors.bg}`
+                            : "border-gray-200 text-gray-600 hover:border-violet-300 hover:text-violet-700"
+                        }`}
+                      >
+                        {isSelected ? (
+                          <><CheckCircle className="h-3 w-3 mr-1" /> Applied</>
+                        ) : (
+                          "Use This"
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-600 leading-relaxed">{summaryItem.text}</p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

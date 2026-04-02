@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import PersonalDetails from "./form-components/PersonalDetails";
@@ -12,7 +12,6 @@ import FloatingResumeScore from "./FloatingResumeScore";
 import {
   ArrowLeft,
   ArrowRight,
-  HomeIcon,
   User,
   FileText,
   Briefcase,
@@ -21,12 +20,11 @@ import {
   BadgePlus,
   CheckCircle2,
   Eye,
-  ChevronRight,
   Award,
   PlusCircle,
   Sparkles,
 } from "lucide-react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import ThemeColor from "./ThemeColor";
 import CertificationsForm from "./form-components/CertificationsForm";
 import ManageAdditionalSections from "./form-components/ManageAdditionalSections";
@@ -61,7 +59,6 @@ function ResumeForm({ onOpenAIReview, isAIReviewOpen = false }) {
     if (totalPossibleSections === 0) return 0;
 
     let completed = 0;
-    
     if (resumeInfo.firstName && resumeInfo.lastName) completed++;
     if (resumeInfo.summary) completed++;
     if (resumeInfo.experience && resumeInfo.experience.length > 0) completed++;
@@ -72,153 +69,222 @@ function ResumeForm({ onOpenAIReview, isAIReviewOpen = false }) {
     if (resumeInfo.additionalSections) {
       completed += resumeInfo.additionalSections.filter(s => s.content?.trim()).length;
     }
-    
     return Math.round((completed / totalPossibleSections) * 100);
   };
-  
+
+  const isSectionComplete = (name) => {
+    if (!resumeInfo) return false;
+    switch (name) {
+      case "Details": return !!(resumeInfo.firstName && resumeInfo.lastName);
+      case "Summary": return !!resumeInfo.summary;
+      case "Experience": return (resumeInfo.experience?.length || 0) > 0;
+      case "Projects": return (resumeInfo.projects?.length || 0) > 0;
+      case "Education": return (resumeInfo.education?.length || 0) > 0;
+      case "Skills": return (resumeInfo.skills?.length || 0) > 0;
+      case "Certifications": return (resumeInfo.certifications?.length || 0) > 0;
+      default: return false;
+    }
+  };
+
   const progressPercent = calculateProgress();
 
   return (
-    <div className="space-y-6 bg-gray-100 min-h-screen">
-      <div className="w-full bg-gray-200 h-1 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-gradient-to-r from-primary to-blue-500 transition-all duration-700 ease-in-out"
-          style={{ width: `${progressPercent}%` }}
-        ></div>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row justify-between gap-4 bg-white p-3 rounded-xl shadow-md border border-gray-100">
-        <div className="flex items-center gap-3">
-          <Link to="/dashboard">
-            <Button variant="outline" size="sm" className="flex items-center gap-1 hover:bg-primary hover:text-white transition-colors duration-300 px-2 border-gray-200 text-gray-700">
-              <HomeIcon className="h-4 w-4" /> 
-              <span className="text-xs">Dashboard</span>
-            </Button>
-          </Link>
-          <ThemeColor resumeInfo={resumeInfo}/> 
+    <div className="flex flex-col h-full bg-white">
+
+      {/* ── Compact Toolbar ── */}
+      <div className="flex-shrink-0 flex items-center justify-between gap-2 border-b border-gray-100 bg-white px-3 py-2">
+        <div className="flex items-center gap-2">
+          <ThemeColor resumeInfo={resumeInfo} />
+
           <Button
             variant="outline"
             size="sm"
             onClick={onOpenAIReview}
-            className={`flex items-center gap-1.5 px-3 transition-colors duration-300 ${
+            className={`flex items-center gap-1.5 px-2.5 transition-colors duration-200 ${
               isAIReviewOpen
                 ? "bg-indigo-500 text-white border-indigo-500 hover:bg-indigo-600"
-                : "border-indigo-500 text-indigo-600 hover:bg-indigo-500 hover:text-white"
+                : "border-indigo-300 text-indigo-600 hover:bg-indigo-50"
             }`}
           >
-            <Sparkles className="h-4 w-4" /> 
-            <span className="text-xs font-semibold">AI Review</span>
+            <Sparkles className="h-3.5 w-3.5" />
+            <span className="text-xs font-semibold hidden sm:inline">AI Review</span>
           </Button>
-          <div className="hidden md:flex items-center gap-1 text-sm text-gray-500">
-            <CheckCircle2 className={`h-4 w-4 ${progressPercent === 100 ? 'text-green-500' : 'text-gray-600'}`} />
-            <span>{progressPercent}%</span>
+
+          <div className="hidden md:flex items-center gap-1 rounded-full bg-gray-50 border border-gray-200 px-2.5 py-1">
+            <CheckCircle2 className={`h-3.5 w-3.5 flex-shrink-0 ${progressPercent === 100 ? "text-green-500" : "text-gray-400"}`} />
+            <span className="text-xs font-medium text-gray-600">{progressPercent}%</span>
           </div>
         </div>
-        
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-1.5">
           <Button
             size="sm"
             variant="outline"
-            className="flex items-center gap-1 border-green-500 text-green-600 hover:bg-green-500 hover:text-white transition-colors duration-300 px-2 min-w-0"
+            className="flex items-center gap-1 border-emerald-300 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-400 transition-colors px-2.5"
             onClick={() => navigate(`/dashboard/view-resume/${resume_id}`)}
           >
-            <Eye className="h-4 w-4" /> 
-            <span className="text-xs">Preview</span>
+            <Eye className="h-3.5 w-3.5" />
+            <span className="text-xs hidden sm:inline">Preview</span>
           </Button>
-          
+
           <Button
             size="sm"
             variant="outline"
-            className={`flex items-center gap-1 border-primary text-primary hover:bg-primary hover:text-white transition-colors duration-300 px-2 min-w-0 ${!enanbledPrev ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className="flex items-center gap-1 border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 px-2.5"
             disabled={!enanbledPrev}
             onClick={() => setCurrentIndex(currentIndex - 1)}
           >
-            <ArrowLeft className="h-4 w-4" /> 
-            <span className="text-xs">Prev</span>
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span className="text-xs hidden sm:inline">Prev</span>
           </Button>
-          
+
           <Button
             size="sm"
-            className={`flex items-center gap-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary/90 shadow-sm transition-all duration-300 text-white px-2 min-w-0 ${!enanbledNext ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className="flex items-center gap-1 bg-primary hover:bg-primary/90 text-white shadow-sm disabled:opacity-40 px-2.5"
             disabled={!enanbledNext}
             onClick={() => setCurrentIndex(currentIndex + 1)}
           >
-            <span className="text-xs">Next</span> 
+            <span className="text-xs hidden sm:inline">Next</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
+
+      {/* ── Progress Bar ── */}
+      <div className="h-0.5 w-full bg-gray-100 flex-shrink-0">
+        <div
+          className="h-full bg-gradient-to-r from-primary to-blue-500 transition-all duration-700 ease-in-out"
+          style={{ width: `${progressPercent}%` }}
+        />
+      </div>
+
+      {/* ── Main Content: Section Nav + Form ── */}
+      <div className="flex flex-1 min-h-0">
+
+        {/* Vertical Section Sidebar — desktop */}
+        <nav className="hidden sm:flex flex-col w-44 flex-shrink-0 border-r border-gray-100 bg-gray-50 py-2 overflow-y-auto">
+          <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400">Sections</p>
+          {sections.map((section, idx) => {
+            const complete = isSectionComplete(section.name);
+            const active = currentIndex === idx;
+            return (
+              <button
+                key={idx}
+                onClick={() => setCurrentIndex(idx)}
+                className={`group relative flex items-center gap-2.5 w-full px-3 py-2.5 text-left transition-colors duration-150 ${
+                  active
+                    ? "bg-primary/10 text-primary"
+                    : "text-gray-500 hover:bg-white hover:text-gray-800"
+                }`}
+              >
+                {/* Active indicator bar */}
+                {active && (
+                  <span className="absolute left-0 top-0 h-full w-0.5 rounded-r bg-primary" />
+                )}
+
+                <span className={`flex-shrink-0 transition-colors ${active ? "text-primary" : "text-gray-400 group-hover:text-gray-600"}`}>
+                  {section.icon}
+                </span>
+
+                <span className={`flex-1 text-xs font-medium truncate ${active ? "text-primary" : ""}`}>
+                  {section.name}
+                </span>
+
+                {/* Completion dot */}
+                {complete && (
+                  <CheckCircle2 className="h-3 w-3 flex-shrink-0 text-emerald-500" />
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Mobile Section Dots */}
+        <div className="sm:hidden fixed bottom-16 left-0 right-0 z-20 flex items-center justify-center gap-1 px-4 py-1 bg-white/80 backdrop-blur-sm">
+          {sections.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentIndex(idx)}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                idx === currentIndex ? "bg-primary w-4" : idx < currentIndex ? "bg-primary/40 w-1.5" : "bg-gray-300 w-1.5"
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Form Content */}
+        <div className="flex-1 overflow-y-auto bg-gray-50">
+          <div>
+
+            <FloatingResumeScore resumeInfo={resumeInfo} />
+
+            <div className={currentIndex === 0 ? "block" : "hidden"}>
+              <PersonalDetails resumeInfo={resumeInfo} enanbledNext={setEnabledNext} />
+            </div>
+            <div className={currentIndex === 1 ? "block" : "hidden"}>
+              <Summary resumeInfo={resumeInfo} enanbledNext={setEnabledNext} enanbledPrev={setEnabledPrev} />
+            </div>
+            <div className={currentIndex === 2 ? "block" : "hidden"}>
+              <Experience resumeInfo={resumeInfo} enanbledNext={setEnabledNext} enanbledPrev={setEnabledPrev} />
+            </div>
+            <div className={currentIndex === 3 ? "block" : "hidden"}>
+              <Project resumeInfo={resumeInfo} setEnabledNext={setEnabledNext} setEnabledPrev={setEnabledPrev} />
+            </div>
+            <div className={currentIndex === 4 ? "block" : "hidden"}>
+              <Education resumeInfo={resumeInfo} enanbledNext={setEnabledNext} enanbledPrev={setEnabledPrev} />
+            </div>
+            <div className={currentIndex === 5 ? "block" : "hidden"}>
+              <Skills resumeInfo={resumeInfo} enanbledNext={setEnabledNext} />
+            </div>
+            <div className={currentIndex === 6 ? "block" : "hidden"}>
+              <CertificationsForm resumeInfo={resumeInfo} enanbledNext={setEnabledNext} enanbledPrev={setEnabledPrev} />
+            </div>
+            <div className={currentIndex === 7 ? "block" : "hidden"}>
+              <ManageAdditionalSections resumeInfo={resumeInfo} />
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      {/* ── Mobile Bottom Nav ── */}
+      <div className="flex sm:hidden items-center justify-between border-t border-gray-100 bg-white px-4 py-2.5">
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex items-center gap-1 border-gray-200 text-gray-600 px-3 disabled:opacity-40"
+          disabled={!enanbledPrev}
+          onClick={() => setCurrentIndex(currentIndex - 1)}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span className="text-xs">Prev</span>
+        </Button>
+
+        <span className="text-xs text-gray-400 font-medium">
+          {sections[currentIndex]?.name} &mdash; {currentIndex + 1}/{sections.length}
+        </span>
+
+        <div className="flex items-center gap-1.5">
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex items-center gap-1 border-emerald-300 text-emerald-600 px-3"
+            onClick={() => navigate(`/dashboard/view-resume/${resume_id}`)}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            className="flex items-center gap-1 bg-primary text-white px-3 disabled:opacity-40"
+            disabled={!enanbledNext}
+            onClick={() => setCurrentIndex(currentIndex + 1)}
+          >
+            <span className="text-xs">Next</span>
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
-      
-      <FloatingResumeScore resumeInfo={resumeInfo} />
 
-      <div className="hidden sm:flex justify-start overflow-x-auto py-2 no-scrollbar">
-        <div className="flex items-center">
-          {sections.map((section, idx) => (
-            <Fragment key={idx}>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`flex items-center gap-1 px-2 ${
-                  currentIndex === idx 
-                    ? "bg-primary text-white shadow-sm" 
-                    : currentIndex > idx
-                    ? "text-primary bg-gray-50"
-                    : "text-gray-500 hover:text-primary hover:bg-gray-50"
-                } transition-all duration-300 whitespace-nowrap rounded-md`}
-                onClick={() => setCurrentIndex(idx)}
-              >
-                {section.icon}
-                <span className="text-xs font-medium">{section.name}</span>
-              </Button>
-              
-              {idx < sections.length - 1 && (
-                <ChevronRight className={`h-4 w-4 mx-1 ${
-                  currentIndex > idx ? "text-primary" : "text-gray-300"
-                }`} />
-              )}
-            </Fragment>
-          ))}
-        </div>
-      </div>
-      
-      <div className="sm:hidden flex justify-between items-center px-4 py-2">
-        <div className="flex space-x-1">
-          {sections.map((_, idx) => (
-            <div 
-              key={idx} 
-              className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                idx === currentIndex ? 'bg-primary' : idx < currentIndex ? 'bg-primary/40' : 'bg-gray-300'
-              }`}
-              onClick={() => setCurrentIndex(idx)}
-            ></div>
-          ))}
-        </div>
-        <div className="text-sm text-gray-500">
-          Step {currentIndex + 1} of {sections.length}
-        </div>
-      </div>
-
-      <div className="transition-all duration-500 transform max-w-3xl mx-auto px-4 md:px-0">
-        <div className={currentIndex === 0 ? 'block' : 'hidden'}><PersonalDetails resumeInfo={resumeInfo} enanbledNext={setEnabledNext} /></div>
-        <div className={currentIndex === 1 ? 'block' : 'hidden'}><Summary resumeInfo={resumeInfo} enanbledNext={setEnabledNext} enanbledPrev={setEnabledPrev} /></div>
-        <div className={currentIndex === 2 ? 'block' : 'hidden'}><Experience resumeInfo={resumeInfo} enanbledNext={setEnabledNext} enanbledPrev={setEnabledPrev} /></div>
-        <div className={currentIndex === 3 ? 'block' : 'hidden'}><Project resumeInfo={resumeInfo} setEnabledNext={setEnabledNext} setEnabledPrev={setEnabledPrev} /></div>
-        <div className={currentIndex === 4 ? 'block' : 'hidden'}><Education resumeInfo={resumeInfo} enanbledNext={setEnabledNext} enanbledPrev={setEnabledPrev} /></div>
-        <div className={currentIndex === 5 ? 'block' : 'hidden'}><Skills resumeInfo={resumeInfo} enanbledNext={setEnabledNext} /></div>
-        <div className={currentIndex === 6 ? 'block' : 'hidden'}><CertificationsForm resumeInfo={resumeInfo} enanbledNext={setEnabledNext} enanbledPrev={setEnabledPrev} /></div>
-        
-        <div className={currentIndex === 7 ? 'block' : 'hidden'}>
-          <ManageAdditionalSections resumeInfo={resumeInfo} />
-        </div>
-      </div>
-      
-      <div className="flex justify-between mt-6 sm:hidden bg-white p-4 rounded-lg shadow-md fixed bottom-0 left-0 right-0 z-10 border-t border-gray-100">
-        <Button size="sm" variant="outline" className={`flex items-center gap-1 border-primary text-primary px-2 min-w-0 ${!enanbledPrev ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={!enanbledPrev} onClick={() => setCurrentIndex(currentIndex - 1)}> <ArrowLeft className="h-4 w-4" /> <span className="text-xs">Prev</span> </Button>
-        <Button size="sm" variant="outline" className="flex items-center gap-1 border-green-500 text-green-600 px-2 min-w-0" onClick={() => navigate(`/dashboard/view-resume/${resume_id}`)}> <Eye className="h-4 w-4" /> <span className="text-xs">Preview</span> </Button>
-        <Button size="sm" className={`flex items-center gap-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary/90 shadow-sm transition-all duration-300 text-white px-2 min-w-0 ${!enanbledNext ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={!enanbledNext} onClick={() => setCurrentIndex(currentIndex + 1)}> <span className="text-xs">Next</span> <ArrowRight className="h-4 w-4" /> </Button>
-      </div>
-      
-      <div className="h-16 sm:hidden"></div>
     </div>
   );
 }

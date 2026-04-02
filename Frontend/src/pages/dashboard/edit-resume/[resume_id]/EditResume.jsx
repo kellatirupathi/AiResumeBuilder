@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
-import { LoaderCircle, User } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import { LoaderCircle, User, HomeIcon } from "lucide-react";
 import { toast } from "sonner";
 import ResumeForm from "../components/ResumeForm";
 import PreviewPage from "../components/PreviewPage";
@@ -106,7 +106,6 @@ export function EditResume() {
       if (Array.isArray(importableData.experience)) {
         importableData.experience = importableData.experience.map((experience) => {
           const cleanedExperience = stripItemId(experience);
-
           return {
             ...cleanedExperience,
             currentlyWorking:
@@ -167,60 +166,97 @@ export function EditResume() {
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="flex h-screen bg-white"
-      style={{ cursor: isResizing ? "ew-resize" : "default" }}
-    >
-      <div className="form-container min-w-0 overflow-y-auto bg-white" style={{ width: `${sidebarWidth}%` }}>
-        <div className="flex items-center justify-center gap-4 border-b border-indigo-100 bg-indigo-50 p-1">
-          <User className="h-5 w-5 text-indigo-500" />
-          <p className="text-sm text-indigo-700">Quick start by importing data from your master profile.</p>
+    <div className="flex flex-col h-screen bg-slate-50" style={{ cursor: isResizing ? "ew-resize" : "default" }}>
+
+      {/* ── Top Header Bar ── */}
+      <header className="flex-shrink-0 flex items-center justify-between gap-4 border-b border-gray-200 bg-white px-4 py-2.5 shadow-sm z-10">
+        <div className="flex items-center gap-2.5">
+          <Link to="/dashboard">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1.5 border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors"
+            >
+              <HomeIcon className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs font-medium">Dashboard</span>
+            </Button>
+          </Link>
+
+          <div className="h-5 w-px bg-gray-200" />
+
           <Button
             variant="outline"
             size="sm"
-            className="border-indigo-200 bg-white text-indigo-600 hover:bg-indigo-100"
+            className="flex items-center gap-1.5 border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
             onClick={() => setIsImportModalOpen(true)}
             disabled={isImporting}
           >
-            {isImporting ? <LoaderCircle className="h-4 w-4 animate-spin" /> : "Import from Profile"}
+            {isImporting ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline text-xs font-medium">Import from Profile</span>
+              </>
+            )}
           </Button>
         </div>
 
-        <ImportConfirmationDialog
-          open={isImportModalOpen}
-          onOpenChange={setIsImportModalOpen}
-          onConfirm={handleImportFromProfile}
-          loading={isImporting}
-        />
-
-        <ResumeForm onOpenAIReview={handleOpenAIReview} isAIReviewOpen={isAIReviewOpen} />
-      </div>
-
-      <div
-        className="divider relative flex w-2 cursor-ew-resize items-center justify-center bg-gray-200 transition-colors hover:bg-primary"
-        onMouseDown={(event) => {
-          event.preventDefault();
-          setIsResizing(true);
-        }}
-      >
-        <div className="h-12 w-1 rounded-full bg-gray-400" />
-      </div>
-
-      <div
-        className="preview-container min-w-0 overflow-hidden border-l border-slate-200 bg-slate-50"
-        style={{ width: `${100 - sidebarWidth}%` }}
-      >
-        {isAIReviewOpen ? (
-          <AIReviewPanel resumeInfo={resumeInfo} onClose={() => setIsAIReviewOpen(false)} />
-        ) : (
-          <div className="h-full overflow-y-auto">
-            <div className="md:w-full lg:w-full xl:w-full">
-              <PreviewPage />
-            </div>
-          </div>
+        {/* Resume title — center */}
+        {resumeInfo?.title && (
+          <p className="hidden md:block text-sm font-semibold text-gray-700 truncate max-w-xs select-none">
+            {resumeInfo.title}
+          </p>
         )}
+
+        {/* Right spacer to balance layout */}
+        <div className="hidden md:block w-[160px]" />
+      </header>
+
+      {/* ── Main Split Area ── */}
+      <div ref={containerRef} className="flex flex-1 min-h-0">
+
+        {/* Form Panel */}
+        <div
+          className="min-w-0 overflow-hidden flex flex-col"
+          style={{ width: `${sidebarWidth}%` }}
+        >
+          <ResumeForm onOpenAIReview={handleOpenAIReview} isAIReviewOpen={isAIReviewOpen} />
+        </div>
+
+        {/* Resize Handle */}
+        <div
+          className="relative flex w-2 flex-shrink-0 cursor-ew-resize items-center justify-center bg-gray-200 hover:bg-indigo-400 transition-colors duration-150"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            setIsResizing(true);
+          }}
+        >
+          <div className="h-10 w-1 rounded-full bg-gray-400" />
+        </div>
+
+        {/* Preview / AI Review Panel */}
+        <div
+          className="min-w-0 overflow-hidden flex-1 border-l border-slate-200 bg-slate-50"
+        >
+          {isAIReviewOpen ? (
+            <AIReviewPanel resumeInfo={resumeInfo} onClose={() => setIsAIReviewOpen(false)} />
+          ) : (
+            <div className="h-full overflow-y-auto">
+              <div className="md:w-full lg:w-full xl:w-full">
+                <PreviewPage />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
+
+      <ImportConfirmationDialog
+        open={isImportModalOpen}
+        onOpenChange={setIsImportModalOpen}
+        onConfirm={handleImportFromProfile}
+        loading={isImporting}
+      />
     </div>
   );
 }

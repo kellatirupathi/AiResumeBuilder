@@ -60,7 +60,7 @@ function AdditionalSectionForm({ resumeInfo, onUpdate }) {
   }
 
   return (
-    <div className="space-y-4 mt-6">
+    <div className="mt-4 space-y-4">
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="additional-sections">
           {(provided) => (
@@ -79,29 +79,31 @@ function AdditionalSectionForm({ resumeInfo, onUpdate }) {
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      className={`p-4 bg-white rounded-lg shadow-sm border transition-shadow ${
-                        snapshot.isDragging ? 'shadow-lg border-primary' : ''
+                      className={`overflow-hidden rounded-lg border border-gray-100 bg-white transition-shadow ${
+                        snapshot.isDragging ? 'border-violet-300 shadow-lg' : ''
                       }`}
                     >
-                      <div className="flex justify-between items-center mb-2">
+                      <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-4 py-2.5">
                         <div className="flex items-center gap-2">
                           <div
                             {...provided.dragHandleProps}
-                            className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+                            className="cursor-grab text-gray-400 hover:text-violet-600 active:cursor-grabbing"
                             title="Drag to reorder"
                           >
-                            <GripVertical className="h-5 w-5" />
+                            <GripVertical className="h-4 w-4" />
                           </div>
-                          <h3 className="text-lg font-semibold text-gray-700">{section.title}</h3>
+                          <h3 className="text-xs font-medium text-gray-700">{section.title}</h3>
                         </div>
-                        <Button variant="ghost" size="sm" onClick={() => handleRemove(index)}>
-                          <Trash2 className="h-4 w-4 text-red-500" />
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-400 hover:bg-red-50 hover:text-red-500" onClick={() => handleRemove(index)}>
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
-                      <GenericRichTextEditor
-                        defaultValue={section.content}
-                        onUpdate={(val) => handleContentChange(index, val)}
-                      />
+                      <div className="p-4">
+                        <GenericRichTextEditor
+                          defaultValue={section.content}
+                          onUpdate={(val) => handleContentChange(index, val)}
+                        />
+                      </div>
                     </div>
                   )}
                 </Draggable>
@@ -112,8 +114,8 @@ function AdditionalSectionForm({ resumeInfo, onUpdate }) {
         </Droppable>
       </DragDropContext>
       <div className="flex justify-end">
-        <Button onClick={onSave} className="flex items-center gap-2">
-          <Save className="h-4 w-4" /> Save Sections
+        <Button onClick={onSave} className="h-8 gap-2 bg-violet-600 px-4 text-xs text-white hover:bg-violet-700">
+          <Save className="h-3.5 w-3.5" /> Save Sections
         </Button>
       </div>
     </div>
