@@ -14,7 +14,6 @@ import {
   FaExclamationTriangle,
   FaTimes
 } from "react-icons/fa";
-import { FcGoogle } from "react-icons/fc"; // <-- NEW: Google Icon
 import { motion, AnimatePresence } from "framer-motion";
 import { loginUser, registerUser, googleLogin } from "@/Services/login"; // <-- NEW: Import googleLogin
 import { GoogleLogin } from '@react-oauth/google'; // <-- NEW: Import GoogleLogin component
@@ -59,6 +58,37 @@ const Toast = ({ message, type, onClose }) => {
     </motion.div>
   );
 };
+
+const InputField = ({
+  id,
+  label,
+  icon,
+  type = "text",
+  placeholder,
+  value,
+  onChange,
+  required,
+  hint,
+  rightEl
+}) => (
+  <div>
+    <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+    <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-gray-50 focus-within:bg-white focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all duration-200">
+      <span className="text-gray-400 mr-2.5 flex-shrink-0">{icon}</span>
+      <input
+        id={id}
+        type={type}
+        className="w-full outline-none bg-transparent text-gray-800 placeholder-gray-400 text-sm"
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        required={required}
+      />
+      {rightEl && <span className="ml-2 flex-shrink-0">{rightEl}</span>}
+    </div>
+    {hint && <p className="text-xs text-gray-400 mt-1">{hint}</p>}
+  </div>
+);
 
 function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -184,27 +214,6 @@ function AuthPage() {
       setLoading(false);
     }
   };
-
-  // Reusable input wrapper
-  const InputField = ({ id, label, icon, type = "text", placeholder, value, onChange, required, hint, rightEl }) => (
-    <div>
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
-      <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-gray-50 focus-within:bg-white focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all duration-200">
-        <span className="text-gray-400 mr-2.5 flex-shrink-0">{icon}</span>
-        <input
-          id={id}
-          type={type}
-          className="w-full outline-none bg-transparent text-gray-800 placeholder-gray-400 text-sm"
-          placeholder={placeholder}
-          value={value}
-          onChange={onChange}
-          required={required}
-        />
-        {rightEl && <span className="ml-2 flex-shrink-0">{rightEl}</span>}
-      </div>
-      {hint && <p className="text-xs text-gray-400 mt-1">{hint}</p>}
-    </div>
-  );
 
   return (
     <div className="min-h-screen w-full flex bg-gray-50">
