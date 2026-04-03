@@ -1,6 +1,12 @@
 // C:\Users\NxtWave\Downloads\code\Frontend\src\Services\login.js
 import axios from "axios";
 import { API_BASE_URL } from "@/config/config";
+import {
+  resolveApiData,
+  setNotificationPreferencesCache,
+  setUserCaches,
+} from "@/lib/queryCacheUtils";
+import { queryClient } from "@/lib/queryClient";
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -13,6 +19,10 @@ const axiosInstance = axios.create({
 const startUser = async () => {
   try {
     const response = await axiosInstance.get("users/");
+    const userData = resolveApiData(response.data);
+    if (userData) {
+      setUserCaches(userData);
+    }
     return response.data;
   } catch (error) {
     throw new Error(
@@ -35,6 +45,10 @@ const getSessionUser = async () => {
 const registerUser = async (data) => {
   try {
     const response = await axiosInstance.post("users/register", data);
+    const userData = resolveApiData(response.data);
+    if (userData) {
+      setUserCaches(userData);
+    }
     return response.data;
   } catch (error) {
     throw new Error(
@@ -46,6 +60,10 @@ const registerUser = async (data) => {
 const loginUser = async (data) => {
   try {
     const response = await axiosInstance.post("users/login", data);
+    const userData = resolveApiData(response.data);
+    if (userData) {
+      setUserCaches(userData);
+    }
     return response.data;
   } catch (error) {
     throw new Error(
@@ -57,6 +75,10 @@ const loginUser = async (data) => {
 const googleLogin = async (credential) => {
     try {
         const response = await axiosInstance.post("users/google-login", { credential });
+        const userData = resolveApiData(response.data);
+        if (userData) {
+          setUserCaches(userData);
+        }
         return response.data;
     } catch (error) {
         throw new Error(
@@ -68,6 +90,10 @@ const googleLogin = async (credential) => {
 const logoutUser = async () => {
   try {
     const response = await axiosInstance.get("users/logout");
+    queryClient.clear();
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem("nxtresume-query-cache");
+    }
     return response.data;
   } catch (error) {
     throw new Error(
@@ -123,6 +149,10 @@ const getProfile = async () => {
 const updateProfile = async (profileData) => {
   try {
     const response = await axiosInstance.put("users/profile", profileData);
+    const updatedProfile = resolveApiData(response.data);
+    if (updatedProfile) {
+      setUserCaches(updatedProfile);
+    }
     return response.data;
   } catch (error) {
     throw new Error(
@@ -134,6 +164,10 @@ const updateProfile = async (profileData) => {
 export const generatePortfolio = async (templateName) => {
     try {
         const response = await axiosInstance.post("users/profile/generate-portfolio", { templateName });
+        const updatedProfile = resolveApiData(response.data);
+        if (updatedProfile) {
+          setUserCaches(updatedProfile);
+        }
         return response.data;
     } catch (error) {
         throw new Error(
@@ -156,6 +190,8 @@ const getNotificationPreferences = async () => {
 const updateNotificationPreferences = async (prefs) => {
   try {
     const response = await axiosInstance.patch("users/notification-preferences", prefs);
+    const updatedPreferences = resolveApiData(response.data);
+    setNotificationPreferencesCache(updatedPreferences);
     return response.data;
   } catch (error) {
     throw new Error(
@@ -168,6 +204,10 @@ const updateNotificationPreferences = async (prefs) => {
 const completeProfile = async (data) => {
   try {
     const response = await axiosInstance.post("users/complete-profile", data);
+    const userData = resolveApiData(response.data);
+    if (userData) {
+      setUserCaches(userData);
+    }
     return response.data;
   } catch (error) {
     throw new Error(

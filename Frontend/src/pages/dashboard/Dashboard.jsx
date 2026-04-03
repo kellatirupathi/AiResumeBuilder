@@ -1,8 +1,7 @@
 // C:\Users\NxtWave\Downloads\AiResumeBuilder-3\Frontend\src\pages\dashboard\Dashboard.jsx
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { getAllResumeData } from "@/Services/resumeAPI";
 import { logoutUser } from "@/Services/login";
 import { addUserData } from "@/features/user/userFeatures";
 import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
@@ -43,6 +42,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useNavigate, useOutletContext } from "react-router-dom";
+import { useResumeListQuery } from "@/hooks/useAppQueryData";
 
 // Animated User Icon Component
 const AnimatedUserIcon = ({ fullName }) => {
@@ -106,9 +106,6 @@ function Dashboard() {
   const { darkMode, toggleDarkMode } = useOutletContext();
   const user = useSelector((state) => state.editUser.userData);
   const dispatch = useDispatch();
-  const [resumeList, setResumeList] = useState([]);
-  const [filteredList, setFilteredList] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [showSortOptions, setShowSortOptions] = useState(false);
@@ -120,26 +117,48 @@ function Dashboard() {
   const userDropdownRef = useRef(null);
   const profileDropdownRef = useRef(null);
   const navigate = useNavigate();
+  const resumeListQuery = useResumeListQuery({ enabled: Boolean(user) });
+  const resumeList = resumeListQuery.data || [];
+  const isLoading = resumeListQuery.isPending && !resumeListQuery.data;
+  const filteredList = useMemo(() => {
+    let filtered = [...resumeList];
+    if (searchQuery.trim()) {
+      filtered = filtered.filter((resume) =>
+        resume.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    if (sortOption === "newest") filtered.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    else if (sortOption === "oldest") filtered.sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
+    else if (sortOption === "alphabetical") filtered.sort((a, b) => a.title.localeCompare(b.title));
+    return filtered;
+  }, [resumeList, searchQuery, sortOption]);
+
+  const profileCompletion = useMemo(() => {
+    if (!user || typeof user !== 'object') return 0;
+    let completed = 0;
+    const total = 8;
+    if ((user.firstName || user.fullName) && user.email) completed++;
+    if (user.summary?.trim()) completed++;
+    if (user.experience?.length > 0) completed++;
+    if (user.projects?.length > 0) completed++;
+    if (user.education?.length > 0) completed++;
+    if (user.skills?.length > 0) completed++;
+    if (user.certifications?.length > 0) completed++;
+    if (user.additionalSections?.length > 0) completed++;
+    return Math.round((completed / total) * 100);
+  }, [user]);
 
   const isDarkMode = document.documentElement.classList.contains('dark');
+  const refreshResumeData = () => resumeListQuery.refetch();
 
-  const fetchAllResumeData = async () => {
-    setIsLoading(true);
-    try {
-      const resumes = await getAllResumeData();
-      setResumeList(resumes.data || []);
-      setFilteredList(resumes.data || []);
-    } catch (error) {
+  useEffect(() => {
+    if (resumeListQuery.isError) {
       toast.error("Failed to load resumes", {
         description: "Please try refreshing the page",
-        action: { label: "Retry", onClick: () => fetchAllResumeData() },
+        action: { label: "Retry", onClick: () => refreshResumeData() },
       });
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  useEffect(() => { fetchAllResumeData(); }, [user]);
+  }, [resumeListQuery.isError]);
 
   const handleLogout = async () => {
     try {
@@ -168,17 +187,6 @@ function Dashboard() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  useEffect(() => {
-    let filtered = [...resumeList];
-    if (searchQuery.trim()) {
-      filtered = filtered.filter(resume => resume.title.toLowerCase().includes(searchQuery.toLowerCase()));
-    }
-    if (sortOption === "newest") filtered.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-    else if (sortOption === "oldest") filtered.sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
-    else if (sortOption === "alphabetical") filtered.sort((a, b) => a.title.localeCompare(b.title));
-    setFilteredList(filtered);
-  }, [searchQuery, resumeList, sortOption]);
 
   const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08 } } };
   const itemVariants = { hidden: { y: 15, opacity: 0 }, visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 120, damping: 12 } } };
@@ -246,6 +254,25 @@ function Dashboard() {
                   {resumeList.length}
                 </span>
               )}
+              {key === "profile" && (() => {
+                const size = 26;
+                const strokeWidth = 2.5;
+                const radius = (size - strokeWidth) / 2;
+                const circumference = 2 * Math.PI * radius;
+                const offset = circumference - (profileCompletion / 100) * circumference;
+                const color = profileCompletion >= 80 ? '#34d399' : profileCompletion >= 50 ? '#fbbf24' : '#f87171';
+                return (
+                  <div className="relative ml-auto flex-shrink-0" style={{ width: size, height: size }}>
+                    <svg width={size} height={size} className="-rotate-90">
+                      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={strokeWidth} />
+                      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={color} strokeWidth={strokeWidth} strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-700" />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-[7px] font-bold" style={{ color }}>
+                      {profileCompletion}
+                    </span>
+                  </div>
+                );
+              })()}
             </button>
           ))}
         </nav>
@@ -427,7 +454,7 @@ function Dashboard() {
                 )}
                 {filteredList.map((resume) => (
                   <motion.div key={resume._id} variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
-                    <ResumeCard resume={resume} refreshData={fetchAllResumeData} viewMode={viewMode} />
+                  <ResumeCard resume={resume} refreshData={refreshResumeData} viewMode={viewMode} />
                   </motion.div>
                 ))}
                 {filteredList.length === 0 && searchQuery && (

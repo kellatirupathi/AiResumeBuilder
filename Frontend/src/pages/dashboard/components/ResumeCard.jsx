@@ -16,6 +16,8 @@ import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
 import CloneResumeModal from "./CloneResumeModal";
 import ResumePreview from "../edit-resume/components/PreviewPage";
+import { useQueryClient } from "@tanstack/react-query";
+import { prefetchResumeQuery } from "@/hooks/useAppQueryData";
 
 const gradients = [
   "from-blue-600 to-indigo-600",
@@ -80,6 +82,7 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
   const [openAlert, setOpenAlert] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isCloneModalOpen, setCloneModalOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleShare = () => {
     if (resume.googleDriveLink) {
@@ -116,6 +119,15 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
   const gradientIndex = resume._id ? Math.abs(resume._id.charCodeAt(0) + resume._id.charCodeAt(resume._id.length - 1)) % gradients.length : 0;
   const gradient = gradients[gradientIndex];
   const navigate = useNavigate();
+  const warmResumeCache = () => prefetchResumeQuery(queryClient, resume._id);
+  const openViewResume = () => {
+    warmResumeCache();
+    navigate(`/dashboard/view-resume/${resume._id}`);
+  };
+  const openEditResume = () => {
+    warmResumeCache();
+    navigate(`/dashboard/edit-resume/${resume._id}`);
+  };
 
   const handleDelete = async () => {
     setDeleteLoading(true);
@@ -157,11 +169,14 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
   if (viewMode === "list") {
     return (
       <>
-        <div className="group flex items-center justify-between rounded-xl shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-800 transition-all duration-300 bg-white dark:bg-gray-800/90 backdrop-blur-sm overflow-hidden">
+        <div
+          className="group flex items-center justify-between rounded-xl shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-800 transition-all duration-300 bg-white dark:bg-gray-800/90 backdrop-blur-sm overflow-hidden"
+          onMouseEnter={warmResumeCache}
+        >
           <div className="flex items-center flex-1">
             <div className={`w-1.5 self-stretch bg-gradient-to-b ${gradient}`}></div>
             <div className="p-3 pl-4">
-              <Link to={`/dashboard/edit-resume/${resume._id}`}>
+              <Link to={`/dashboard/edit-resume/${resume._id}`} onMouseEnter={warmResumeCache}>
                 <h3 className="text-base font-semibold text-blue-600 dark:text-blue-400 hover:underline transition-colors">{resume.title}</h3>
               </Link>
               <div className="flex items-center gap-3 mt-1 text-gray-500 dark:text-gray-400 text-xs">
@@ -172,8 +187,8 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
           </div>
           <div className="flex items-center gap-2 pr-3">
             <div className="hidden sm:flex items-center gap-1">
-              <Button variant="ghost" size="sm" onClick={() => navigate(`/dashboard/view-resume/${resume._id}`)} className="rounded-full w-7 h-7 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20" title="View Resume"><Eye className="w-3.5 h-3.5" /></Button>
-              <Button variant="ghost" size="sm" onClick={() => navigate(`/dashboard/edit-resume/${resume._id}`)} className="rounded-full w-7 h-7 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20" title="Edit Resume"><Edit className="w-3.5 h-3.5" /></Button>
+              <Button variant="ghost" size="sm" onClick={openViewResume} className="rounded-full w-7 h-7 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20" title="View Resume"><Eye className="w-3.5 h-3.5" /></Button>
+              <Button variant="ghost" size="sm" onClick={openEditResume} className="rounded-full w-7 h-7 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20" title="Edit Resume"><Edit className="w-3.5 h-3.5" /></Button>
               <Button variant="ghost" size="sm" onClick={handleShare} className="rounded-full w-7 h-7 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20" title="Share Resume Link"><Share2 className="w-3.5 h-3.5" /></Button>
               <Button variant="ghost" size="sm" onClick={() => setCloneModalOpen(true)} className="rounded-full w-7 h-7 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20" title="Clone Resume"><Copy className="w-3.5 h-3.5" /></Button>
               <Button variant="ghost" size="sm" onClick={() => setOpenAlert(true)} className="rounded-full w-7 h-7 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20" title="Delete Resume"><Trash2 className="w-3.5 h-3.5" /></Button>
@@ -181,15 +196,15 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
             <div className="sm:hidden relative">
                 <Button variant="ghost" size="sm" className="rounded-full h-7 w-7 p-0 flex items-center justify-center" onClick={() => setShowMobileMenu(!showMobileMenu)}><MoreVertical className="h-4 w-4" /></Button>
                 {showMobileMenu && (<div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-10"><div className="py-1" role="menu">
-                    <button onClick={() => { navigate(`/dashboard/view-resume/${resume._id}`); setShowMobileMenu(false);}} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"> <Eye className="mr-2 h-4 w-4 text-blue-500" /> View Resume </button>
-                    <button onClick={() => { navigate(`/dashboard/edit-resume/${resume._id}`); setShowMobileMenu(false);}} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"> <Edit className="mr-2 h-4 w-4 text-purple-500" /> Edit Resume </button>
+                    <button onClick={() => { openViewResume(); setShowMobileMenu(false);}} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"> <Eye className="mr-2 h-4 w-4 text-blue-500" /> View Resume </button>
+                    <button onClick={() => { openEditResume(); setShowMobileMenu(false);}} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"> <Edit className="mr-2 h-4 w-4 text-purple-500" /> Edit Resume </button>
                     <button onClick={() => { handleShare(); setShowMobileMenu(false);}} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"> <Share2 className="mr-2 h-4 w-4 text-emerald-500" /> Share Link </button>
                     <button onClick={() => { setCloneModalOpen(true); setShowMobileMenu(false);}} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"> <Copy className="mr-2 h-4 w-4 text-green-500" /> Clone Resume </button>
                     <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
                     <button onClick={() => { setOpenAlert(true); setShowMobileMenu(false);}} className="flex items-center px-4 py-2 text-sm text-rose-600 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"> <Trash2 className="mr-2 h-4 w-4" /> Delete Resume </button>
                 </div></div>)}
             </div>
-            <Button variant="ghost" size="sm" onClick={() => navigate(`/dashboard/edit-resume/${resume._id}`)} className={`hidden md:flex items-center gap-1 bg-gradient-to-r ${gradient} text-white hover:opacity-90 transition-opacity rounded-md px-3 py-1 text-xs shadow-sm`}> Continue <ChevronRight className="h-3 w-3" /></Button>
+            <Button variant="ghost" size="sm" onClick={openEditResume} className={`hidden md:flex items-center gap-1 bg-gradient-to-r ${gradient} text-white hover:opacity-90 transition-opacity rounded-md px-3 py-1 text-xs shadow-sm`}> Continue <ChevronRight className="h-3 w-3" /></Button>
         </div>
         </div>
         <AlertDialog open={openAlert} onOpenChange={setOpenAlert}>
@@ -209,7 +224,10 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
   // Grid View - Reuse the exact resume renderer and scale it into the card
   return (
     <>
-      <div className="group relative flex flex-col h-[348px] rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 bg-white dark:bg-gray-800/90 backdrop-blur-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+      <div
+        className="group relative flex flex-col h-[348px] rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 bg-white dark:bg-gray-800/90 backdrop-blur-sm border border-gray-100 dark:border-gray-800 overflow-hidden"
+        onMouseEnter={warmResumeCache}
+      >
         <div className={`h-1.5 w-full bg-gradient-to-r ${gradient}`}></div>
         <div className="absolute top-2 right-2 z-10 md:hidden">
           <Button variant="ghost" size="sm" className="rounded-full h-7 w-7 p-0 flex items-center justify-center bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm" onClick={() => setShowMobileMenu(!showMobileMenu)}>
@@ -217,8 +235,8 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
           </Button>
           {showMobileMenu && (<div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5">
             <div className="py-1" role="menu">
-              <button onClick={() => { navigate(`/dashboard/view-resume/${resume._id}`); setShowMobileMenu(false);}} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"><Eye className="mr-2 h-4 w-4 text-blue-500" /> View Resume</button>
-              <button onClick={() => { navigate(`/dashboard/edit-resume/${resume._id}`); setShowMobileMenu(false);}} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"><Edit className="mr-2 h-4 w-4 text-purple-500" /> Edit Resume</button>
+              <button onClick={() => { openViewResume(); setShowMobileMenu(false);}} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"><Eye className="mr-2 h-4 w-4 text-blue-500" /> View Resume</button>
+              <button onClick={() => { openEditResume(); setShowMobileMenu(false);}} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"><Edit className="mr-2 h-4 w-4 text-purple-500" /> Edit Resume</button>
               <button onClick={() => { handleShare(); setShowMobileMenu(false);}} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"><Share2 className="mr-2 h-4 w-4 text-emerald-500" /> Share Link</button>
               <button onClick={() => { setCloneModalOpen(true); setShowMobileMenu(false);}} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"><Copy className="mr-2 h-4 w-4 text-green-500" /> Clone Resume</button>
               <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
@@ -229,7 +247,7 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
         <div className="relative flex-grow overflow-hidden">
           <ResumeExactPreview resume={resume} />
           <div className="absolute inset-x-0 top-0 z-[1] bg-gradient-to-b from-white/94 via-white/78 to-transparent dark:from-gray-900/92 dark:via-gray-900/68 dark:to-transparent px-4 pt-4 pb-10">
-            <Link to={`/dashboard/edit-resume/${resume._id}`}>
+            <Link to={`/dashboard/edit-resume/${resume._id}`} onMouseEnter={warmResumeCache}>
               <h3 className="text-base font-bold text-blue-600 dark:text-blue-400 hover:underline transition-colors line-clamp-1">
                 {resume.title}
               </h3>
@@ -242,13 +260,13 @@ function ResumeCard({ resume, refreshData, viewMode = "grid" }) {
         </div>
         <div className="relative z-[1] border-t border-white/80 dark:border-white/10 bg-white/88 dark:bg-gray-900/80 backdrop-blur-sm p-3 pt-2 pb-2 flex justify-between items-center mt-auto">
           <div className="flex space-x-1">
-            <Button variant="ghost" size="sm" onClick={() => navigate(`/dashboard/view-resume/${resume._id}`)} className="rounded-full w-7 h-7 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20" title="View Resume"><Eye className="w-3.5 h-3.5" /></Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate(`/dashboard/edit-resume/${resume._id}`)} className="rounded-full w-7 h-7 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20" title="Edit Resume"><Edit className="w-3.5 h-3.5" /></Button>
+            <Button variant="ghost" size="sm" onClick={openViewResume} className="rounded-full w-7 h-7 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20" title="View Resume"><Eye className="w-3.5 h-3.5" /></Button>
+            <Button variant="ghost" size="sm" onClick={openEditResume} className="rounded-full w-7 h-7 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20" title="Edit Resume"><Edit className="w-3.5 h-3.5" /></Button>
             <Button variant="ghost" size="sm" onClick={handleShare} className="rounded-full w-7 h-7 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20" title="Share Resume Link"><Share2 className="w-3.5 h-3.5" /></Button>
             <Button variant="ghost" size="sm" onClick={() => setCloneModalOpen(true)} className="rounded-full w-7 h-7 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20" title="Clone Resume"><Copy className="w-3.5 h-3.5" /></Button>
             <Button variant="ghost" size="sm" onClick={() => setOpenAlert(true)} className="rounded-full w-7 h-7 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20" title="Delete Resume"><Trash2 className="w-3.5 h-3.5" /></Button>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => navigate(`/dashboard/edit-resume/${resume._id}`)} className={`flex items-center gap-1 bg-gradient-to-r ${gradient} text-white hover:opacity-90 transition-opacity rounded-md px-2.5 py-1 text-xs shadow-sm`}> Continue <ChevronRight className="h-3 w-3" /></Button>
+          <Button variant="ghost" size="sm" onClick={openEditResume} className={`flex items-center gap-1 bg-gradient-to-r ${gradient} text-white hover:opacity-90 transition-opacity rounded-md px-2.5 py-1 text-xs shadow-sm`}> Continue <ChevronRight className="h-3 w-3" /></Button>
         </div>
       </div>
       <CloneResumeModal 

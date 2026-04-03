@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AIChatSession } from "@/Services/AiModel";
-import { getAllResumeData, getResumeData } from "@/Services/resumeAPI";
+import { useResumeListQuery, useResumeQuery } from "@/hooks/useAppQueryData";
 
 // ── ATS PROMPT ─────────────────────────────────────────────────────────────
 const ATS_PROMPT = `
@@ -168,15 +168,13 @@ const scoreLabel = (s) => s >= 75 ? "Great Match" : s >= 50 ? "Moderate Match" :
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function ATSCheckerPage() {
   const navigate = useNavigate();
+  const resumeListQuery = useResumeListQuery();
 
   // left panel state
-  const [resumeList, setResumeList]         = useState([]);
   const [sourceType, setSourceType]         = useState("saved");
   const [selectedId, setSelectedId]         = useState("");
-  const [resumeData, setResumeData]         = useState(null);
   const [uploadedFileName, setUploadedFileName] = useState("");
   const [uploadedResumeText, setUploadedResumeText] = useState("");
-  const [loadingResume, setLoadingResume]   = useState(false);
   const [loadingUploadedPdf, setLoadingUploadedPdf] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
   const [dropdownOpen, setDropdownOpen]     = useState(false);
@@ -187,13 +185,36 @@ export default function ATSCheckerPage() {
   const [progress, setProgress]             = useState(0);
   const [result, setResult]                 = useState(null);
   const [copied, setCopied]                 = useState(false);
+  const resumeList = resumeListQuery.data || [];
+  const resumeQuery = useResumeQuery(selectedId, {
+    enabled: sourceType === "saved" && Boolean(selectedId),
+  });
+  const resumeData = resumeQuery.data || null;
+  const loadingResume =
+    sourceType === "saved" &&
+    resumeQuery.isPending &&
+    Boolean(selectedId) &&
+    !resumeQuery.data;
 
-  // fetch resume list on mount
   useEffect(() => {
-    getAllResumeData()
-      .then((res) => setResumeList(res.data || []))
-      .catch(() => toast.error("Could not load resumes"));
-  }, []);
+    if (!resumeListQuery.isError) {
+      return;
+    }
+
+    toast.error("Could not load resumes", {
+      description: resumeListQuery.error?.message,
+    });
+  }, [resumeListQuery.error?.message, resumeListQuery.isError]);
+
+  useEffect(() => {
+    if (!resumeQuery.isError) {
+      return;
+    }
+
+    toast.error("Failed to load resume data", {
+      description: resumeQuery.error?.message || "Please try again later",
+    });
+  }, [resumeQuery.error?.message, resumeQuery.isError]);
 
   // animation ticker
   useEffect(() => {
@@ -224,26 +245,15 @@ export default function ATSCheckerPage() {
       setLoadingUploadedPdf(false);
     } else {
       setSelectedId("");
-      setResumeData(null);
-      setLoadingResume(false);
     }
   };
 
-  const handleSelectResume = async (id) => {
+  const handleSelectResume = (id) => {
     setSourceType("saved");
     setSelectedId(id);
     setDropdownOpen(false);
     setUploadedFileName("");
     setUploadedResumeText("");
-    setLoadingResume(true);
-    try {
-      const res = await getResumeData(id);
-      setResumeData(res.data);
-    } catch {
-      toast.error("Failed to load resume data");
-    } finally {
-      setLoadingResume(false);
-    }
   };
 
   const handlePdfUpload = async (event) => {
@@ -260,7 +270,6 @@ export default function ATSCheckerPage() {
     setSourceType("pdf");
     setDropdownOpen(false);
     setSelectedId("");
-    setResumeData(null);
     setResult(null);
     setUploadedFileName(file.name);
     setUploadedResumeText("");
@@ -801,7 +810,6 @@ export default function ATSCheckerPage() {
                     setJobDescription("");
                     setSourceType("saved");
                     setSelectedId("");
-                    setResumeData(null);
                     setUploadedFileName("");
                     setUploadedResumeText("");
                     setDropdownOpen(false);

@@ -8,9 +8,10 @@ import {
   removeResume,
   getPublicResume,
   trackResumeView,
-  cloneResume,      // <-- NEW
-  saveVersion,      // <-- NEW
-  revertToVersion,  // <-- NEW
+  cloneResume,
+  saveVersion,
+  revertToVersion,
+  generateDriveLink,
 } from "../controller/resume.controller.js";
 import { isUserAvailable } from "../middleware/auth.js";
 
@@ -33,5 +34,8 @@ router.delete("/removeResume", isUserAvailable, removeResume);
 router.post("/:id/clone", isUserAvailable, cloneResume);
 router.post("/:id/version", isUserAvailable, saveVersion);
 router.put("/:id/revert/:versionId", isUserAvailable, revertToVersion);
+
+// --- Generate Google Drive Link ---
+router.post("/generateDriveLink", isUserAvailable, generateDriveLink);
 
 export default router;

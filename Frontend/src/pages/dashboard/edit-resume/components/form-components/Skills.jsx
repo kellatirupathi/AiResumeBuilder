@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoaderCircle, Plus, Sparkles, XCircle, Code, Database, Server, Cloud, CheckCircle2, Save } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { addResumeData } from "@/features/resume/resumeFeatures";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -36,11 +36,18 @@ function Skills({ resumeInfo }) {
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState(null);
-  const isInitialMount = React.useRef(true);
 
   const dispatch = useDispatch();
   const { resume_id } = useParams();
   const hasSkills = skillLines.some((line) => line && line.trim() !== "");
+
+  // Helper: convert skillLines array to skills objects and dispatch to Redux
+  const dispatchSkillsToRedux = (lines) => {
+    const skillsArray = lines
+      .map((line) => ({ name: line }))
+      .filter(skill => skill.name && skill.name.trim() !== "");
+    dispatch(addResumeData({ ...resumeInfo, skills: skillsArray }));
+  };
 
   // Sync local skillLines from Redux whenever resumeInfo.skills changes (initial load or import).
   useEffect(() => {
@@ -57,22 +64,11 @@ function Skills({ resumeInfo }) {
     }
   }, [resumeInfo?.skills]);
 
-  // Dispatch to Redux only when the user actually changes skillLines (skip initial mount).
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-    const skillsArray = skillLines
-      .map((line) => ({ name: line }))
-      .filter(skill => skill.name && skill.name.trim() !== "");
-    dispatch(addResumeData({ ...resumeInfo, skills: skillsArray }));
-  }, [skillLines]);
-
   const handleLineChange = (index, value) => {
     const newLines = [...skillLines];
     newLines[index] = value;
     setSkillLines(newLines);
+    dispatchSkillsToRedux(newLines);
   };
 
   const addNewLine = () => {
@@ -162,6 +158,7 @@ function Skills({ resumeInfo }) {
       const newLines = [...skillLines];
       newLines[lineIndex] = aiSuggestions[lineKey];
       setSkillLines(newLines);
+      dispatchSkillsToRedux(newLines);
       
       toast(`Line ${lineIndex + 1} updated`, {
         description: "Skills suggestion applied"
@@ -181,6 +178,7 @@ function Skills({ resumeInfo }) {
     }
     
     setSkillLines(newLines);
+    dispatchSkillsToRedux(newLines);
     setAiSuggestions(null);
     
     toast("All suggestions applied", {
