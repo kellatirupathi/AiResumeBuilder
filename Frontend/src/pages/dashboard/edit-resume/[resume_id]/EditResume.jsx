@@ -6,12 +6,14 @@ import { toast } from "sonner";
 import ResumeForm from "../components/ResumeForm";
 import PreviewPage from "../components/PreviewPage";
 import AIReviewPanel from "../components/AIReviewModal";
-import { getResumeData, updateThisResume } from "@/Services/resumeAPI";
+import ResumePublicLinkButton from "../components/ResumePublicLinkButton";
+import { updateThisResume } from "@/Services/resumeAPI";
 import { getProfile } from "@/Services/login";
 import { addResumeData } from "@/features/resume/resumeFeatures";
 import { Button } from "@/components/ui/button";
 import ImportConfirmationDialog from "@/components/custom/ImportConfirmationDialog";
 import LoadingSpinner from "@/components/custom/LoadingSpinner";
+import { useResumeQuery } from "@/hooks/useAppQueryData";
 
 const stripResumeMeta = (value = {}) => {
   const cleanedValue = { ...value };
@@ -35,33 +37,51 @@ export function EditResume() {
   const dispatch = useDispatch();
   const resumeInfo = useSelector((state) => state.editResume.resumeData);
   const containerRef = useRef(null);
+  const hydratedResumeIdRef = useRef(null);
   const [isResizing, setIsResizing] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(50);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [isAIReviewOpen, setIsAIReviewOpen] = useState(false);
+  const cachedResumeInfo =
+    resumeInfo && typeof resumeInfo === "object" && resumeInfo?._id === resume_id
+      ? resumeInfo
+      : null;
+  const resumeQuery = useResumeQuery(resume_id, {
+    initialData: cachedResumeInfo || undefined,
+  });
+  // Show loading until Redux holds the correct resume for this URL.
+  // cachedResumeInfo is non-null only when resumeInfo._id === resume_id.
+  // Without this, sections like Skills render empty on navigation because the
+  // useEffect that dispatches resumeQuery.data to Redux runs after the first render.
+  const isLoading = !cachedResumeInfo && !resumeQuery.isError;
 
   useEffect(() => {
-    const fetchAndSetResumeData = async () => {
-      try {
-        window.scrollTo(0, 0);
-        const response = await getResumeData(resume_id);
-        dispatch(addResumeData(response.data));
-      } catch (error) {
-        console.error("Error fetching resume data:", error);
-        toast.error("Failed to load resume", {
-          description: "Please check the URL or try again later.",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    setIsLoading(true);
+    window.scrollTo(0, 0);
     setIsAIReviewOpen(false);
-    fetchAndSetResumeData();
-  }, [dispatch, resume_id]);
+    hydratedResumeIdRef.current =
+      cachedResumeInfo?._id === resume_id ? resume_id : null;
+  }, [cachedResumeInfo?._id, resume_id]);
+
+  useEffect(() => {
+    if (!resumeQuery.data || hydratedResumeIdRef.current === resume_id) {
+      return;
+    }
+
+    dispatch(addResumeData(resumeQuery.data));
+    hydratedResumeIdRef.current = resume_id;
+  }, [dispatch, resumeQuery.data, resume_id]);
+
+  useEffect(() => {
+    if (!resumeQuery.isError) {
+      return;
+    }
+
+    toast.error("Failed to load resume", {
+      description:
+        resumeQuery.error?.message || "Please check the URL or try again later.",
+    });
+  }, [resumeQuery.error?.message, resumeQuery.isError]);
 
   useEffect(() => {
     if (!isResizing) {
@@ -149,7 +169,10 @@ export function EditResume() {
       });
     } catch (error) {
       toast.error("Failed to import profile", { description: error.message });
-      getResumeData(resume_id).then((response) => dispatch(addResumeData(response.data)));
+      const refreshedResume = await resumeQuery.refetch();
+      if (refreshedResume.data) {
+        dispatch(addResumeData(refreshedResume.data));
+      }
     } finally {
       setIsImporting(false);
       toast.dismiss();
@@ -209,8 +232,18 @@ export function EditResume() {
           </p>
         )}
 
-        {/* Right spacer to balance layout */}
-        <div className="hidden md:block w-[160px]" />
+        <div className="flex items-center gap-2">
+          <ResumePublicLinkButton
+            resumeId={resume_id}
+            resumeInfo={resumeInfo}
+            shareClassName="gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+            generateClassName={`gap-1.5 ${
+              resumeInfo?.driveOutOfSync
+                ? "border-amber-300 text-amber-700 hover:bg-amber-50"
+                : "border-gray-200 text-gray-700 hover:bg-gray-50"
+            }`}
+          />
+        </div>
       </header>
 
       {/* ── Main Split Area ── */}

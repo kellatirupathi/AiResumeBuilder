@@ -1,5 +1,13 @@
 import axios from "axios";
 import { API_BASE_URL } from "@/config/config";
+import {
+  removeResumeFromCaches,
+  resolveApiData,
+  setResumeListCache,
+  upsertResumeInCaches,
+} from "@/lib/queryCacheUtils";
+import { queryClient } from "@/lib/queryClient";
+import { queryKeys } from "@/lib/queryKeys";
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -20,6 +28,12 @@ const createNewResume = async (data) => {
       "resumes/createResume",
       resumeData
     );
+    const createdResume = resolveApiData(response.data);
+    if (createdResume) {
+      upsertResumeInCaches(createdResume);
+    } else {
+      queryClient.invalidateQueries({ queryKey: queryKeys.resumes.all });
+    }
     return response.data;
   } catch (error) {
     throw new Error(
@@ -31,6 +45,7 @@ const createNewResume = async (data) => {
 const getAllResumeData = async () => {
   try {
     const response = await axiosInstance.get("resumes/getAllResume");
+    setResumeListCache(resolveApiData(response.data) || []);
     return response.data;
   } catch (error) {
     throw new Error(
@@ -58,6 +73,13 @@ const updateThisResume = async (resumeID, data) => {
       `resumes/updateResume?id=${resumeID}`,
       data.data
     );
+    const updatedResume = resolveApiData(response.data);
+    if (updatedResume) {
+      upsertResumeInCaches(updatedResume);
+    } else {
+      queryClient.invalidateQueries({ queryKey: queryKeys.resumes.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.resumes.detail(resumeID) });
+    }
     return response.data;
   } catch (error) {
     throw new Error(
@@ -71,6 +93,7 @@ const deleteThisResume = async (resumeID) => {
     const response = await axiosInstance.delete(
       `resumes/removeResume?id=${resumeID}`
     );
+    removeResumeFromCaches(resumeID);
     return response.data;
   } catch (error) {
     throw new Error(
@@ -152,9 +175,45 @@ const trackPublicResumeView = async (resumeID) => {
   }
 };
 
+export const generateResumeDriveLink = async (resumeId) => {
+  try {
+    const response = await axiosInstance.post(`resumes/generateDriveLink?id=${resumeId}`);
+    const googleDriveLink = resolveApiData(response.data)?.googleDriveLink;
+    if (googleDriveLink) {
+      queryClient.setQueryData(queryKeys.resumes.detail(resumeId), (previous) =>
+        previous
+          ? {
+              ...previous,
+              googleDriveLink,
+              driveOutOfSync: false,
+            }
+          : previous
+      );
+      queryClient.setQueryData(queryKeys.resumes.list, (previous = []) =>
+        (Array.isArray(previous) ? previous : []).map((resume) =>
+          resume?._id === resumeId
+            ? { ...resume, googleDriveLink, driveOutOfSync: false }
+            : resume
+        )
+      );
+    }
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error?.response?.data?.message || error?.message || "Failed to generate drive link"
+    );
+  }
+};
+
 export const cloneResume = async (resumeId, newTitle) => {
   try {
     const response = await axiosInstance.post(`resumes/${resumeId}/clone`, { newTitle });
+    const clonedResume = resolveApiData(response.data);
+    if (clonedResume) {
+      upsertResumeInCaches(clonedResume);
+    } else {
+      queryClient.invalidateQueries({ queryKey: queryKeys.resumes.all });
+    }
     return response.data;
   } catch (error) {
     throw new Error(
@@ -177,6 +236,13 @@ export const saveResumeVersion = async (resumeId) => {
 export const revertToVersion = async (resumeId, versionId) => {
   try {
     const response = await axiosInstance.put(`resumes/${resumeId}/revert/${versionId}`);
+    const revertedResume = resolveApiData(response.data);
+    if (revertedResume) {
+      upsertResumeInCaches(revertedResume);
+    } else {
+      queryClient.invalidateQueries({ queryKey: queryKeys.resumes.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.resumes.detail(resumeId) });
+    }
     return response.data;
   } catch (error) {
     throw new Error(

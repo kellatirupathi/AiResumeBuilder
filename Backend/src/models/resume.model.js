@@ -98,6 +98,7 @@ const resumeSchema = new mongoose.Schema({
   // --- NEW FIELDS ---
   googleDriveFileId: { type: String, default: null },
   googleDriveLink: { type: String, default: null },
+  driveOutOfSync: { type: Boolean, default: false },
   // --- END OF NEW FIELDS ---
 });
 

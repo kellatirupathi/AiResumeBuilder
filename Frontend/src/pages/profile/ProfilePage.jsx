@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from "react-redux";
 import { Button } from '@/components/ui/button';
-import { 
+import {
   LoaderCircle,
   Save,
   ArrowLeft,
@@ -26,9 +26,11 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { getProfile, updateProfile, generatePortfolio } from "@/Services/login";
+import { updateProfile, generatePortfolio } from "@/Services/login";
 import { addUserData } from "@/features/user/userFeatures";
 import SelectPortfolioTemplateModal from './components/SelectPortfolioTemplateModal'; // <-- NEW IMPORT
+import { useProfileQuery } from "@/hooks/useAppQueryData";
+import { normalizeProfileData } from "@/lib/queryCacheUtils";
 
 // Components
 import ProfilePersonalDetails from './components/ProfilePersonalDetails';
@@ -45,8 +47,19 @@ function ProfilePage() {
     const dispatch = useDispatch();
     
     const profileData = useSelector(state => state.editUser.userData);
-    
-    const [isLoading, setIsLoading] = useState(true);
+    const normalizedReduxProfile =
+      profileData && typeof profileData === "object"
+        ? normalizeProfileData(profileData)
+        : null;
+    // hasProfileData is true only when Redux holds a full profile document from the server.
+    // A full profile always has '_id' (MongoDB ObjectId).
+    // Minimal session data (from login: { id, email, fullName, ... }) does NOT have '_id'.
+    // This prevents the form from rendering with empty fields while the profile fetch runs.
+    const hasProfileData = Boolean(
+      normalizedReduxProfile && '_id' in normalizedReduxProfile
+    );
+    const profileQuery = useProfileQuery();
+    const isLoading = profileQuery.isPending && !hasProfileData;
     const [isSaving, setIsSaving] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [expandedSections, setExpandedSections] = useState({});
@@ -55,6 +68,7 @@ function ProfilePage() {
     const [isDirty, setIsDirty] = useState(false);
     const lastSavedData = useRef(null);
     const isInitialLoad = useRef(true);
+    const sectionsInitialized = useRef(false);
 
     const sections = [
       { id: 'details', name: 'Personal Details', icon: User, component: ProfilePersonalDetails },
@@ -67,47 +81,70 @@ function ProfilePage() {
       { id: 'add_section', name: 'Additional Sections', icon: PlusCircle, component: ProfileAddSection },
     ];
 
-    useEffect(() => {
-        setIsLoading(true);
-        getProfile()
-            .then(response => {
-                const fetchedData = response.data || {};
-                const profileWithDefaults = {
-                  ...fetchedData,
-                  experience: fetchedData.experience || [],
-                  projects: fetchedData.projects || [],
-                  education: fetchedData.education || [],
-                  skills: fetchedData.skills || [],
-                  certifications: fetchedData.certifications || [],
-                  additionalSections: fetchedData.additionalSections || []
-                };
-                dispatch(addUserData(profileWithDefaults));
-                lastSavedData.current = JSON.stringify(profileWithDefaults);
-                isInitialLoad.current = false;
+    const initializeExpandedSections = () => {
+      if (sectionsInitialized.current) {
+        return;
+      }
 
-                const initialExpandedSections = {};
-                sections.forEach(section => {
-                  initialExpandedSections[section.id] = true;
-                });
-                setExpandedSections(initialExpandedSections);
-            })
-            .catch(error => toast.error("Failed to load profile.", { description: error.message }))
-            .finally(() => setIsLoading(false));
-    }, [dispatch]);
+      const initialExpandedSections = {};
+      sections.forEach(section => {
+        initialExpandedSections[section.id] = true;
+      });
+      setExpandedSections(initialExpandedSections);
+      sectionsInitialized.current = true;
+    };
+
+    useEffect(() => {
+      if (!hasProfileData || lastSavedData.current) {
+        return;
+      }
+
+      lastSavedData.current = JSON.stringify(normalizedReduxProfile);
+      isInitialLoad.current = false;
+      initializeExpandedSections();
+    }, [hasProfileData, normalizedReduxProfile]);
+
+    useEffect(() => {
+      if (!profileQuery.data || isDirty) {
+        return;
+      }
+
+      const fetchedProfile = normalizeProfileData(profileQuery.data);
+      const serializedProfile = JSON.stringify(fetchedProfile);
+
+      if (serializedProfile !== lastSavedData.current || !hasProfileData) {
+        dispatch(addUserData(fetchedProfile));
+      }
+
+      lastSavedData.current = serializedProfile;
+      isInitialLoad.current = false;
+      initializeExpandedSections();
+    }, [dispatch, hasProfileData, isDirty, profileQuery.data]);
+
+    useEffect(() => {
+      if (!profileQuery.isError) {
+        return;
+      }
+
+      toast.error("Failed to load profile.", {
+        description: profileQuery.error?.message,
+      });
+    }, [profileQuery.error?.message, profileQuery.isError]);
 
     // Track unsaved changes
     useEffect(() => {
         if (isInitialLoad.current) return;
-        const currentData = JSON.stringify(profileData);
+        const currentData = JSON.stringify(normalizedReduxProfile || {});
         setIsDirty(currentData !== lastSavedData.current);
-    }, [profileData]);
+    }, [normalizedReduxProfile]);
 
     const handleSaveProfile = async () => {
         setIsSaving(true);
         try {
-            const response = await updateProfile(profileData);
-            dispatch(addUserData(response.data));
-            lastSavedData.current = JSON.stringify(response.data);
+            const response = await updateProfile(normalizedReduxProfile || {});
+            const savedProfile = normalizeProfileData(response.data || {});
+            dispatch(addUserData(savedProfile));
+            lastSavedData.current = JSON.stringify(savedProfile);
             setIsDirty(false);
             toast.success("Profile saved successfully!");
         } catch (error) {
@@ -123,7 +160,10 @@ function ProfilePage() {
         const toastId = toast.loading("Generating your portfolio... This might take a moment.");
         try {
             const response = await generatePortfolio(templateName); // <-- PASS templateName
-            dispatch(addUserData(response.data));
+            const updatedProfile = normalizeProfileData(response.data || {});
+            dispatch(addUserData(updatedProfile));
+            lastSavedData.current = JSON.stringify(updatedProfile);
+            setIsDirty(false);
             toast.success("Portfolio Generated & Saved! and Wait for 1-2 mins to build your Portfolio", {
                 id: toastId,
                 description: "Your new portfolio is live. The link has been updated in your portfolio.",
@@ -136,16 +176,16 @@ function ProfilePage() {
     };
     
     const isSectionComplete = (sectionId) => {
-      if (!profileData) return false;
+      if (!normalizedReduxProfile) return false;
       switch (sectionId) {
-        case 'details': return !!profileData.firstName && !!profileData.email;
-        case 'summary': return !!profileData.summary?.trim();
-        case 'experience': return profileData.experience?.length > 0;
-        case 'projects': return profileData.projects?.length > 0;
-        case 'education': return profileData.education?.length > 0;
-        case 'skills': return profileData.skills?.length > 0;
-        case 'certifications': return profileData.certifications?.length > 0;
-        case 'add_section': return profileData.additionalSections?.length > 0;
+        case 'details': return !!normalizedReduxProfile.firstName && !!normalizedReduxProfile.email;
+        case 'summary': return !!normalizedReduxProfile.summary?.trim();
+        case 'experience': return normalizedReduxProfile.experience?.length > 0;
+        case 'projects': return normalizedReduxProfile.projects?.length > 0;
+        case 'education': return normalizedReduxProfile.education?.length > 0;
+        case 'skills': return normalizedReduxProfile.skills?.length > 0;
+        case 'certifications': return normalizedReduxProfile.certifications?.length > 0;
+        case 'add_section': return normalizedReduxProfile.additionalSections?.length > 0;
         default: return false;
       }
     };

@@ -35,6 +35,8 @@ import UserNotificationsPage from "./pages/notifications/UserNotificationsPage.j
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { VITE_GOOGLE_CLIENT_ID } from './config/config.js';
 import { HelmetProvider } from 'react-helmet-async';
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { queryClient, queryPersistOptions } from "./lib/queryClient.js";
 
 const router = createBrowserRouter([
   {
@@ -127,9 +129,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <GoogleOAuthProvider clientId={VITE_GOOGLE_CLIENT_ID}>
       <Provider store={resumeStore}>
         <PersistGate loading={null} persistor={persistor}>
-          <React.StrictMode>
-            <RouterProvider router={router} />
-          </React.StrictMode>
+          <PersistQueryClientProvider client={queryClient} persistOptions={queryPersistOptions}>
+            <React.StrictMode>
+              <RouterProvider router={router} />
+            </React.StrictMode>
+          </PersistQueryClientProvider>
         </PersistGate>
       </Provider>
     </GoogleOAuthProvider>

@@ -1,8 +1,10 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getResumeData, downloadResumePDF } from "@/Services/resumeAPI";
+import { downloadResumePDF } from "@/Services/resumeAPI";
 import ResumePreview from "../../edit-resume/components/PreviewPage";
-import { useDispatch } from "react-redux";
+import ResumePublicLinkButton from "../../edit-resume/components/ResumePublicLinkButton";
+import ResumeDesignPanel from "../../edit-resume/components/ResumeDesignPanel";
+import { useDispatch, useSelector } from "react-redux";
 import { addResumeData } from "@/features/resume/resumeFeatures";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,72 +13,69 @@ import {
   ArrowLeft,
   CheckCircle,
   Edit,
-  Home,
-  Share2,
-  ChevronRight,
   X,
   Maximize2,
   FileText,
-  Clock,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useResumeQuery } from "@/hooks/useAppQueryData";
 
 function ViewResume() {
-  const [resumeInfo, setResumeInfo] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
   const [fullscreenPreview, setFullscreenPreview] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadingState, setDownloadingState] = useState(false);
 
-  const resumeRef = useRef(null);
   const { resume_id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const reduxResumeInfo = useSelector((state) => state.editResume.resumeData);
+  const cachedResumeInfo =
+    reduxResumeInfo &&
+    typeof reduxResumeInfo === "object" &&
+    reduxResumeInfo?._id === resume_id
+      ? reduxResumeInfo
+      : null;
+  const [resumeInfo, setResumeInfo] = useState(cachedResumeInfo || {});
+  const resumeQuery = useResumeQuery(resume_id, {
+    initialData: cachedResumeInfo || undefined,
+  });
+  const isLoading =
+    resumeQuery.isPending && !cachedResumeInfo && !resumeQuery.data;
+  const activeResumeInfo =
+    resumeInfo?._id === resume_id
+      ? resumeInfo
+      : cachedResumeInfo || resumeQuery.data || {};
 
   useEffect(() => {
-    fetchResumeInfo();
-  }, []);
+    setResumeInfo(cachedResumeInfo || {});
+  }, [cachedResumeInfo, resume_id]);
 
-  const fetchResumeInfo = async () => {
-    setIsLoading(true);
-    try {
-      const response = await getResumeData(resume_id);
-      const resumeData = {
-        ...response.data,
-        template: response.data.template || "modern",
-      };
-      dispatch(addResumeData(resumeData));
-      setResumeInfo(resumeData);
-    } catch (error) {
-      toast("Error loading resume", {
-        description: "Please try again later",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (!resumeQuery.data) {
+      return;
     }
-  };
 
-  const handleShareLink = () => {
-    if (resumeInfo && resumeInfo.googleDriveLink) {
-      navigator.clipboard
-        .writeText(resumeInfo.googleDriveLink)
-        .then(() => {
-          toast.success("Resume link copied to clipboard!", {
-            description: "Anyone with the link can view your resume on Google Drive.",
-          });
-        })
-        .catch(() => {
-          toast.error("Failed to copy link", { description: "Please try again manually." });
-        });
-    } else {
-      toast.info("Link not ready yet", {
-        description:
-          "The shareable link for this resume is still being generated. Please wait a moment and try again.",
-      });
+    const nextResumeInfo = {
+      ...resumeQuery.data,
+      template: resumeQuery.data.template || "modern",
+    };
+
+    dispatch(addResumeData(nextResumeInfo));
+    setResumeInfo((current) =>
+      current?._id === resume_id ? { ...current, ...nextResumeInfo } : nextResumeInfo
+    );
+  }, [dispatch, resumeQuery.data, resume_id]);
+
+  useEffect(() => {
+    if (!resumeQuery.isError) {
+      return;
     }
-  };
+
+    toast.error("Error loading resume", {
+      description: resumeQuery.error?.message || "Please try again later",
+    });
+  }, [resumeQuery.error?.message, resumeQuery.isError]);
 
   const handleDownloadPDF = async () => {
     try {
@@ -89,6 +88,7 @@ function ViewResume() {
             clearInterval(progressInterval);
             return 90;
           }
+
           return prev + 10;
         });
       }, 300);
@@ -117,7 +117,6 @@ function ViewResume() {
 
   return (
     <>
-      {/* ── Main view ── */}
       <AnimatePresence>
         {!fullscreenPreview && (
           <motion.div
@@ -125,30 +124,29 @@ function ViewResume() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="min-h-screen bg-gray-50 flex flex-col"
+            className="flex h-screen overflow-hidden flex-col bg-gray-50"
           >
-            {/* Top Bar */}
-            <div className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-                {/* Left: nav */}
-                <div className="flex items-center gap-2">
+            <div className="sticky top-0 z-20 border-b border-gray-200 bg-white shadow-sm">
+              <div className="mx-auto flex h-14 w-full max-w-[1800px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+                <div className="flex min-w-0 items-center gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => navigate("/dashboard")}
-                    className="text-gray-600 hover:text-gray-900 gap-1.5"
+                    className="gap-1.5 text-gray-600 hover:text-gray-900"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Dashboard
                   </Button>
                   <span className="text-gray-300">/</span>
-                  <span className="text-sm text-gray-500 flex items-center gap-1.5">
-                    <FileText className="h-4 w-4" />
-                    {resumeInfo?.title || "Resume Preview"}
+                  <span className="flex min-w-0 items-center gap-1.5 truncate text-sm text-gray-500">
+                    <FileText className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">
+                      {activeResumeInfo?.title || "Resume Preview"}
+                    </span>
                   </span>
                 </div>
 
-                {/* Right: actions */}
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
@@ -159,20 +157,24 @@ function ViewResume() {
                     <Edit className="h-4 w-4" />
                     Edit
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleShareLink}
-                    className="gap-1.5 text-gray-700"
-                  >
-                    <Share2 className="h-4 w-4" />
-                    Share
-                  </Button>
+
+                  <ResumePublicLinkButton
+                    resumeId={resume_id}
+                    resumeInfo={activeResumeInfo}
+                    onResumeInfoChange={setResumeInfo}
+                    shareClassName="gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                    generateClassName={`gap-1.5 ${
+                      activeResumeInfo?.driveOutOfSync
+                        ? "border-amber-300 text-amber-700 hover:bg-amber-50"
+                        : "text-gray-700"
+                    }`}
+                  />
+
                   <Button
                     size="sm"
                     onClick={handleDownloadPDF}
                     disabled={downloadingState}
-                    className="gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white"
+                    className="gap-1.5 bg-indigo-600 text-white hover:bg-indigo-700"
                   >
                     {downloadingState ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -185,48 +187,66 @@ function ViewResume() {
               </div>
             </div>
 
-            {/* Body */}
-            <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
-              <div className="flex flex-col lg:flex-row gap-8 items-start">
-
-                {/* Resume preview */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.1 }}
-                  className="flex-1 min-w-0"
+            <div className="mx-auto flex-1 w-full max-w-[1800px] overflow-hidden">
+              <div className="grid h-full items-stretch gap-0 lg:grid-cols-[minmax(0,40%),minmax(0,60%)]">
+                <motion.aside
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="h-full overflow-hidden"
                 >
                   {isLoading ? (
-                    <div className="bg-white rounded-2xl shadow border border-gray-200 flex items-center justify-center min-h-[600px]">
-                      <div className="flex flex-col items-center gap-4">
-                        <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                        <p className="text-gray-500 text-sm">Loading resume...</p>
+                    <div className="flex h-full items-center justify-center border-r border-gray-200 bg-white p-6">
+                      <div className="flex items-center gap-3 text-sm text-gray-500">
+                        <div className="h-5 w-5 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+                        Loading design controls...
                       </div>
                     </div>
                   ) : (
-                    <div className="relative group bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
-                      {/* Ready badge */}
-                      <div className="absolute top-3 right-3 z-10">
-                        <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-medium px-2.5 py-1 rounded-full">
-                          <CheckCircle className="h-3 w-3" /> Ready to Apply
+                    <ResumeDesignPanel
+                      resumeId={resume_id}
+                      resumeInfo={activeResumeInfo}
+                      onResumeInfoChange={setResumeInfo}
+                      defaultTab="template"
+                    />
+                  )}
+                </motion.aside>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.45, delay: 0.05 }}
+                  className="h-full min-w-0 overflow-y-auto bg-gray-50 p-2 sm:p-3"
+                >
+                  {isLoading ? (
+                    <div className="flex min-h-full items-center justify-center rounded-2xl bg-white">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="h-12 w-12 rounded-full border-4 border-indigo-500 border-t-transparent animate-spin" />
+                        <p className="text-sm text-gray-500">Loading resume preview...</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative group min-h-full overflow-hidden rounded-2xl bg-white">
+                      <div className="absolute right-3 top-3 z-10">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                          <CheckCircle className="h-3 w-3" />
+                          Ready to Apply
                         </span>
                       </div>
 
-                      {/* Fullscreen button on hover */}
-                      <div className="absolute bottom-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <div className="absolute bottom-4 right-4 z-10 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                         <Button
                           size="sm"
                           onClick={() => setFullscreenPreview(true)}
-                          className="rounded-full h-9 w-9 p-0 bg-white shadow-md border border-gray-200 text-gray-600 hover:bg-gray-50"
+                          className="h-9 w-9 rounded-full border border-gray-200 bg-white p-0 text-gray-600 shadow-md hover:bg-gray-50"
                         >
                           <Maximize2 className="h-4 w-4" />
                         </Button>
                       </div>
 
                       <div
-                        ref={resumeRef}
                         id="resume-container"
-                        className="mx-auto bg-white overflow-hidden"
+                        className="mx-auto overflow-hidden bg-white"
                         style={{
                           width: "290mm",
                           maxWidth: "100%",
@@ -238,98 +258,12 @@ function ViewResume() {
                     </div>
                   )}
                 </motion.div>
-
-                {/* Sidebar */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  className="lg:w-72 w-full flex-shrink-0 space-y-4"
-                >
-                  {/* Download card */}
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-4">Resume Actions</h3>
-
-                    {downloadingState ? (
-                      <div className="space-y-2">
-                        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${downloadProgress}%` }}
-                            className="h-full bg-indigo-500 rounded-full"
-                          />
-                        </div>
-                        <div className="flex items-center justify-between text-xs text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" /> Processing PDF...
-                          </span>
-                          <span className="font-medium text-indigo-600">{downloadProgress}%</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <Button
-                          onClick={handleDownloadPDF}
-                          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white gap-2"
-                        >
-                          <Download className="h-4 w-4" /> Download PDF
-                        </Button>
-                        <Button
-                          onClick={handleShareLink}
-                          variant="outline"
-                          className="w-full gap-2 text-gray-700"
-                        >
-                          <Share2 className="h-4 w-4" /> Share Resume
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Navigation card */}
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Navigation</h3>
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => navigate(`/dashboard/edit-resume/${resume_id}`)}
-                        className="w-full flex items-center justify-between p-3 rounded-xl border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 transition-all group text-left"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-lg bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                            <Edit className="h-4 w-4 text-indigo-600" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-800">Return to Editor</p>
-                            <p className="text-xs text-gray-400">Edit your resume content</p>
-                          </div>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-indigo-500 transition-colors" />
-                      </button>
-
-                      <button
-                        onClick={() => navigate("/dashboard")}
-                        className="w-full flex items-center justify-between p-3 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all group text-left"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center group-hover:bg-gray-200 transition-colors">
-                            <Home className="h-4 w-4 text-gray-600" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-800">Back to Dashboard</p>
-                            <p className="text-xs text-gray-400">View all your resumes</p>
-                          </div>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── Fullscreen preview ── */}
       <AnimatePresence>
         {fullscreenPreview && (
           <motion.div
@@ -337,48 +271,59 @@ function ViewResume() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-gray-900/95 flex flex-col"
+            className="fixed inset-0 z-50 flex flex-col bg-gray-900/95"
           >
-            {/* Fullscreen top bar */}
-            <div className="flex items-center justify-between px-6 py-3 bg-gray-900 border-b border-white/10 flex-shrink-0">
-              <span className="text-white text-sm font-medium flex items-center gap-2">
+            <div className="flex flex-shrink-0 items-center justify-between border-b border-white/10 bg-gray-900 px-6 py-3">
+              <span className="flex items-center gap-2 text-sm font-medium text-white">
                 <CheckCircle className="h-4 w-4 text-emerald-400" />
                 Full Preview
               </span>
+
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleShareLink}
-                  className="border-white/20 bg-white/10 text-white hover:bg-white/20 gap-1.5"
-                >
-                  <Share2 className="h-4 w-4" /> Share
-                </Button>
+                <ResumePublicLinkButton
+                  resumeId={resume_id}
+                  resumeInfo={activeResumeInfo}
+                  onResumeInfoChange={setResumeInfo}
+                  shareClassName="gap-1.5 border-emerald-400/50 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"
+                  generateClassName={`gap-1.5 ${
+                    activeResumeInfo?.driveOutOfSync
+                      ? "border-amber-400/50 bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
+                      : "border-white/20 bg-white/10 text-white hover:bg-white/20"
+                  }`}
+                />
+
                 <Button
                   size="sm"
                   onClick={handleDownloadPDF}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5"
+                  disabled={downloadingState}
+                  className="gap-1.5 bg-indigo-600 text-white hover:bg-indigo-700"
                 >
-                  <Download className="h-4 w-4" /> Download PDF
+                  {downloadingState ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                  {downloadingState ? `${downloadProgress}%` : "Download PDF"}
                 </Button>
+
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setFullscreenPreview(false)}
-                  className="text-white hover:bg-white/10 gap-1.5"
+                  className="gap-1.5 text-white hover:bg-white/10"
                 >
-                  <X className="h-4 w-4" /> Close
+                  <X className="h-4 w-4" />
+                  Close
                 </Button>
               </div>
             </div>
 
-            {/* Fullscreen resume */}
-            <div className="flex-1 overflow-auto flex items-start justify-center p-8">
-              <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
+            <div className="flex flex-1 items-start justify-center overflow-auto p-8">
+              <div className="overflow-hidden rounded-xl bg-white shadow-2xl">
                 <div
                   id="fullscreen-resume"
                   className="print-area mx-auto"
-                  style={{ width: "250mm", padding: 0, boxSizing: "border-box" }}
+                  style={{ width: "250mm", maxWidth: "100%", boxSizing: "border-box" }}
                 >
                   <ResumePreview />
                 </div>

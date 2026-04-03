@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { AIChatSession } from "@/Services/AiModel"; // AI service
-import { getResumeData } from "@/Services/resumeAPI"; // Import the API function to get resume data
+import { useResumeQuery } from "@/hooks/useAppQueryData";
 
 // ATS evaluation prompt
 const ATS_PROMPT = `
@@ -111,10 +111,14 @@ function ATSScoreChecker({ isOpen, onClose, resumes, darkMode }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [copySuccess, setCopySuccess] = useState(false);
-  const [resumeData, setResumeData] = useState(null);
-  const [isLoadingResume, setIsLoadingResume] = useState(false);
   const [analysisStage, setAnalysisStage] = useState(0);
   const [animationProgress, setAnimationProgress] = useState(0);
+  const resumeQuery = useResumeQuery(selectedResumeId, {
+    enabled: isOpen && Boolean(selectedResumeId),
+  });
+  const resumeData = resumeQuery.data || null;
+  const isLoadingResume =
+    resumeQuery.isPending && Boolean(selectedResumeId) && !resumeQuery.data;
   
   // Animation stages
   const analyzeStages = [
@@ -153,6 +157,16 @@ function ATSScoreChecker({ isOpen, onClose, resumes, darkMode }) {
       return () => clearInterval(interval);
     }
   }, [isAnalyzing]);
+
+  useEffect(() => {
+    if (!resumeQuery.isError) {
+      return;
+    }
+
+    toast.error("Failed to load resume data", {
+      description: resumeQuery.error?.message || "Please try again later",
+    });
+  }, [resumeQuery.error?.message, resumeQuery.isError]);
   
   // Reset state when modal closes
   const handleClose = () => {
@@ -160,26 +174,13 @@ function ATSScoreChecker({ isOpen, onClose, resumes, darkMode }) {
     setJobDescription("");
     setAnalysisResult(null);
     setIsAnalyzing(false);
-    setResumeData(null);
     setAnalysisStage(0);
     setAnimationProgress(0);
     onClose();
   };
   
-  // Fetch resume data when a resume is selected
-  const handleResumeSelect = async (resumeId) => {
+  const handleResumeSelect = (resumeId) => {
     setSelectedResumeId(resumeId);
-    setIsLoadingResume(true);
-    try {
-      const response = await getResumeData(resumeId);
-      setResumeData(response.data);
-    } catch (error) {
-      toast.error("Failed to load resume data", {
-        description: error.message || "Please try again later"
-      });
-    } finally {
-      setIsLoadingResume(false);
-    }
   };
   
   const handleJobDescriptionChange = (e) => {

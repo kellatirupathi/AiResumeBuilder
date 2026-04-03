@@ -8,17 +8,16 @@ import heroSnapshot4 from "@/assets/heroSnapshot4.png";
 import { useNavigate } from "react-router-dom";
 import { FaArrowRight, FaRegLightbulb, FaRegFileAlt, FaRegStar, FaRegClock, FaRegChartBar, FaCheck, FaPlay, FaExpand, FaVideo } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
-import { getSessionUser } from "../../Services/login.js";
 import { useDispatch, useSelector } from "react-redux";
 import { addUserData } from "@/features/user/userFeatures.js";
 import { motion } from "framer-motion";
 import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
+import { useSessionUserQuery } from "@/hooks/useAppQueryData";
 
 function HomePage() {
   const user = useSelector((state) => state.editUser.userData);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [isLoading, setIsLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imagesLoaded, setImagesLoaded] = useState(false);
@@ -35,6 +34,8 @@ function HomePage() {
     heroSnapshot3,
     heroSnapshot4
   ].filter(img => img);
+
+  const sessionQuery = useSessionUserQuery();
 
   useEffect(() => {
     const preloadImages = async () => {
@@ -64,19 +65,15 @@ function HomePage() {
       document.documentElement.classList.remove("dark");
     }
 
-    const fetchResponse = async () => {
-      setIsLoading(true);
-      try {
-        const response = await getSessionUser();
-        dispatch(addUserData(response.data || ""));
-      } catch (error) {
-        dispatch(addUserData(""));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchResponse();
   }, [dispatch]);
+
+  useEffect(() => {
+    if (sessionQuery.data) {
+      dispatch(addUserData(sessionQuery.data));
+    } else if (sessionQuery.isSuccess) {
+      dispatch(addUserData(""));
+    }
+  }, [dispatch, sessionQuery.data, sessionQuery.isSuccess]);
 
   useEffect(() => {
     if (!imagesLoaded || heroImages.length === 0) return;

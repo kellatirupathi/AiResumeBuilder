@@ -46,9 +46,6 @@ const createResume = async (req, res) => {
       skills: [],
       projects: [],
     });
-    
-    // Fire-and-forget the PDF generation and upload process
-    generateAndUpload(resume);
 
     return res
       .status(201)
@@ -116,9 +113,15 @@ const updateResume = async (req, res) => {
 
   try {
     console.log("Database update request started");
+    const existing = await Resume.findOne({ _id: id, user: req.user._id });
+    const updatePayload = { ...req.body };
+    if (existing?.googleDriveLink) {
+      updatePayload.driveOutOfSync = true;
+    }
+
     const updatedResume = await Resume.findOneAndUpdate(
       { _id: id, user: req.user._id },
-      { $set: req.body, $currentDate: { updatedAt: true } },
+      { $set: updatePayload, $currentDate: { updatedAt: true } },
       { new: true }
     );
 
@@ -128,10 +131,7 @@ const updateResume = async (req, res) => {
         .status(404)
         .json(new ApiResponse(404, null, "Resume not found or unauthorized"));
     }
-    
-    // Fire-and-forget the PDF generation and upload process
-    generateAndUpload(updatedResume);
-    
+
     console.log("Resume updated successfully:");
 
     return res
@@ -220,6 +220,23 @@ const trackResumeView = async (req, res) => {
   } catch(error) {
     console.error("Error tracking resume view:", error);
     return res.status(200).json(new ApiResponse(200, null, "View tracking failed on server."));
+  }
+};
+
+const generateDriveLink = async (req, res) => {
+  const { id } = req.query;
+  try {
+    const resume = await Resume.findOne({ _id: id, user: req.user._id });
+    if (!resume) {
+      return res.status(404).json(new ApiError(404, "Resume not found or unauthorized."));
+    }
+    await generateAndUploadResumeDriveLink(resume);
+    await Resume.findByIdAndUpdate(id, { driveOutOfSync: false });
+    const updatedResume = await Resume.findById(id);
+    return res.status(200).json(new ApiResponse(200, { googleDriveLink: updatedResume.googleDriveLink, driveOutOfSync: false }, "Drive link generated successfully"));
+  } catch (error) {
+    console.error("Error generating drive link:", error);
+    return res.status(500).json(new ApiError(500, "Failed to generate drive link", [error.message], error.stack));
   }
 };
 
@@ -325,5 +342,6 @@ export {
   trackResumeView,
   cloneResume,
   saveVersion,
-  revertToVersion
+  revertToVersion,
+  generateDriveLink,
 };

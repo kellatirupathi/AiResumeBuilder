@@ -10,7 +10,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { getNotificationPreferences, updateNotificationPreferences } from "@/Services/login";
+import { updateNotificationPreferences } from "@/Services/login";
+import { useNotificationPreferencesQuery } from "@/hooks/useAppQueryData";
 
 const NOTIFICATION_TYPES = [
   {
@@ -70,26 +71,38 @@ function ToggleSwitch({ checked, onChange, disabled, onColor }) {
 
 export default function UserNotificationsPage() {
   const navigate = useNavigate();
-  const [prefs, setPrefs] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const preferencesQuery = useNotificationPreferencesQuery();
+  const [prefs, setPrefs] = useState(preferencesQuery.data || null);
   const [updating, setUpdating] = useState({});
+  const loading = preferencesQuery.isPending && !prefs;
 
   useEffect(() => {
-    getNotificationPreferences()
-      .then((res) => setPrefs(res.data))
-      .catch((err) => toast.error("Failed to load preferences", { description: err.message }))
-      .finally(() => setLoading(false));
-  }, []);
+    if (!preferencesQuery.data) {
+      return;
+    }
+
+    setPrefs(preferencesQuery.data);
+  }, [preferencesQuery.data]);
+
+  useEffect(() => {
+    if (!preferencesQuery.isError) {
+      return;
+    }
+
+    toast.error("Failed to load preferences", {
+      description: preferencesQuery.error?.message,
+    });
+  }, [preferencesQuery.error?.message, preferencesQuery.isError]);
 
   const handleToggle = async (key, value) => {
-    setPrefs((prev) => ({ ...prev, [key]: value }));
+    setPrefs((prev) => ({ ...(prev || {}), [key]: value }));
     setUpdating((prev) => ({ ...prev, [key]: true }));
     try {
       const res = await updateNotificationPreferences({ [key]: value });
-      setPrefs(res.data);
+      setPrefs(res.data || res);
       toast.success(value ? "Notifications turned on" : "Notifications turned off");
     } catch (err) {
-      setPrefs((prev) => ({ ...prev, [key]: !value }));
+      setPrefs((prev) => ({ ...(prev || {}), [key]: !value }));
       toast.error("Failed to save preference", { description: err.message });
     } finally {
       setUpdating((prev) => ({ ...prev, [key]: false }));
