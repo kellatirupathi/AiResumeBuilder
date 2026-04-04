@@ -33,7 +33,7 @@ function DatePicker({ name, value, onChange, min, isDisabled, label }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const containerRef = useRef(null);
   const dropdownRef = useRef(null);
-  const [dropdownPosition, setDropdownPosition] = useState('bottom');
+  const [dropdownCoords, setDropdownCoords] = useState({ top: 0, left: 0, width: 0 });
   
   // Parse the initial value (if any)
   const parseInitialValue = () => {
@@ -98,15 +98,16 @@ function DatePicker({ name, value, onChange, min, isDisabled, label }) {
   const calculateDropdownPosition = () => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
+      const dropdownHeight = 320;
+      const sideOffset = 6;
       const spaceBelow = window.innerHeight - rect.bottom;
-      const spaceAbove = rect.top;
-      
-      // If there's more space above than below, or if space below is less than 300px
-      if (spaceAbove > spaceBelow || spaceBelow < 300) {
-        setDropdownPosition('top');
-      } else {
-        setDropdownPosition('bottom');
-      }
+      const shouldOpenAbove = spaceBelow < dropdownHeight && rect.top > dropdownHeight;
+
+      setDropdownCoords({
+        top: shouldOpenAbove ? rect.top - dropdownHeight - sideOffset : rect.bottom + sideOffset,
+        left: rect.left,
+        width: rect.width,
+      });
     }
   };
 
@@ -173,7 +174,13 @@ function DatePicker({ name, value, onChange, min, isDisabled, label }) {
       {showDropdown && !isDisabled && (
         <div 
           ref={dropdownRef}
-          className={`absolute z-50 ${dropdownPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'} w-full bg-white border border-gray-200 rounded-md shadow-lg p-4 animate-fadeIn`}
+          style={{
+            position: 'fixed',
+            top: `${dropdownCoords.top}px`,
+            left: `${dropdownCoords.left}px`,
+            width: `${dropdownCoords.width}px`,
+          }}
+          className="date-picker-portal z-[10000] bg-white border border-gray-200 rounded-md shadow-lg p-4 animate-fadeIn"
         >
           {/* Header with steps and clear button */}
           <div className="flex justify-between items-center mb-2 border-b pb-2">

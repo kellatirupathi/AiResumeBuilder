@@ -11,11 +11,17 @@ import {
   Bell,
   ChevronLeft,
   ChevronRight,
+  MoreVertical,
   RefreshCw,
   Send,
   XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const TYPE_LABELS = {
   reminder: "Signup Reminder",
@@ -23,8 +29,8 @@ const TYPE_LABELS = {
 };
 
 const TYPE_COLORS = {
-  reminder: "bg-indigo-50 text-indigo-700",
-  "download-link": "bg-emerald-50 text-emerald-700",
+  reminder: "text-indigo-700",
+  "download-link": "text-emerald-700",
 };
 
 const STATUS_LABELS = {
@@ -35,20 +41,75 @@ const STATUS_LABELS = {
 };
 
 const STATUS_COLORS = {
-  pending: "bg-amber-50 text-amber-700",
-  sent: "bg-green-50 text-green-700",
-  failed: "bg-red-50 text-red-700",
-  cancelled: "bg-gray-100 text-gray-500",
+  pending: "text-amber-700",
+  sent: "text-green-700",
+  failed: "text-red-700",
+  cancelled: "text-gray-500",
 };
 
 function Badge({ label, colorClass }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colorClass}`}
+      className={`inline-flex items-center text-xs font-medium ${colorClass}`}
     >
       {label}
     </span>
   );
+}
+
+function RowActionMenu({ children }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+        >
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-44 p-1.5">
+        <div className="space-y-1">{children}</div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function MenuActionButton({
+  children,
+  onClick,
+  disabled = false,
+  tone = "default",
+}) {
+  const toneClass =
+    tone === "danger"
+      ? "text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+      : "text-slate-700 hover:bg-slate-100 hover:text-slate-900";
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${toneClass}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function StageCell({ stage }) {
+  const label =
+    stage?.status === "na"
+      ? "-"
+      : STATUS_LABELS[stage?.status] ?? "Pending";
+  const colorClass =
+    stage?.status === "na"
+      ? "text-slate-400"
+      : STATUS_COLORS[stage?.status] ?? "text-amber-700";
+
+  return <Badge label={label} colorClass={colorClass} />;
 }
 
 function formatDate(iso) {
@@ -433,7 +494,7 @@ export default function AdminNotificationsPage() {
                 Notification History
               </h2>
               <p className="mt-1 text-xs text-gray-500">
-                Email notification log with {total} records.
+                Tracking summary with {total} rows across reminder and download-link notifications.
               </p>
             </div>
 
@@ -479,36 +540,44 @@ export default function AdminNotificationsPage() {
               <table className="min-w-full divide-y divide-gray-100">
                 <thead>
                   <tr className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    <th className="px-5 py-3 text-left">User</th>
+                    <th className="px-5 py-3 text-left">User Name</th>
+                    <th className="px-5 py-3 text-left">User Email</th>
                     <th className="px-5 py-3 text-left">Type</th>
                     <th className="px-5 py-3 text-left">Resume</th>
-                    <th className="px-5 py-3 text-left">Status</th>
-                    <th className="px-5 py-3 text-left">Created</th>
+                    <th className="px-5 py-3 text-left">Current Status</th>
+                    <th className="px-5 py-3 text-left">Stage 1</th>
+                    <th className="px-5 py-3 text-left">Stage 1 Sent At</th>
+                    <th className="px-5 py-3 text-left">Stage 2</th>
+                    <th className="px-5 py-3 text-left">Stage 2 Sent At</th>
+                    <th className="px-5 py-3 text-left">Stage 3</th>
+                    <th className="px-5 py-3 text-left">Stage 3 Sent At</th>
+                    <th className="px-5 py-3 text-left">Last Error</th>
+                    <th className="px-5 py-3 text-left">Signed Up At</th>
                     <th className="px-5 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {notifications.map((notification) => (
                     <tr
-                      key={notification._id}
+                      key={notification.id}
                       className="transition-colors hover:bg-gray-50"
                     >
-                      <td className="px-5 py-3.5">
+                      <td className="px-5 py-3.5 whitespace-nowrap">
                         <p className="text-sm font-medium text-gray-800">
                           {notification.userName || "-"}
                         </p>
-                        <p className="text-xs text-gray-400">
-                          {notification.userEmail}
-                        </p>
                       </td>
-                      <td className="px-5 py-3.5">
+                      <td className="px-5 py-3.5 whitespace-nowrap text-xs text-gray-500">
+                        {notification.userEmail}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5">
                         <Badge
                           label={
                             TYPE_LABELS[notification.type] ?? notification.type
                           }
                           colorClass={
                             TYPE_COLORS[notification.type] ??
-                            "bg-gray-100 text-gray-600"
+                            "text-gray-600"
                           }
                         />
                       </td>
@@ -521,67 +590,81 @@ export default function AdminNotificationsPage() {
                         <div>
                           <Badge
                             label={
-                              STATUS_LABELS[notification.status] ??
-                              notification.status
+                              STATUS_LABELS[notification.currentStatus] ??
+                              notification.currentStatus
                             }
                             colorClass={
-                              STATUS_COLORS[notification.status] ??
-                              "bg-gray-100 text-gray-600"
+                              STATUS_COLORS[notification.currentStatus] ??
+                              "text-gray-600"
                             }
                           />
-                          {notification.status === "failed" &&
-                            notification.errorMessage && (
-                              <p
-                                className="mt-0.5 max-w-[180px] truncate text-[10px] text-red-400"
-                                title={notification.errorMessage}
-                              >
-                                {notification.errorMessage}
-                              </p>
-                            )}
                         </div>
                       </td>
+                      <td className="px-5 py-3.5">
+                        <StageCell stage={notification.stages?.[1]} />
+                      </td>
                       <td className="px-5 py-3.5 whitespace-nowrap text-xs text-gray-500">
-                        {formatDate(notification.createdAt)}
+                        {formatDate(notification.stages?.[1]?.sentAt)}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <StageCell stage={notification.stages?.[2]} />
+                      </td>
+                      <td className="px-5 py-3.5 whitespace-nowrap text-xs text-gray-500">
+                        {formatDate(notification.stages?.[2]?.sentAt)}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <StageCell stage={notification.stages?.[3]} />
+                      </td>
+                      <td className="px-5 py-3.5 whitespace-nowrap text-xs text-gray-500">
+                        {formatDate(notification.stages?.[3]?.sentAt)}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <p
+                          className="max-w-[180px] truncate text-xs text-red-400"
+                          title={notification.lastError || ""}
+                        >
+                          {notification.lastError || "-"}
+                        </p>
+                      </td>
+                      <td className="px-5 py-3.5 whitespace-nowrap text-xs text-gray-500">
+                        {formatDate(notification.signupAt)}
                       </td>
                       <td className="px-5 py-3.5 text-right">
-                        {notification.type === "reminder" ? (
-                          <span className="text-xs italic text-gray-400">
-                            Use reminder queue above
-                          </span>
-                        ) : notification.status === "cancelled" ? (
-                          <span className="text-xs italic text-gray-400">
-                            Cancelled
-                          </span>
-                        ) : (
-                          <div className="flex items-center justify-end gap-2">
-                            <button
+                        <div className="flex justify-end">
+                          <RowActionMenu>
+                            <MenuActionButton
                               onClick={() =>
-                                handleHistoryResend(notification._id)
+                                handleHistoryResend(notification.latestNotificationId)
                               }
                               disabled={
+                                !notification.actions?.canResend ||
                                 actionId ===
-                                `history-resend-${notification._id}`
+                                  `history-resend-${notification.latestNotificationId}`
                               }
-                              className="flex items-center gap-1 rounded-lg border border-indigo-200 px-2.5 py-1.5 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-50 disabled:opacity-50"
                             >
-                              <Send className="h-3 w-3" />
+                              <Send className="h-4 w-4" />
                               Resend
-                            </button>
-                            <button
+                            </MenuActionButton>
+                            <MenuActionButton
                               onClick={() =>
-                                handleHistoryCancel(notification._id)
+                                notification.type === "reminder"
+                                  ? handleReminderCancel(notification.userId)
+                                  : handleHistoryCancel(notification.latestNotificationId)
                               }
                               disabled={
+                                !notification.actions?.canCancel ||
                                 actionId ===
-                                `history-cancel-${notification._id}`
+                                  (notification.type === "reminder"
+                                    ? `reminder-cancel-${notification.userId}`
+                                    : `history-cancel-${notification.latestNotificationId}`)
                               }
-                              className="flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 disabled:opacity-50"
+                              tone="danger"
                             >
-                              <XCircle className="h-3 w-3" />
+                              <XCircle className="h-4 w-4" />
                               Cancel
-                            </button>
-                          </div>
-                        )}
+                            </MenuActionButton>
+                          </RowActionMenu>
+                        </div>
                       </td>
                     </tr>
                   ))}
