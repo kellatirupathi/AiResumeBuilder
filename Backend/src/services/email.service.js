@@ -173,3 +173,35 @@ export const sendPasswordResetEmail = async (userName, userEmail, resetLink) => 
     throw new Error('Could not send the password reset email.');
   }
 };
+
+export const sendAdminInviteEmail = async (adminName, adminEmail, inviteLink, role) => {
+  try {
+    const info = await sendEmail({
+      to: [{ email: adminEmail, name: adminName }],
+      subject: "Set your admin password - NxtResume",
+      htmlContent: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+          <h1 style="color: #4A90E2; text-align: center;">Admin Account Invitation</h1>
+          <p>Hello ${adminName},</p>
+          <p>An admin account has been created for you in NxtResume as <strong>${role === "owner" ? "Owner Admin" : "Admin"}</strong>.</p>
+          <p>To activate your account, set your password using the button below. This link is valid for 15 minutes.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${inviteLink}" style="display: inline-block; padding: 12px 25px; background-color: #4A90E2; color: white; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold;">
+              Set My Password
+            </a>
+          </div>
+          <p>If you're having trouble with the button, you can also copy and paste this link into your browser:</p>
+          <p style="word-break: break-all; font-size: 12px; color: #666;">${inviteLink}</p>
+          <p style="margin-top: 20px; font-size: 12px; color: #888; text-align: center;">
+            &mdash; The ${process.env.FROM_NAME} Team
+          </p>
+        </div>
+      `,
+    });
+    console.log(`Admin invite email sent to ${adminEmail}`);
+    return info;
+  } catch (error) {
+    console.error(`Failed to send admin invite email to ${adminEmail}. Error: ${error.message}`);
+    throw new Error("Could not send the admin invite email.");
+  }
+};

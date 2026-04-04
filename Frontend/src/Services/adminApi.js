@@ -20,6 +20,24 @@ export const loginAdmin = async (credentials) => {
   }
 };
 
+export const getAdminInviteDetails = async (token) => {
+  try {
+    const response = await adminAxios.get("/invite", { params: { token } });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to validate admin invite.");
+  }
+};
+
+export const setAdminPassword = async (payload) => {
+  try {
+    const response = await adminAxios.post("/set-password", payload);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to set admin password.");
+  }
+};
+
 export const logoutAdmin = async () => {
     try {
         const response = await adminAxios.post('/logout');
@@ -37,6 +55,42 @@ export const checkAdminSession = async () => {
         throw new Error(error.response?.data?.message || 'Admin session invalid.');
     }
 }
+
+export const getAdminAccounts = async () => {
+  try {
+    const response = await adminAxios.get("/accounts");
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to fetch admin accounts.");
+  }
+};
+
+export const createAdminAccount = async (payload) => {
+  try {
+    const response = await adminAxios.post("/accounts", payload);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to create admin account.");
+  }
+};
+
+export const updateAdminAccount = async (adminId, payload) => {
+  try {
+    const response = await adminAxios.put(`/accounts/${adminId}`, payload);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to update admin account.");
+  }
+};
+
+export const deleteAdminAccount = async (adminId) => {
+  try {
+    const response = await adminAxios.delete(`/accounts/${adminId}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to delete admin account.");
+  }
+};
 
 export const getAllUsers = async () => {
   try {
@@ -128,9 +182,33 @@ export const getDashboardStats = async (days = 30) => {
   }
 };
 
-export const getUsersPaginated = async ({ page = 1, limit = 20, search = '' } = {}) => {
+export const getUsersPaginated = async ({
+  page = 1,
+  limit = 20,
+  search = "",
+  niatIdVerified = "",
+  reminderEnabled = "",
+  downloadLinkEnabled = "",
+  createdFrom = "",
+  createdTo = "",
+  resumeCountMin = "",
+  resumeCountMax = "",
+} = {}) => {
   try {
-    const response = await adminAxios.get('/users/paginated', { params: { page, limit, search } });
+    const response = await adminAxios.get("/users/paginated", {
+      params: {
+        page,
+        limit,
+        search,
+        niatIdVerified,
+        reminderEnabled,
+        downloadLinkEnabled,
+        createdFrom,
+        createdTo,
+        resumeCountMin,
+        resumeCountMax,
+      },
+    });
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to fetch users.');

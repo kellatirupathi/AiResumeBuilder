@@ -37,7 +37,6 @@ export function EditResume() {
   const dispatch = useDispatch();
   const resumeInfo = useSelector((state) => state.editResume.resumeData);
   const containerRef = useRef(null);
-  const hydratedResumeIdRef = useRef(null);
   const [isResizing, setIsResizing] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(50);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -59,18 +58,15 @@ export function EditResume() {
   useEffect(() => {
     window.scrollTo(0, 0);
     setIsAIReviewOpen(false);
-    hydratedResumeIdRef.current =
-      cachedResumeInfo?._id === resume_id ? resume_id : null;
   }, [cachedResumeInfo?._id, resume_id]);
 
   useEffect(() => {
-    if (!resumeQuery.data || hydratedResumeIdRef.current === resume_id) {
+    if (!resumeQuery.data) {
       return;
     }
 
     dispatch(addResumeData(resumeQuery.data));
-    hydratedResumeIdRef.current = resume_id;
-  }, [dispatch, resumeQuery.data, resume_id]);
+  }, [dispatch, resumeQuery.data]);
 
   useEffect(() => {
     if (!resumeQuery.isError) {

@@ -9,6 +9,7 @@ import Dashboard from "./pages/dashboard/Dashboard.jsx";
 import { EditResume } from "./pages/dashboard/edit-resume/[resume_id]/EditResume.jsx";
 import ViewResume from "./pages/dashboard/view-resume/[resume_id]/ViewResume.jsx";
 import AdminLoginPage from "./pages/auth/admin/AdminLoginPage.jsx";
+import AdminSetPasswordPage from "./pages/auth/admin/AdminSetPasswordPage.jsx";
 import AdminLayout from "./pages/admin/AdminLayout.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AdminUsersPage from "./pages/admin/AdminUsersPage.jsx";
@@ -17,6 +18,7 @@ import AdminUserDetailPage from "./pages/admin/AdminUserDetailPage.jsx";
 import AdminUserResumesPage from "./pages/admin/AdminUserResumesPage.jsx";
 import AdminStudentIdsPage from "./pages/admin/AdminStudentIdsPage.jsx";
 import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage.jsx";
+import AdminAccountsPage from "./pages/admin/AdminAccountsPage.jsx";
 import AuthPage from "./pages/auth/customAuth/AuthPage.jsx";
 import { resumeStore, persistor } from "./store/store";
 import { Provider } from "react-redux";
@@ -110,6 +112,10 @@ const router = createBrowserRouter([
     element: <AdminLoginPage />,
   },
   {
+    path: "/admin/set-password",
+    element: <AdminSetPasswordPage />,
+  },
+  {
     path: "/admin",
     element: <AdminLayout />,
     children: [
@@ -120,6 +126,7 @@ const router = createBrowserRouter([
       { path: "resumes/:userId", element: <AdminUserResumesPage /> },
       { path: "student-ids", element: <AdminStudentIdsPage /> },
       { path: "notifications", element: <AdminNotificationsPage /> },
+      { path: "accounts", element: <AdminAccountsPage /> },
     ],
   },
 ]);

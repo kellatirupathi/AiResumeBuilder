@@ -2,14 +2,14 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import User from "../models/user.model.js";
 import Resume from "../models/resume.model.js";
+import Admin from "../models/admin.model.js";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import {
   generateAndUploadResumeDriveLink,
   processPendingResumeDriveLinks,
 } from "../services/resumeDrive.service.js";
-
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "tirupathirao.kella@nxtwave.co.in";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Tirupathi@0231";
+import { sendAdminInviteEmail } from "../services/email.service.js";
 
 const cookieOptions = {
   httpOnly: true,
@@ -63,6 +63,8 @@ const RESUME_FIELDS = [
   "viewCount",
 ];
 
+const ADMIN_FIELDS = ["name", "email", "password", "role"];
+
 const pickDefinedFields = (source, allowedFields) => {
   const result = {};
 
@@ -88,6 +90,32 @@ const stripPasswordField = (userDocument) => {
 
   return userObject;
 };
+
+const sanitizeAdmin = (adminDocument) => {
+  const adminObject = adminDocument?.toObject ? adminDocument.toObject() : adminDocument;
+
+  if (!adminObject) {
+    return adminObject;
+  }
+
+  delete adminObject.password;
+  delete adminObject.inviteToken;
+  delete adminObject.inviteTokenExpiry;
+
+  return adminObject;
+};
+
+const signAdminToken = (admin) =>
+  jwt.sign(
+    {
+      adminId: admin._id,
+      email: admin.email,
+      name: admin.name,
+      role: admin.role,
+    },
+    process.env.JWT_SECRET_KEY,
+    { expiresIn: "1d" }
+  );
 
 const PROFILE_COMPLETION_BUCKETS = [
   { label: "0-25%", min: 0, max: 25 },
@@ -199,23 +227,40 @@ const generateAndUpload = async (resume) => {
   }
 };
 
-export const loginAdmin = (req, res) => {
+export const loginAdmin = async (req, res) => {
   const { email, password } = req.body;
 
-  if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-    const adminToken = jwt.sign(
-      { email: ADMIN_EMAIL, role: "admin" },
-      process.env.JWT_SECRET_KEY,
-      { expiresIn: "1d" }
-    );
+  try {
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const admin = await Admin.findOne({ email: normalizedEmail });
+
+    if (!admin) {
+      return res.status(401).json(new ApiError(401, "Invalid admin credentials"));
+    }
+
+    const isPasswordValid = await admin.comparePassword(password || "");
+
+    if (!isPasswordValid) {
+      return res.status(401).json(new ApiError(401, "Invalid admin credentials"));
+    }
+
+    const adminToken = signAdminToken(admin);
 
     return res
       .cookie("adminToken", adminToken, cookieOptions)
       .status(200)
-      .json(new ApiResponse(200, { email: ADMIN_EMAIL }, "Admin logged in successfully"));
+      .json(
+        new ApiResponse(
+          200,
+          { admin: sanitizeAdmin(admin) },
+          "Admin logged in successfully"
+        )
+      );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to login admin", [error.message], error.stack));
   }
-
-  return res.status(401).json(new ApiError(401, "Invalid admin credentials"));
 };
 
 export const logoutAdmin = (req, res) =>
@@ -224,10 +269,281 @@ export const logoutAdmin = (req, res) =>
     .status(200)
     .json(new ApiResponse(200, {}, "Admin logged out successfully"));
 
-export const checkAdminSession = (req, res) =>
-  res
-    .status(200)
-    .json(new ApiResponse(200, { admin: req.admin }, "Admin session is active"));
+export const checkAdminSession = async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.admin.adminId).select("-password -inviteToken -inviteTokenExpiry");
+
+    if (!admin) {
+      return res.status(401).json(new ApiError(401, "Admin session is invalid."));
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, { admin }, "Admin session is active"));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to validate admin session", [], error.stack));
+  }
+};
+
+export const getAdminAccounts = async (req, res) => {
+  try {
+    const admins = await Admin.find({})
+      .select("-password -inviteToken -inviteTokenExpiry")
+      .sort({ createdAt: -1 });
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, admins, "Admin accounts fetched successfully"));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to fetch admin accounts", [], error.stack));
+  }
+};
+
+export const createAdminAccount = async (req, res) => {
+  try {
+    const payload = pickDefinedFields(req.body, ADMIN_FIELDS);
+    payload.email = String(payload.email || "").trim().toLowerCase();
+    payload.name = String(payload.name || "").trim();
+
+    if (!payload.name || !payload.email) {
+      return res
+        .status(400)
+        .json(new ApiError(400, "Name and email are required."));
+    }
+
+    if (!["owner", "admin"].includes(payload.role)) {
+      return res
+        .status(400)
+        .json(new ApiError(400, "Role must be either owner or admin."));
+    }
+
+    const existingAdmin = await Admin.findOne({ email: payload.email });
+    if (existingAdmin) {
+      return res
+        .status(409)
+        .json(new ApiError(409, "An admin with this email already exists."));
+    }
+
+    const inviteToken = crypto.randomBytes(32).toString("hex");
+    const hashedInviteToken = crypto.createHash("sha256").update(inviteToken).digest("hex");
+
+    const createdAdmin = await Admin.create({
+      name: payload.name,
+      email: payload.email,
+      role: payload.role,
+      inviteToken: hashedInviteToken,
+      inviteTokenExpiry: Date.now() + 15 * 60 * 1000,
+    });
+
+    const inviteLink = `${process.env.ALLOWED_SITE}/admin/set-password?token=${inviteToken}`;
+    await sendAdminInviteEmail(createdAdmin.name, createdAdmin.email, inviteLink, createdAdmin.role);
+
+    return res
+      .status(201)
+      .json(
+        new ApiResponse(
+          201,
+          sanitizeAdmin(createdAdmin),
+          "Admin account created and invite email sent successfully"
+        )
+      );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to create admin account", [error.message], error.stack));
+  }
+};
+
+export const getAdminInviteDetails = async (req, res) => {
+  try {
+    const token = String(req.query.token || "");
+
+    if (!token) {
+      return res.status(400).json(new ApiError(400, "Invite token is required."));
+    }
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    const admin = await Admin.findOne({
+      inviteToken: hashedToken,
+      inviteTokenExpiry: { $gt: Date.now() },
+    }).select("name email role");
+
+    if (!admin) {
+      return res.status(400).json(new ApiError(400, "This invite link is invalid or has expired."));
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, admin, "Admin invite is valid."));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to validate admin invite", [], error.stack));
+  }
+};
+
+export const setAdminPasswordFromInvite = async (req, res) => {
+  try {
+    const { token, password, confirmPassword } = req.body;
+
+    if (!token || !password || !confirmPassword) {
+      return res.status(400).json(new ApiError(400, "All fields are required."));
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json(new ApiError(400, "Passwords do not match."));
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json(new ApiError(400, "Password must be at least 6 characters long."));
+    }
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    const admin = await Admin.findOne({
+      inviteToken: hashedToken,
+      inviteTokenExpiry: { $gt: Date.now() },
+    });
+
+    if (!admin) {
+      return res.status(400).json(new ApiError(400, "This invite link is invalid or has expired."));
+    }
+
+    admin.password = password;
+    admin.inviteToken = undefined;
+    admin.inviteTokenExpiry = undefined;
+    await admin.save();
+
+    const adminToken = signAdminToken(admin);
+
+    return res
+      .cookie("adminToken", adminToken, cookieOptions)
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { admin: sanitizeAdmin(admin) },
+          "Admin password set successfully"
+        )
+      );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to set admin password", [error.message], error.stack));
+  }
+};
+
+export const updateAdminAccount = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const admin = await Admin.findById(id);
+
+    if (!admin) {
+      return res.status(404).json(new ApiError(404, "Admin account not found."));
+    }
+
+    const payload = pickDefinedFields(req.body, ADMIN_FIELDS);
+
+    if (payload.email !== undefined) {
+      payload.email = String(payload.email || "").trim().toLowerCase();
+      const existingAdmin = await Admin.findOne({ email: payload.email, _id: { $ne: id } });
+      if (existingAdmin) {
+        return res
+          .status(409)
+          .json(new ApiError(409, "An admin with this email already exists."));
+      }
+    }
+
+    if (payload.name !== undefined) {
+      payload.name = String(payload.name || "").trim();
+    }
+
+    if (payload.role !== undefined && !["owner", "admin"].includes(payload.role)) {
+      return res
+        .status(400)
+        .json(new ApiError(400, "Role must be either owner or admin."));
+    }
+
+    if (payload.password === "") {
+      delete payload.password;
+    }
+
+    if (
+      admin.role === "owner" &&
+      payload.role === "admin" &&
+      String(admin._id) === String(req.admin.adminId)
+    ) {
+      return res
+        .status(400)
+        .json(new ApiError(400, "You cannot remove your own owner access."));
+    }
+
+    if (admin.role === "owner" && payload.role === "admin") {
+      const ownerCount = await Admin.countDocuments({ role: "owner" });
+      if (ownerCount <= 1) {
+        return res
+          .status(400)
+          .json(new ApiError(400, "At least one owner admin must remain."));
+      }
+    }
+
+    Object.assign(admin, payload);
+    const updatedAdmin = await admin.save();
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          sanitizeAdmin(updatedAdmin),
+          "Admin account updated successfully"
+        )
+      );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to update admin account", [error.message], error.stack));
+  }
+};
+
+export const deleteAdminAccount = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const admin = await Admin.findById(id);
+
+    if (!admin) {
+      return res.status(404).json(new ApiError(404, "Admin account not found."));
+    }
+
+    if (String(admin._id) === String(req.admin.adminId)) {
+      return res
+        .status(400)
+        .json(new ApiError(400, "You cannot delete your own admin account."));
+    }
+
+    if (admin.role === "owner") {
+      const ownerCount = await Admin.countDocuments({ role: "owner" });
+      if (ownerCount <= 1) {
+        return res
+          .status(400)
+          .json(new ApiError(400, "At least one owner admin must remain."));
+      }
+    }
+
+    await Admin.findByIdAndDelete(id);
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, null, "Admin account deleted successfully"));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to delete admin account", [error.message], error.stack));
+  }
+};
 
 export const getDashboardStats = async (req, res) => {
   try {
@@ -310,22 +626,133 @@ export const getUsersPaginated = async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
     const search = req.query.search || "";
+    const niatIdVerified = req.query.niatIdVerified || "";
+    const reminderEnabled = req.query.reminderEnabled || "";
+    const downloadLinkEnabled = req.query.downloadLinkEnabled || "";
+    const createdFrom = req.query.createdFrom || "";
+    const createdTo = req.query.createdTo || "";
+    const resumeCountMin = req.query.resumeCountMin;
+    const resumeCountMax = req.query.resumeCountMax;
     const skip = (page - 1) * limit;
 
-    const filter = search
-      ? {
-          $or: [
-            { fullName: { $regex: search, $options: "i" } },
-            { email: { $regex: search, $options: "i" } },
-            { niatId: { $regex: search, $options: "i" } },
-          ],
-        }
-      : {};
+    const baseMatch = {};
 
-    const [users, total] = await Promise.all([
-      User.find(filter).select("-password").sort({ createdAt: -1 }).skip(skip).limit(limit),
-      User.countDocuments(filter),
-    ]);
+    if (search) {
+      baseMatch.$or = [
+        { fullName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { niatId: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (niatIdVerified === "true") {
+      baseMatch.niatIdVerified = true;
+    } else if (niatIdVerified === "false") {
+      baseMatch.niatIdVerified = false;
+    }
+
+    if (reminderEnabled === "true") {
+      baseMatch.$and = [
+        ...(baseMatch.$and || []),
+        {
+          $or: [
+            { "notificationPreferences.reminder": { $exists: false } },
+            { "notificationPreferences.reminder": true },
+          ],
+        },
+      ];
+    } else if (reminderEnabled === "false") {
+      baseMatch["notificationPreferences.reminder"] = false;
+    }
+
+    if (downloadLinkEnabled === "true") {
+      baseMatch.$and = [
+        ...(baseMatch.$and || []),
+        {
+          $or: [
+            { "notificationPreferences.downloadLink": { $exists: false } },
+            { "notificationPreferences.downloadLink": true },
+          ],
+        },
+      ];
+    } else if (downloadLinkEnabled === "false") {
+      baseMatch["notificationPreferences.downloadLink"] = false;
+    }
+
+    if (createdFrom || createdTo) {
+      const createdAtFilter = {};
+
+      if (createdFrom) {
+        const fromDate = new Date(createdFrom);
+        if (!Number.isNaN(fromDate.getTime())) {
+          createdAtFilter.$gte = fromDate;
+        }
+      }
+
+      if (createdTo) {
+        const toDate = new Date(createdTo);
+        if (!Number.isNaN(toDate.getTime())) {
+          toDate.setHours(23, 59, 59, 999);
+          createdAtFilter.$lte = toDate;
+        }
+      }
+
+      if (Object.keys(createdAtFilter).length) {
+        baseMatch.createdAt = createdAtFilter;
+      }
+    }
+
+    const resumeCountMatch = {};
+    const parsedResumeCountMin = Number.parseInt(resumeCountMin, 10);
+    const parsedResumeCountMax = Number.parseInt(resumeCountMax, 10);
+
+    if (Number.isFinite(parsedResumeCountMin)) {
+      resumeCountMatch.$gte = parsedResumeCountMin;
+    }
+
+    if (Number.isFinite(parsedResumeCountMax)) {
+      resumeCountMatch.$lte = parsedResumeCountMax;
+    }
+
+    const pipeline = [
+      { $match: baseMatch },
+      {
+        $lookup: {
+          from: "resumes",
+          localField: "_id",
+          foreignField: "user",
+          as: "userResumes",
+        },
+      },
+      {
+        $addFields: {
+          resumeCount: { $size: "$userResumes" },
+        },
+      },
+      ...(Object.keys(resumeCountMatch).length ? [{ $match: { resumeCount: resumeCountMatch } }] : []),
+      { $sort: { createdAt: -1 } },
+      {
+        $facet: {
+          users: [
+            { $skip: skip },
+            { $limit: limit },
+            {
+              $project: {
+                password: 0,
+                forgotPasswordToken: 0,
+                forgotPasswordTokenExpiry: 0,
+                userResumes: 0,
+              },
+            },
+          ],
+          totalCount: [{ $count: "count" }],
+        },
+      },
+    ];
+
+    const [result] = await User.aggregate(pipeline);
+    const users = result?.users || [];
+    const total = result?.totalCount?.[0]?.count || 0;
 
     return res.status(200).json(new ApiResponse(200, {
       users,
@@ -381,7 +808,7 @@ export const getResumesPaginated = async (req, res) => {
     const [resumes, total] = await Promise.all([
       Resume.find(resumeFilter)
         .populate("user", "fullName email niatId")
-        .select("title template themeColor createdAt updatedAt viewCount googleDriveLink user")
+        .select("title template themeColor createdAt updatedAt viewCount googleDriveLink driveOutOfSync user")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),

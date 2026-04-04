@@ -7,6 +7,7 @@ const pendingDriveLinkQuery = {
     { googleDriveLink: { $exists: false } },
     { googleDriveLink: null },
     { googleDriveLink: "" },
+    { driveOutOfSync: true },
   ],
 };
 
@@ -32,6 +33,7 @@ export const generateAndUploadResumeDriveLink = async (resume) => {
       $set: {
         googleDriveFileId: fileId,
         googleDriveLink: webViewLink,
+        driveOutOfSync: false,
       },
     }
   );

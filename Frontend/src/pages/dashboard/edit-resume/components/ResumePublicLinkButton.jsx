@@ -1,7 +1,18 @@
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Loader2, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { addResumeData } from "@/features/resume/resumeFeatures";
 import {
   generationError,
@@ -21,6 +32,7 @@ function ResumePublicLinkButton({
 }) {
   const dispatch = useDispatch();
   const driveGeneration = useSelector((state) => state.driveGeneration);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const generatingLink =
     driveGeneration.status === "generating" && driveGeneration.resumeId === resumeId;
 
@@ -87,24 +99,48 @@ function ResumePublicLinkButton({
   }
 
   return (
-    <Button
-      variant={variant}
-      size={size}
-      onClick={handleGenerateLink}
-      disabled={generatingLink}
-      className={generateClassName}
-    >
-      {generatingLink ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <Share2 className="h-4 w-4" />
-      )}
-      {generatingLink
-        ? "Updating..."
-        : resumeInfo?.driveOutOfSync
-          ? "Update Public Link"
-          : "Generate Public Link"}
-    </Button>
+    <>
+      <Button
+        variant={variant}
+        size={size}
+        onClick={() => setConfirmOpen(true)}
+        disabled={generatingLink}
+        className={generateClassName}
+      >
+        {generatingLink ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Share2 className="h-4 w-4" />
+        )}
+        {generatingLink
+          ? "Updating..."
+          : resumeInfo?.driveOutOfSync
+            ? "Update Public Link"
+            : "Generate Public Link"}
+      </Button>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {resumeInfo?.driveOutOfSync ? "Update public link?" : "Generate public link?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Make sure you have saved all latest resume changes before continuing. Do you want to proceed?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={generatingLink}>No</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleGenerateLink}
+              disabled={generatingLink}
+            >
+              Yes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 

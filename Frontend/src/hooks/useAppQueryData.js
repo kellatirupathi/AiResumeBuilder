@@ -98,6 +98,7 @@ export function prefetchResumeQuery(queryClient, resumeId) {
 
 export function useProfileQuery(options = {}) {
   const queryClient = useQueryClient();
+  const { initialData: providedInitialData, ...restOptions } = options;
 
   return useQuery({
     queryKey: queryKeys.auth.profile,
@@ -108,10 +109,15 @@ export function useProfileQuery(options = {}) {
     // Do NOT fall back to auth.session here — session data is minimal (no firstName,
     // lastName, jobTitle, etc.) and would cause ProfilePage to show empty fields.
     // auth.profile is now only set with full profile data (see setUserCaches).
-    initialData: () =>
-      queryClient.getQueryData(queryKeys.auth.profile) ?? undefined,
+    initialData: () => {
+      if (providedInitialData !== undefined) {
+        return providedInitialData ? normalizeProfileData(providedInitialData) : undefined;
+      }
+
+      return queryClient.getQueryData(queryKeys.auth.profile) ?? undefined;
+    },
     staleTime: PROFILE_STALE_TIME,
-    ...options,
+    ...restOptions,
   });
 }
 

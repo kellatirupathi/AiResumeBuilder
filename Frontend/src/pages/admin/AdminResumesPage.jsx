@@ -3,11 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
-  getResumesPaginated, updateAdminResume, deleteAdminResume, getAllUsers,
+  getResumesPaginated,
+  updateAdminResume,
+  deleteAdminResume,
+  getAllUsers,
+  processPendingResumeLinks,
 } from "@/Services/adminApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Pencil, Trash2, RefreshCw, Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Pencil, Trash2, RefreshCw, Download, ChevronLeft, ChevronRight, LoaderCircle } from "lucide-react";
 import { ResumeFormDialog, DeleteConfirmDialog } from "./AdminCrudDialogs";
 import ResumePreviewModal from "./ResumePreviewModal";
 
@@ -57,9 +61,41 @@ export default function AdminResumesPage() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
+    let processingSummary = null;
+
+    try {
+      const processResponse = await processPendingResumeLinks();
+      processingSummary = processResponse.data || null;
+    } catch (err) {
+      toast.error("Drive link processing failed", {
+        description: err.message,
+      });
+    }
+
     await fetchPage(pagination.page, search);
     setRefreshing(false);
-    toast.success("Refreshed");
+
+    if (processingSummary) {
+      const { attempted = 0, processed = 0, failed = 0, skipped = 0 } = processingSummary;
+      const hasPendingWork = attempted > 0;
+      const hasFailures = failed > 0;
+
+      if (hasFailures) {
+        toast.warning("Resumes refreshed with Drive link issues", {
+          description: `Processed ${processed}, failed ${failed}, skipped ${skipped}.`,
+        });
+        return;
+      }
+
+      toast.success("Resumes refreshed", {
+        description: hasPendingWork
+          ? `Drive links checked: ${attempted}. Updated ${processed}, skipped ${skipped}.`
+          : "No pending or out-of-sync Drive links were found.",
+      });
+      return;
+    }
+
+    toast.success("Resumes refreshed");
   };
 
   const toggleSelect = (id, checked) =>
@@ -181,7 +217,11 @@ export default function AdminResumesPage() {
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">{format(new Date(resume.createdAt), "PP")}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">{format(new Date(resume.updatedAt), "PP")}</td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        {resume.googleDriveLink ? (
+                        {resume.driveOutOfSync ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600">
+                            <LoaderCircle className="h-3 w-3 animate-spin" /> Updating...
+                          </span>
+                        ) : resume.googleDriveLink ? (
                           <a href={resume.googleDriveLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-600 hover:underline">
                             <Download className="h-3 w-3" /> PDF
                           </a>

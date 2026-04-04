@@ -1,8 +1,14 @@
 import { Router } from "express";
 import {
   loginAdmin,
+  getAdminInviteDetails,
+  setAdminPasswordFromInvite,
   logoutAdmin,
   checkAdminSession,
+  getAdminAccounts,
+  createAdminAccount,
+  updateAdminAccount,
+  deleteAdminAccount,
   getAllUsers,
   getUsersPaginated,
   getUserById,
@@ -25,18 +31,24 @@ import {
   sendReminderNotification,
   cancelReminderNotification,
 } from "../controller/notification.controller.js";
-import { isAdmin } from "../middleware/adminAuth.js";
+import { isAdmin, isOwnerAdmin } from "../middleware/adminAuth.js";
 
 const router = Router();
 
 // --- Public Admin Routes ---
 router.post("/login", loginAdmin);
+router.get("/invite", getAdminInviteDetails);
+router.post("/set-password", setAdminPasswordFromInvite);
 
 // --- Protected Admin Routes (require admin token) ---
 router.use(isAdmin);
 
 router.get("/session", checkAdminSession);
 router.post("/logout", logoutAdmin);
+router.get("/accounts", isOwnerAdmin, getAdminAccounts);
+router.post("/accounts", isOwnerAdmin, createAdminAccount);
+router.put("/accounts/:id", isOwnerAdmin, updateAdminAccount);
+router.delete("/accounts/:id", isOwnerAdmin, deleteAdminAccount);
 router.get("/stats", getDashboardStats);
 router.get("/users", getAllUsers);
 router.get("/users/paginated", getUsersPaginated);

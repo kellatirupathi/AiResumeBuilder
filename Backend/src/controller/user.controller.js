@@ -101,6 +101,13 @@ const sanitizeUserPayload = (userDocument) => {
   delete userObject.forgotPasswordToken;
   delete userObject.forgotPasswordTokenExpiry;
 
+  const nameParts = typeof userObject.fullName === "string"
+    ? userObject.fullName.trim().split(/\s+/)
+    : [];
+  userObject.firstName = userObject.firstName || nameParts[0] || "";
+  userObject.lastName =
+    userObject.lastName || nameParts.slice(1).join(" ") || "";
+
   return userObject;
 };
 
@@ -473,11 +480,15 @@ const getUserProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json(new ApiError(404, "User profile not found."));
     }
-    const userObject = user.toObject();
-    const nameParts = userObject.fullName ? userObject.fullName.split(' ') : [''];
-    userObject.firstName = nameParts[0] || '';
-    userObject.lastName = nameParts.slice(1).join(' ') || '';
-    return res.status(200).json(new ApiResponse(200, userObject, "Profile fetched successfully."));
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          sanitizeUserPayload(user),
+          "Profile fetched successfully."
+        )
+      );
   } catch (err) {
     return res.status(500).json(new ApiError(500, "Internal Server Error", [], err.stack));
   }
@@ -492,12 +503,15 @@ const updateUserProfile = async (req, res) => {
     Object.assign(user, otherData); 
     user.fullName = fullName; 
     const updatedUser = await user.save();
-    const userObject = updatedUser.toObject();
-    delete userObject.password;
-    const nameParts = userObject.fullName.split(' ');
-    userObject.firstName = nameParts[0] || '';
-    userObject.lastName = nameParts.slice(1).join(' ') || '';
-    return res.status(200).json(new ApiResponse(200, userObject, "Profile updated successfully."));
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          sanitizeUserPayload(updatedUser),
+          "Profile updated successfully."
+        )
+      );
   } catch (err) {
     return res.status(500).json(new ApiError(500, "Failed to update profile", [], err.stack));
   }
@@ -524,11 +538,15 @@ const generatePortfolio = async (req, res) => {
     const portfolioUrl = await createOrUpdatePortfolio(user, htmlContent);
     user.portfolioUrl = portfolioUrl;
     await user.save();
-    const updatedUser = user.toObject();
-    delete updatedUser.password;
-    delete updatedUser.forgotPasswordToken;
-    delete updatedUser.forgotPasswordTokenExpiry;
-    return res.status(200).json(new ApiResponse(200, updatedUser, "Portfolio generated successfully!"));
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          sanitizeUserPayload(user),
+          "Portfolio generated successfully!"
+        )
+      );
   } catch (err) {
     console.error("Error generating portfolio:", err);
     return res.status(500).json(new ApiError(500, "Failed to generate portfolio.", [], err.stack));
@@ -569,11 +587,16 @@ const completeProfile = async (req, res) => {
     user.niatId = niatId;
     user.niatIdVerified = true;
     await user.save();
-    
-    const updatedUser = user.toObject();
-    delete updatedUser.password;
-    
-    return res.status(200).json(new ApiResponse(200, updatedUser, "Profile completed successfully."));
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          sanitizeUserPayload(user),
+          "Profile completed successfully."
+        )
+      );
 
   } catch (error) {
     console.error("Error completing profile:", error);
