@@ -52,6 +52,12 @@ const USER_DEFAULTS = {
   phone: "",
 };
 
+const ADMIN_DEFAULTS = {
+  name: "",
+  email: "",
+  role: "admin",
+};
+
 const RESUME_DEFAULTS = {
   user: "",
   title: "",
@@ -74,6 +80,12 @@ const normalizeUserForm = (user) => ({
   niatIdVerified: Boolean(user?.niatIdVerified),
   jobTitle: user?.jobTitle || "",
   phone: user?.phone || "",
+});
+
+const normalizeAdminForm = (admin) => ({
+  name: admin?.name || "",
+  email: admin?.email || "",
+  role: admin?.role || "admin",
 });
 
 const normalizeResumeForm = (resume) => ({
@@ -208,6 +220,96 @@ export function UserFormDialog({ open, onOpenChange, mode, initialData, onSubmit
             <Button type="submit" disabled={loading}>
               {loading ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
               {mode === "edit" ? "Save User" : "Create User"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function AdminAccountFormDialog({ open, onOpenChange, mode, initialData, onSubmit, loading }) {
+  const [form, setForm] = useState(ADMIN_DEFAULTS);
+
+  useEffect(() => {
+    if (open) {
+      setForm(mode === "edit" ? normalizeAdminForm(initialData) : ADMIN_DEFAULTS);
+    }
+  }, [open, mode, initialData]);
+
+  const handleChange = (field, value) => {
+    setForm((currentValue) => ({ ...currentValue, [field]: value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    await onSubmit({
+      ...form,
+      name: form.name.trim(),
+      email: form.email.trim(),
+      role: form.role,
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>{mode === "edit" ? "Edit Admin Account" : "Create Admin Account"}</DialogTitle>
+          <DialogDescription>
+            {mode === "edit"
+              ? "Update admin account details and access level."
+              : "Create a new admin account and choose whether it should be owner or normal admin."}
+          </DialogDescription>
+        </DialogHeader>
+
+        <form className="space-y-5" onSubmit={handleSubmit}>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2 sm:col-span-2">
+              <label className="text-sm font-medium text-slate-700">Name</label>
+              <Input
+                value={form.name}
+                onChange={(event) => handleChange("name", event.target.value)}
+                placeholder="Admin Name"
+                required
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <label className="text-sm font-medium text-slate-700">Email</label>
+              <Input
+                type="email"
+                value={form.email}
+                onChange={(event) => handleChange("email", event.target.value)}
+                placeholder="admin@example.com"
+                required
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <label className="text-sm font-medium text-slate-700">Role</label>
+              <select
+                className={selectClassName}
+                value={form.role}
+                onChange={(event) => handleChange("role", event.target.value)}
+              >
+                <option value="admin">Admin</option>
+                <option value="owner">Owner Admin</option>
+              </select>
+            </div>
+            {mode === "create" ? (
+              <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2 text-sm text-indigo-700 sm:col-span-2">
+                An email will be sent to this admin so they can set their password and activate the account.
+              </div>
+            ) : null}
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {mode === "edit" ? "Save Account" : "Create Account"}
             </Button>
           </DialogFooter>
         </form>

@@ -11,15 +11,24 @@ export const normalizeResumeData = (resume = {}) => ({
 export const normalizeResumeList = (resumes = []) =>
   Array.isArray(resumes) ? resumes.map((resume) => normalizeResumeData(resume)) : [];
 
-export const normalizeProfileData = (profile = {}) => ({
-  ...profile,
-  experience: profile?.experience || [],
-  projects: profile?.projects || [],
-  education: profile?.education || [],
-  skills: profile?.skills || [],
-  certifications: profile?.certifications || [],
-  additionalSections: profile?.additionalSections || [],
-});
+export const normalizeProfileData = (profile = {}) => {
+  const nameParts =
+    typeof profile?.fullName === "string" && profile.fullName.trim()
+      ? profile.fullName.trim().split(/\s+/)
+      : [];
+
+  return {
+    ...profile,
+    firstName: profile?.firstName || nameParts[0] || "",
+    lastName: profile?.lastName || nameParts.slice(1).join(" ") || "",
+    experience: profile?.experience || [],
+    projects: profile?.projects || [],
+    education: profile?.education || [],
+    skills: profile?.skills || [],
+    certifications: profile?.certifications || [],
+    additionalSections: profile?.additionalSections || [],
+  };
+};
 
 export const upsertResumeInCaches = (resume) => {
   if (!resume?._id) {

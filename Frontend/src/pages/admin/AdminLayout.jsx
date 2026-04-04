@@ -3,7 +3,7 @@ import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { toast } from "sonner";
 import { checkAdminSession, logoutAdmin } from "@/Services/adminApi";
 import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
-import { LayoutDashboard, Users, FileText, Fingerprint, Bell, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Fingerprint, Bell, LogOut, ShieldCheck } from "lucide-react";
 
 const NAV = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
@@ -13,19 +13,32 @@ const NAV = [
   { label: "Notifications", icon: Bell, path: "/admin/notifications" },
 ];
 
+const OWNER_NAV = [{ label: "Accounts", icon: ShieldCheck, path: "/admin/accounts" }];
+
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [checking, setChecking] = useState(true);
+  const [admin, setAdmin] = useState(null);
 
   useEffect(() => {
     checkAdminSession()
-      .then(() => setChecking(false))
+      .then((response) => {
+        setAdmin(response?.data?.admin || null);
+        setChecking(false);
+      })
       .catch(() => {
         toast.error("Session invalid or expired", { description: "Redirecting to admin login." });
         navigate("/admin/login");
       });
   }, [navigate]);
+
+  useEffect(() => {
+    if (!checking && admin?.role !== "owner" && location.pathname.startsWith("/admin/accounts")) {
+      toast.error("Only owner admins can access accounts.");
+      navigate("/admin/dashboard", { replace: true });
+    }
+  }, [admin, checking, location.pathname, navigate]);
 
   const handleLogout = async () => {
     try {
@@ -45,6 +58,8 @@ export default function AdminLayout() {
     );
   }
 
+  const navItems = admin?.role === "owner" ? [...NAV, ...OWNER_NAV] : NAV;
+
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       {/* Sidebar */}
@@ -54,7 +69,9 @@ export default function AdminLayout() {
             <NxtResumeLogoMark className="h-10 w-10" />
             <div>
               <p className="text-base font-bold leading-tight text-white">NxtResume</p>
-              <p className="text-xs text-indigo-400">Admin Panel</p>
+              <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-indigo-300">
+                {admin?.role === "owner" ? "Owner Admin" : "Admin"}
+              </p>
             </div>
           </div>
         </div>
@@ -63,7 +80,7 @@ export default function AdminLayout() {
           <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-widest text-indigo-500">
             Management
           </p>
-          {NAV.map(({ label, icon: Icon, path }) => {
+          {navItems.map(({ label, icon: Icon, path }) => {
             const active = location.pathname === path || (path !== "/admin/dashboard" && location.pathname.startsWith(path));
             return (
               <button
@@ -97,7 +114,7 @@ export default function AdminLayout() {
 
       {/* Main content */}
       <div className="ml-64 flex h-screen min-h-0 flex-1 flex-col overflow-hidden">
-        <Outlet />
+        <Outlet context={{ admin }} />
       </div>
     </div>
   );

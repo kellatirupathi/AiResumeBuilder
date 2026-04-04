@@ -82,6 +82,10 @@ function ResumeForm({ onOpenAIReview, isAIReviewOpen = false }) {
       case "Education": return (resumeInfo.education?.length || 0) > 0;
       case "Skills": return (resumeInfo.skills?.length || 0) > 0;
       case "Certifications": return (resumeInfo.certifications?.length || 0) > 0;
+      case "Add Section":
+        return (resumeInfo.additionalSections || []).some(
+          (section) => section?.content?.trim()
+        );
       default: return false;
     }
   };

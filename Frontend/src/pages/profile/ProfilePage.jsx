@@ -58,8 +58,12 @@ function ProfilePage() {
     const hasProfileData = Boolean(
       normalizedReduxProfile && '_id' in normalizedReduxProfile
     );
-    const profileQuery = useProfileQuery();
-    const isLoading = profileQuery.isPending && !hasProfileData;
+    const profileQuery = useProfileQuery({
+      initialData: null,
+      staleTime: 0,
+      refetchOnMount: "always",
+    });
+    const isLoading = !profileQuery.isFetchedAfterMount && profileQuery.isFetching;
     const [isSaving, setIsSaving] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [expandedSections, setExpandedSections] = useState({});
@@ -95,14 +99,19 @@ function ProfilePage() {
     };
 
     useEffect(() => {
-      if (!hasProfileData || lastSavedData.current) {
+      if (
+        !hasProfileData ||
+        lastSavedData.current ||
+        profileQuery.isFetching ||
+        profileQuery.data
+      ) {
         return;
       }
 
       lastSavedData.current = JSON.stringify(normalizedReduxProfile);
       isInitialLoad.current = false;
       initializeExpandedSections();
-    }, [hasProfileData, normalizedReduxProfile]);
+    }, [hasProfileData, normalizedReduxProfile, profileQuery.data, profileQuery.isFetching]);
 
     useEffect(() => {
       if (!profileQuery.data || isDirty) {

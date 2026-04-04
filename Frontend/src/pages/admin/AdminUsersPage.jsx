@@ -7,16 +7,226 @@ import {
 } from "@/Services/adminApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Pencil, Trash2, RefreshCw, Download, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Search,
+  Plus,
+  Pencil,
+  Trash2,
+  RefreshCw,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  BadgeCheck,
+  BadgeAlert,
+  Filter,
+  X,
+} from "lucide-react";
 import { UserFormDialog, DeleteConfirmDialog } from "./AdminCrudDialogs";
 import { toast as sonnerToast } from "sonner";
 
 const PAGE_SIZE = 20;
+const DEFAULT_FILTERS = {
+  niatIdVerified: "",
+  reminderEnabled: "",
+  downloadLinkEnabled: "",
+  createdFrom: "",
+  createdTo: "",
+  resumeCountMin: "",
+  resumeCountMax: "",
+};
+
+function countActiveFilters(filters) {
+  return Object.values(filters).filter((value) => String(value || "").trim() !== "").length;
+}
+
+function normalizeFilters(filters) {
+  return Object.fromEntries(
+    Object.entries(filters).map(([key, value]) => [key, typeof value === "string" ? value.trim() : value])
+  );
+}
+
+function UserFiltersSheet({
+  open,
+  onOpenChange,
+  draftFilters,
+  onDraftChange,
+  onApply,
+  onReset,
+  activeCount,
+}) {
+  const handleFieldChange = (field, value) => {
+    onDraftChange((currentValue) => ({ ...currentValue, [field]: value }));
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        setOpenDialog={onOpenChange}
+        className="left-auto right-0 top-0 h-screen max-w-md translate-x-0 translate-y-0 rounded-none border-l border-slate-200 p-0 data-[state=closed]:zoom-out-100 data-[state=open]:zoom-in-100 data-[state=closed]:slide-out-to-right-full data-[state=closed]:slide-out-to-top-0 data-[state=open]:slide-in-from-right-full data-[state=open]:slide-in-from-top-0 sm:max-w-md"
+      >
+        <div className="flex h-full flex-col bg-white">
+          <DialogHeader className="border-b border-slate-200 px-6 py-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <DialogTitle className="text-xl text-slate-900">Filter Users</DialogTitle>
+              </div>
+              {activeCount > 0 ? (
+                <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+                  {activeCount} active
+                </span>
+              ) : null}
+            </div>
+          </DialogHeader>
+
+          <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
+            <section className="space-y-3">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-800">Resume Count</h3>
+                <p className="text-xs text-slate-500">Filter users by how many resumes they have created.</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium uppercase tracking-wide text-slate-500">Minimum</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={draftFilters.resumeCountMin}
+                    onChange={(event) => handleFieldChange("resumeCountMin", event.target.value)}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium uppercase tracking-wide text-slate-500">Maximum</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={draftFilters.resumeCountMax}
+                    onChange={(event) => handleFieldChange("resumeCountMax", event.target.value)}
+                    placeholder="10"
+                  />
+                </div>
+              </div>
+            </section>
+
+            <section className="space-y-3">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-800">Student ID Status</h3>
+                <p className="text-xs text-slate-500">Filter users by Student ID verification.</p>
+              </div>
+              <select
+                className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                value={draftFilters.niatIdVerified}
+                onChange={(event) => handleFieldChange("niatIdVerified", event.target.value)}
+              >
+                <option value="">All users</option>
+                <option value="true">Verified</option>
+                <option value="false">Not verified</option>
+              </select>
+            </section>
+
+            <section className="space-y-3">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-800">Notification Preferences</h3>
+                <p className="text-xs text-slate-500">
+                  Control reminder and download-link opt-in states separately.
+                </p>
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Reminder Emails
+                  </label>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    value={draftFilters.reminderEnabled}
+                    onChange={(event) => handleFieldChange("reminderEnabled", event.target.value)}
+                  >
+                    <option value="">All users</option>
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Download Link Emails
+                  </label>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    value={draftFilters.downloadLinkEnabled}
+                    onChange={(event) => handleFieldChange("downloadLinkEnabled", event.target.value)}
+                  >
+                    <option value="">All users</option>
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            <section className="space-y-3">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-800">Created Date</h3>
+                <p className="text-xs text-slate-500">Filter users by signup date range.</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium uppercase tracking-wide text-slate-500">From</label>
+                  <Input
+                    type="date"
+                    value={draftFilters.createdFrom}
+                    onChange={(event) => handleFieldChange("createdFrom", event.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium uppercase tracking-wide text-slate-500">To</label>
+                  <Input
+                    type="date"
+                    value={draftFilters.createdTo}
+                    onChange={(event) => handleFieldChange("createdTo", event.target.value)}
+                  />
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <DialogFooter className="border-t border-slate-200 px-6 py-4 sm:justify-between sm:space-x-0">
+            <Button type="button" variant="outline" onClick={onReset}>
+              Reset
+            </Button>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="button" onClick={onApply} className="bg-indigo-600 text-white hover:bg-indigo-700">
+                Apply Filters
+              </Button>
+            </div>
+          </DialogFooter>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function exportToCsv(users) {
   if (!users.length) { sonnerToast.warning("Nothing to export."); return; }
-  const headers = ["Full Name", "Student ID", "Email", "Created At"];
-  const rows = users.map((u) => [u.fullName, u.niatId, u.email, format(new Date(u.createdAt), "PPpp")]);
+  const headers = ["Full Name", "Student ID", "Email", "Resumes Count", "Student ID Status", "Created At"];
+  const rows = users.map((u) => [
+    u.fullName,
+    u.niatId,
+    u.email,
+    u.resumeCount || 0,
+    u.niatIdVerified ? "Verified" : "Not Verified",
+    format(new Date(u.createdAt), "PPpp"),
+  ]);
   const csv = [headers, ...rows].map((r) => r.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
   const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(new Blob([csv], { type: "text/csv" })), download: "users_export.csv", style: "display:none" });
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
@@ -27,6 +237,9 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [draftFilters, setDraftFilters] = useState(DEFAULT_FILTERS);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selected, setSelected] = useState([]);
@@ -36,9 +249,14 @@ export default function AdminUsersPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const searchTimer = useRef(null);
 
-  const fetchPage = useCallback(async (page, q) => {
+  const fetchPage = useCallback(async (page, q, activeFilters = DEFAULT_FILTERS) => {
     try {
-      const res = await getUsersPaginated({ page, limit: PAGE_SIZE, search: q });
+      const res = await getUsersPaginated({
+        page,
+        limit: PAGE_SIZE,
+        search: q,
+        ...normalizeFilters(activeFilters),
+      });
       setUsers(res.data.users || []);
       setPagination(res.data.pagination || { page: 1, totalPages: 1, total: 0 });
       setSelected([]);
@@ -49,21 +267,21 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetchPage(1, "").finally(() => setLoading(false));
+    fetchPage(1, "", DEFAULT_FILTERS).finally(() => setLoading(false));
   }, [fetchPage]);
 
   const handleSearchChange = (e) => {
     const q = e.target.value;
     setSearch(q);
     clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => fetchPage(1, q), 400);
+    searchTimer.current = setTimeout(() => fetchPage(1, q, filters), 400);
   };
 
-  const handlePageChange = (p) => fetchPage(p, search);
+  const handlePageChange = (p) => fetchPage(p, search, filters);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchPage(pagination.page, search);
+    await fetchPage(pagination.page, search, filters);
     setRefreshing(false);
     toast.success("Refreshed");
   };
@@ -88,7 +306,7 @@ export default function AdminUsersPage() {
         toast.success("User created successfully");
       }
       setUserDialog({ open: false, mode: "create", record: null });
-      await fetchPage(pagination.page, search);
+      await fetchPage(pagination.page, search, filters);
     } catch (err) {
       toast.error("Failed to save user", { description: err.message });
     } finally {
@@ -102,12 +320,32 @@ export default function AdminUsersPage() {
       for (const u of deleteDialog.records) await deleteAdminUser(u._id);
       toast.success(deleteDialog.records.length > 1 ? `${deleteDialog.records.length} users deleted` : "User deleted");
       setDeleteDialog({ open: false, records: [] });
-      await fetchPage(pagination.page, search);
+      await fetchPage(pagination.page, search, filters);
     } catch (err) {
       toast.error("Delete failed", { description: err.message });
     } finally {
       setDeleteLoading(false);
     }
+  };
+
+  const activeFilterCount = countActiveFilters(filters);
+
+  const handleApplyFilters = async () => {
+    const normalizedDraft = normalizeFilters(draftFilters);
+    setFilters(normalizedDraft);
+    setFiltersOpen(false);
+    setLoading(true);
+    await fetchPage(1, search, normalizedDraft);
+    setLoading(false);
+  };
+
+  const handleResetFilters = async () => {
+    setDraftFilters(DEFAULT_FILTERS);
+    setFilters(DEFAULT_FILTERS);
+    setFiltersOpen(false);
+    setLoading(true);
+    await fetchPage(1, search, DEFAULT_FILTERS);
+    setLoading(false);
   };
 
   return (
@@ -122,6 +360,22 @@ export default function AdminUsersPage() {
             <Input placeholder="Search by name, email, ID..." value={search} onChange={handleSearchChange} className="w-72 pl-10 border-indigo-200" />
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-indigo-400" />
           </div>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setDraftFilters(filters);
+              setFiltersOpen(true);
+            }}
+            className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+          >
+            <Filter className="mr-2 h-4 w-4" />
+            Filter
+            {activeFilterCount > 0 ? (
+              <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700">
+                {activeFilterCount}
+              </span>
+            ) : null}
+          </Button>
           {selected.length > 0 ? (
             <>
               <span className="rounded-full bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-700">{selected.length} selected</span>
@@ -150,6 +404,45 @@ export default function AdminUsersPage() {
         </div>
       </header>
 
+      {activeFilterCount > 0 ? (
+        <div className="flex flex-wrap items-center gap-2 border-b border-indigo-100 bg-indigo-50/50 px-6 py-3">
+          <span className="text-xs font-semibold uppercase tracking-wide text-indigo-700">Active Filters</span>
+          {filters.resumeCountMin !== "" || filters.resumeCountMax !== "" ? (
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700">
+              Resume count: {filters.resumeCountMin || "0"} to {filters.resumeCountMax || "any"}
+            </span>
+          ) : null}
+          {filters.niatIdVerified !== "" ? (
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700">
+              Student ID: {filters.niatIdVerified === "true" ? "Verified" : "Not verified"}
+            </span>
+          ) : null}
+          {filters.reminderEnabled !== "" ? (
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700">
+              Reminder: {filters.reminderEnabled === "true" ? "Enabled" : "Disabled"}
+            </span>
+          ) : null}
+          {filters.downloadLinkEnabled !== "" ? (
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700">
+              Download link: {filters.downloadLinkEnabled === "true" ? "Enabled" : "Disabled"}
+            </span>
+          ) : null}
+          {filters.createdFrom || filters.createdTo ? (
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700">
+              Created: {filters.createdFrom || "Any"} to {filters.createdTo || "Any"}
+            </span>
+          ) : null}
+          <button
+            type="button"
+            onClick={handleResetFilters}
+            className="inline-flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-900"
+          >
+            <X className="h-3.5 w-3.5" />
+            Clear all
+          </button>
+        </div>
+      ) : null}
+
       <main className="flex flex-1 min-h-0 flex-col overflow-hidden bg-white">
         {loading ? (
           <div className="flex flex-1 items-center justify-center">
@@ -167,6 +460,8 @@ export default function AdminUsersPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Full Name</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Student ID</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Resumes Count</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Student ID</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Created At</th>
                   </tr>
                 </thead>
@@ -193,11 +488,32 @@ export default function AdminUsersPage() {
                         <span className="rounded-md bg-blue-50 px-2 py-1 font-mono text-xs font-medium text-blue-700">{user.niatId || "—"}</span>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">{user.email}</td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <span className="inline-flex min-w-10 items-center justify-center text-sm font-semibold text-indigo-700">
+                          {user.resumeCount || 0}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <span
+                          className={`inline-flex items-center gap-2 text-xs font-semibold ${
+                            user.niatIdVerified
+                              ? "text-emerald-700"
+                              : "text-amber-700"
+                          }`}
+                        >
+                          {user.niatIdVerified ? (
+                            <BadgeCheck className="h-3.5 w-3.5 flex-shrink-0" />
+                          ) : (
+                            <BadgeAlert className="h-3.5 w-3.5 flex-shrink-0" />
+                          )}
+                          <span>{user.niatIdVerified ? "Verified" : "Not Verified"}</span>
+                        </span>
+                      </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">{format(new Date(user.createdAt), "PP")}</td>
                     </tr>
                   ))}
                   {users.length === 0 && (
-                    <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-400">No users found</td></tr>
+                    <tr><td colSpan="7" className="px-6 py-12 text-center text-gray-400">No users found</td></tr>
                   )}
                 </tbody>
               </table>
@@ -237,6 +553,15 @@ export default function AdminUsersPage() {
         confirmLabel={deleteDialog.records.length > 1 ? `Delete ${deleteDialog.records.length} Users` : "Delete User"}
         onConfirm={handleDeleteConfirm}
         loading={deleteLoading}
+      />
+      <UserFiltersSheet
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        draftFilters={draftFilters}
+        onDraftChange={setDraftFilters}
+        onApply={handleApplyFilters}
+        onReset={handleResetFilters}
+        activeCount={countActiveFilters(draftFilters)}
       />
     </>
   );
