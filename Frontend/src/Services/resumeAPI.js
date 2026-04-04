@@ -6,6 +6,7 @@ import {
   setResumeListCache,
   upsertResumeInCaches,
 } from "@/lib/queryCacheUtils";
+import { handleUnauthorizedUserSession } from "@/lib/authSession";
 import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 
@@ -16,6 +17,17 @@ const axiosInstance = axios.create({
   },
   withCredentials: true,
 });
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      handleUnauthorizedUserSession();
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 const createNewResume = async (data) => {
   try {
