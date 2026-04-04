@@ -381,7 +381,7 @@ export const getResumesPaginated = async (req, res) => {
     const [resumes, total] = await Promise.all([
       Resume.find(resumeFilter)
         .populate("user", "fullName email niatId")
-        .select("title template themeColor createdAt updatedAt viewCount googleDriveLink user")
+        .select("title template themeColor createdAt updatedAt viewCount googleDriveLink driveOutOfSync user")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
