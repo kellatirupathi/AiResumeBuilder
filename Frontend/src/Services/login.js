@@ -6,6 +6,7 @@ import {
   setNotificationPreferencesCache,
   setUserCaches,
 } from "@/lib/queryCacheUtils";
+import { handleUnauthorizedUserSession } from "@/lib/authSession";
 import { queryClient } from "@/lib/queryClient";
 
 const axiosInstance = axios.create({
@@ -15,6 +16,17 @@ const axiosInstance = axios.create({
   },
   withCredentials: true,
 });
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      handleUnauthorizedUserSession();
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 const startUser = async () => {
   try {

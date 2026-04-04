@@ -37,12 +37,15 @@ import {
   HelpCircle,
   LogOut,
   ChevronUp,
+  CircleAlert,
+  Sparkles,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { useResumeListQuery } from "@/hooks/useAppQueryData";
+import { useProfileQuery, useResumeListQuery } from "@/hooks/useAppQueryData";
+import { getProfileCompletionDetails } from "@/lib/profileCompletion";
 
 // Animated User Icon Component
 const AnimatedUserIcon = ({ fullName }) => {
@@ -103,6 +106,7 @@ const StatCard = ({ icon, label, count, className = "" }) => (
 );
 
 function Dashboard() {
+  const PROFILE_COACHMARK_DISMISSED_KEY = "dashboard-profile-coachmark-dismissed";
   const { darkMode, toggleDarkMode } = useOutletContext();
   const user = useSelector((state) => state.editUser.userData);
   const dispatch = useDispatch();
@@ -113,11 +117,19 @@ function Dashboard() {
   const [showATSModal, setShowATSModal] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [activeNav, setActiveNav] = useState("dashboard");
+  const [showProfileCoachmark, setShowProfileCoachmark] = useState(false);
+  const [coachmarkPosition, setCoachmarkPosition] = useState({ top: 24, left: 280 });
   const sortDropdownRef = useRef(null);
   const userDropdownRef = useRef(null);
   const profileDropdownRef = useRef(null);
+  const profileNavRef = useRef(null);
   const navigate = useNavigate();
   const resumeListQuery = useResumeListQuery({ enabled: Boolean(user) });
+  const profileQuery = useProfileQuery({
+    enabled: Boolean(user),
+    initialData:
+      user && typeof user === "object" && "_id" in user ? user : undefined,
+  });
   const resumeList = resumeListQuery.data || [];
   const isLoading = resumeListQuery.isPending && !resumeListQuery.data;
   const filteredList = useMemo(() => {
@@ -133,20 +145,11 @@ function Dashboard() {
     return filtered;
   }, [resumeList, searchQuery, sortOption]);
 
-  const profileCompletion = useMemo(() => {
-    if (!user || typeof user !== 'object') return 0;
-    let completed = 0;
-    const total = 8;
-    if ((user.firstName || user.fullName) && user.email) completed++;
-    if (user.summary?.trim()) completed++;
-    if (user.experience?.length > 0) completed++;
-    if (user.projects?.length > 0) completed++;
-    if (user.education?.length > 0) completed++;
-    if (user.skills?.length > 0) completed++;
-    if (user.certifications?.length > 0) completed++;
-    if (user.additionalSections?.length > 0) completed++;
-    return Math.round((completed / total) * 100);
-  }, [user]);
+  const completionDetails = useMemo(
+    () => getProfileCompletionDetails(profileQuery.data || user || {}),
+    [profileQuery.data, user]
+  );
+  const profileCompletion = completionDetails.percentage;
 
   const isDarkMode = document.documentElement.classList.contains('dark');
   const refreshResumeData = () => resumeListQuery.refetch();
@@ -172,6 +175,13 @@ function Dashboard() {
     }
   };
 
+  const dismissProfileCoachmark = () => {
+    setShowProfileCoachmark(false);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(PROFILE_COACHMARK_DISMISSED_KEY, "true");
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target)) {
@@ -187,6 +197,55 @@ function Dashboard() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!user || profileQuery.isFetching) {
+      return;
+    }
+
+    const dismissed =
+      typeof window !== "undefined" &&
+      window.sessionStorage.getItem(PROFILE_COACHMARK_DISMISSED_KEY) === "true";
+
+    setShowProfileCoachmark(profileCompletion < 50 && !dismissed);
+  }, [profileCompletion, profileQuery.isFetching, user]);
+
+  useEffect(() => {
+    if (!showProfileCoachmark || !profileNavRef.current) {
+      return;
+    }
+
+    if (
+      typeof document !== "undefined" &&
+      document.activeElement instanceof HTMLElement &&
+      !profileNavRef.current.contains(document.activeElement)
+    ) {
+      document.activeElement.blur();
+    }
+
+    setShowSortOptions(false);
+
+    const updateCoachmarkPosition = () => {
+      if (!profileNavRef.current) {
+        return;
+      }
+
+      const rect = profileNavRef.current.getBoundingClientRect();
+      setCoachmarkPosition({
+        top: Math.max(rect.top + rect.height / 2 - 110, 24),
+        left: rect.right + 18,
+      });
+    };
+
+    updateCoachmarkPosition();
+    window.addEventListener("resize", updateCoachmarkPosition);
+    window.addEventListener("scroll", updateCoachmarkPosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updateCoachmarkPosition);
+      window.removeEventListener("scroll", updateCoachmarkPosition, true);
+    };
+  }, [showProfileCoachmark]);
 
   const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08 } } };
   const itemVariants = { hidden: { y: 15, opacity: 0 }, visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 120, damping: 12 } } };
@@ -234,6 +293,7 @@ function Dashboard() {
           {navItems.map(({ key, label, icon }) => (
             <button
               key={key}
+              ref={key === "profile" ? profileNavRef : null}
               onClick={() => {
                 if (key === "ats")     { navigate("/ats-checker");   return; }
                 if (key === "resumes") { navigate("/resumes");       return; }
@@ -245,7 +305,7 @@ function Dashboard() {
                 activeNav === key
                   ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/40"
                   : "text-indigo-200 hover:bg-white/10 hover:text-white"
-              }`}
+              } ${showProfileCoachmark && key === "profile" ? "relative z-40 ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-900" : ""}`}
             >
               {icon}
               {label}
@@ -337,6 +397,77 @@ function Dashboard() {
         </div>
       </aside>
 
+      {showProfileCoachmark ? (
+        <>
+          <div className="pointer-events-none fixed inset-0 z-30 bg-slate-950/45" />
+          <div
+            className="fixed z-40 hidden w-[340px] rounded-2xl border border-amber-100 bg-white p-5 shadow-2xl shadow-slate-950/20 lg:block"
+            style={{
+              top: `${coachmarkPosition.top}px`,
+              left: `${coachmarkPosition.left}px`,
+            }}
+          >
+            <div className="absolute left-[-10px] top-24 h-5 w-5 rotate-45 border-b border-l border-amber-100 bg-white" />
+            <div className="mb-3 flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
+                <CircleAlert className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-500">
+                  Quick Start
+                </p>
+                <h3 className="text-xl font-semibold text-slate-900">Complete Your Profile</h3>
+              </div>
+            </div>
+
+            <p className="text-sm leading-6 text-slate-600">
+              Your profile is currently {profileCompletion}% complete. Tap the
+              Profile menu and finish at least 50% so your details stay ready
+              across the app.
+            </p>
+
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <span>Progress</span>
+                <span>{profileCompletion}%</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-indigo-500 transition-all duration-500"
+                  style={{ width: `${Math.max(profileCompletion, 8)}%` }}
+                />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {completionDetails.missingSections.slice(0, 4).map((section) => (
+                  <span
+                    key={section}
+                    className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200"
+                  >
+                    {section}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5 flex items-center justify-between gap-3">
+              <Button variant="outline" onClick={dismissProfileCoachmark}>
+                Maybe Later
+              </Button>
+              <Button
+                className="bg-indigo-600 text-white hover:bg-indigo-700"
+                onClick={() => {
+                  dismissProfileCoachmark();
+                  navigate("/profile");
+                }}
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                Complete Profile
+              </Button>
+            </div>
+          </div>
+        </>
+      ) : null}
+
       {/* ─── MAIN CONTENT ─── */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
 
@@ -359,7 +490,10 @@ function Dashboard() {
               />
             </div>
 
-            <div ref={sortDropdownRef} className="relative z-50">
+            <div
+              ref={sortDropdownRef}
+              className={`relative ${showProfileCoachmark ? "z-0" : "z-50"}`}
+            >
               <Button
                 variant="outline"
                 onClick={() => setShowSortOptions(!showSortOptions)}
@@ -372,7 +506,11 @@ function Dashboard() {
                 <ChevronDown className="h-3.5 w-3.5 ml-1.5" />
               </Button>
               {showSortOptions && (
-                <div className="absolute z-[9999] mt-1 right-0 w-44 rounded-md shadow-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600">
+                <div
+                  className={`absolute mt-1 right-0 w-44 rounded-md shadow-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 ${
+                    showProfileCoachmark ? "z-20" : "z-[9999]"
+                  }`}
+                >
                   <div className="py-1">
                     {[
                       { value: "newest", label: "Newest first" },
