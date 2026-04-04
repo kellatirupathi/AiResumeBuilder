@@ -509,7 +509,9 @@ export default function AdminUsersPage() {
                           <span>{user.niatIdVerified ? "Verified" : "Not Verified"}</span>
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">{format(new Date(user.createdAt), "PP")}</td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
+                        {format(new Date(user.createdAt), "PPp")}
+                      </td>
                     </tr>
                   ))}
                   {users.length === 0 && (

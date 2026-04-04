@@ -48,10 +48,14 @@ function DatePicker({ index, field, value, onChange, isDisabled, label }) {
   const calculateDropdownPosition = () => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
+      const dropdownHeight = 300;
+      const sideOffset = 6;
       const spaceBelow = window.innerHeight - rect.bottom;
+      const shouldOpenAbove = spaceBelow < dropdownHeight && rect.top > dropdownHeight;
+
       setDropdownCoords({
         left: rect.left,
-        top: spaceBelow > 310 ? rect.bottom + window.scrollY + 4 : rect.top + window.scrollY - 300 - 4,
+        top: shouldOpenAbove ? rect.top - dropdownHeight - sideOffset : rect.bottom + sideOffset,
         width: rect.width,
       });
     }
@@ -90,14 +94,14 @@ function DatePicker({ index, field, value, onChange, isDisabled, label }) {
   const dropdownJsx = (
     <div
       style={{
-        position: 'absolute',
+        position: 'fixed',
         top: `${dropdownCoords.top}px`,
         left: `${dropdownCoords.left}px`,
         width: `${dropdownCoords.width}px`,
       }}
-      className="date-picker-portal"
+      className="date-picker-portal z-[10000]"
     >
-      <div className="z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl p-3 w-full">
+      <div className="bg-white border border-gray-200 rounded-lg shadow-xl p-3 w-full">
         <div className="flex justify-between items-center mb-4">
           <button type="button" onClick={() => setCurrentYear(y => y - 1)} className="p-1 hover:bg-gray-100 rounded-full"><ChevronDown /></button>
           <span className="mx-2 font-medium">{currentYear}</span>

@@ -9,6 +9,143 @@ import {
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 
+const STAGE_NUMBERS = [1, 2, 3];
+
+const buildStageSnapshot = () => ({
+  status: "pending",
+  sentAt: null,
+  errorMessage: "",
+});
+
+const buildReminderSummary = (notification) => ({
+  id: `reminder:${notification.userId}`,
+  key: `reminder:${notification.userId}`,
+  latestNotificationId: String(notification._id),
+  userId: String(notification.userId),
+  userName: notification.userName || "",
+  userEmail: notification.userEmail || "",
+  type: "reminder",
+  resumeTitle: "",
+  currentStatus: notification.status,
+  lastError: notification.errorMessage || "",
+  signupAt: null,
+  latestActivityAt: notification.createdAt,
+  actions: {
+    canResend: notification.status !== "cancelled",
+    canCancel: notification.status !== "cancelled",
+  },
+  stages: {
+    1: buildStageSnapshot(),
+    2: buildStageSnapshot(),
+    3: buildStageSnapshot(),
+  },
+});
+
+const buildDownloadLinkSummary = (notification) => ({
+  id: `download-link:${notification.resumeId || notification._id}`,
+  key: `download-link:${notification.resumeId || notification._id}`,
+  latestNotificationId: String(notification._id),
+  userId: String(notification.userId),
+  userName: notification.userName || "",
+  userEmail: notification.userEmail || "",
+  type: "download-link",
+  resumeTitle: notification.resumeTitle || "",
+  currentStatus: notification.status,
+  lastError: notification.errorMessage || "",
+  signupAt: null,
+  latestActivityAt: notification.createdAt,
+  actions: {
+    canResend: notification.status !== "cancelled",
+    canCancel: notification.status !== "cancelled",
+  },
+  stages: {
+    1: { status: "na", sentAt: null, errorMessage: "" },
+    2: { status: "na", sentAt: null, errorMessage: "" },
+    3: { status: "na", sentAt: null, errorMessage: "" },
+  },
+});
+
+const buildNotificationSummaries = (
+  notifications = [],
+  userSignupMap = new Map(),
+  { type = "", status = "" } = {}
+) => {
+  const summaries = new Map();
+
+  for (const notification of notifications) {
+    const key =
+      notification.type === "reminder"
+        ? `reminder:${notification.userId}`
+        : `download-link:${notification.resumeId || notification._id}`;
+
+    if (!summaries.has(key)) {
+      summaries.set(
+        key,
+        notification.type === "reminder"
+          ? buildReminderSummary(notification)
+          : buildDownloadLinkSummary(notification)
+      );
+    }
+
+    const summary = summaries.get(key);
+
+    if (new Date(notification.createdAt) > new Date(summary.latestActivityAt)) {
+      summary.latestActivityAt = notification.createdAt;
+      summary.latestNotificationId = String(notification._id);
+      summary.currentStatus = notification.status;
+      summary.actions = {
+        canResend: notification.status !== "cancelled",
+        canCancel: notification.status !== "cancelled",
+      };
+    }
+
+    if (notification.errorMessage && !summary.lastError) {
+      summary.lastError = notification.errorMessage;
+    }
+
+    if (notification.type === "reminder" && notification.reminderStage) {
+      const currentStage = summary.stages[notification.reminderStage];
+
+      if (
+        currentStage &&
+        (!currentStage.sentAt || new Date(notification.createdAt) > new Date(currentStage.sentAt))
+      ) {
+        summary.stages[notification.reminderStage] = {
+          status: notification.status,
+          sentAt: notification.createdAt,
+          errorMessage: notification.errorMessage || "",
+        };
+      }
+    }
+  }
+
+  let rows = Array.from(summaries.values()).map((summary) => {
+    summary.signupAt = userSignupMap.get(summary.userId) || null;
+
+    if (summary.type === "reminder") {
+      STAGE_NUMBERS.forEach((stageNumber) => {
+        if (!summary.stages[stageNumber]) {
+          summary.stages[stageNumber] = buildStageSnapshot();
+        }
+      });
+    }
+
+    return summary;
+  });
+
+  if (type) {
+    rows = rows.filter((row) => row.type === type);
+  }
+
+  if (status) {
+    rows = rows.filter((row) => row.currentStatus === status);
+  }
+
+  rows.sort((a, b) => new Date(b.latestActivityAt) - new Date(a.latestActivityAt));
+
+  return rows;
+};
+
 /**
  * GET /api/admin/notifications
  * Paginated, filterable list of all notifications.
@@ -23,7 +160,6 @@ export const getNotifications = async (req, res) => {
 
     const filter = {};
     if (type) filter.type = type;
-    if (status && status !== "pending") filter.status = status;
     if (search) {
       filter.$or = [
         { userEmail: { $regex: search, $options: "i" } },
@@ -31,19 +167,41 @@ export const getNotifications = async (req, res) => {
       ];
     }
 
-    const total = await Notification.countDocuments(filter);
     const notifications = await Notification.find(filter)
       .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
       .lean();
+
+    const userIds = [
+      ...new Set(
+        notifications
+          .map((notification) => notification.userId)
+          .filter((userId) => userId)
+          .map((userId) => String(userId))
+      ),
+    ];
+    const users = userIds.length
+      ? await User.find({ _id: { $in: userIds } }).select("_id createdAt").lean()
+      : [];
+    const userSignupMap = new Map(
+      users.map((user) => [String(user._id), user.createdAt])
+    );
+
+    const notificationSummaries = buildNotificationSummaries(notifications, userSignupMap, {
+      type,
+      status: status === "pending" ? "pending" : status || "",
+    });
+    const total = notificationSummaries.length;
+    const paginatedSummaries = notificationSummaries.slice(
+      (page - 1) * limit,
+      page * limit
+    );
 
     return res.status(200).json(
       new ApiResponse(
         200,
         {
           reminderControls,
-          notifications,
+          notifications: paginatedSummaries,
           total,
           page,
           limit,
@@ -85,6 +243,14 @@ export const sendReminderNotification = async (req, res) => {
 
     let status = "sent";
     let errorMessage = "";
+    const latestReminderNotification = await Notification.findOne({
+      userId: reminderControl.userId,
+      type: "reminder",
+    })
+      .sort({ createdAt: -1 })
+      .select("reminderStage")
+      .lean();
+    const reminderStage = latestReminderNotification?.reminderStage || 1;
 
     try {
       await sendReminderEmail(
@@ -101,6 +267,7 @@ export const sendReminderNotification = async (req, res) => {
       userEmail: reminderControl.userEmail,
       userName: reminderControl.userName,
       type: "reminder",
+      reminderStage,
       status,
       errorMessage,
     });
@@ -222,6 +389,7 @@ export const resendNotification = async (req, res) => {
       userEmail: notification.userEmail,
       userName: notification.userName,
       type: notification.type,
+      reminderStage: notification.reminderStage ?? null,
       resumeId: notification.resumeId,
       resumeTitle: notification.resumeTitle,
       status: newStatus,
