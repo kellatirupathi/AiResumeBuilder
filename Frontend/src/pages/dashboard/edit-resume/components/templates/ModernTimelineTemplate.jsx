@@ -2,7 +2,7 @@ import React from "react";
 
 const ModernTimelineTemplate = ({ resumeInfo }) => {
   // Helper function to format URLs
-  const formatUrl = (url) => {
+ const formatUrl = (url) => {
    if (!url) return null;
    if (!/^https?:\/\//i.test(url)) {
      return `https://${url}`;
@@ -11,6 +11,21 @@ const ModernTimelineTemplate = ({ resumeInfo }) => {
  };
 
  const themeColor = resumeInfo?.themeColor || "#333333"; // Default to dark gray
+
+  const normalizeBullets = (text) => {
+    if (!text) return [];
+
+    return String(text)
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/p>|<\/div>|<\/li>|<\/h[1-6]>/gi, "\n")
+      .replace(/<li[^>]*>/gi, "")
+      .replace(/<\/ul>|<\/ol>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/gi, " ")
+      .split(/\r?\n|•|â€¢/)
+      .map((item) => item.replace(/^[-*]\s*/, "").trim())
+      .filter(Boolean);
+  };
  
  return (
    <div className="bg-white h-full rounded-md overflow-hidden border border-gray-200">
@@ -140,7 +155,13 @@ const ModernTimelineTemplate = ({ resumeInfo }) => {
                       {exp.state}
                     </h5>
                     
-                    <div className="text-sm text-gray-600" dangerouslySetInnerHTML={{ __html: exp.workSummary }}></div>
+                    {exp.workSummary ? (
+                      <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600">
+                        {normalizeBullets(exp.workSummary).map((item, itemIndex) => (
+                          <li key={itemIndex}>{item}</li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </div>
                 ))}
               </div>
@@ -197,7 +218,13 @@ const ModernTimelineTemplate = ({ resumeInfo }) => {
                       </div>
                     )}
                     
-                    <div className="text-sm text-gray-600" dangerouslySetInnerHTML={{ __html: project.projectSummary }}></div>
+                    {project.projectSummary ? (
+                      <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600">
+                        {normalizeBullets(project.projectSummary).map((item, itemIndex) => (
+                          <li key={itemIndex}>{item}</li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </div>
                 ))}
               </div>

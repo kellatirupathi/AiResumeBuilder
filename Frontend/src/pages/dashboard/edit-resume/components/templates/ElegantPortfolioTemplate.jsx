@@ -11,6 +11,21 @@ const ElegantPortfolioTemplate = ({ resumeInfo }) => {
   };
 
   const themeColor = resumeInfo?.themeColor || "#6d28d9"; // Default to violet-700
+
+  const normalizeBullets = (text) => {
+    if (!text) return [];
+
+    return String(text)
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/p>|<\/div>|<\/li>|<\/h[1-6]>/gi, "\n")
+      .replace(/<li[^>]*>/gi, "")
+      .replace(/<\/ul>|<\/ol>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/gi, " ")
+      .split(/\r?\n|•|â€¢/)
+      .map((item) => item.replace(/^[-*]\s*/, "").trim())
+      .filter(Boolean);
+  };
   
   return (
     <div className="bg-white h-full rounded-md overflow-hidden shadow-md">
@@ -119,7 +134,13 @@ const ElegantPortfolioTemplate = ({ resumeInfo }) => {
                         <span className="text-sm text-gray-500">{exp.startDate}{exp.startDate && (exp.endDate || exp.currentlyWorking) ? " - " : ""}{exp.currentlyWorking ? "Present" : exp.endDate}</span>
                       </div>
                       <h5 className="text-sm font-medium text-gray-700 mb-1">{exp.companyName}{exp.city && exp.companyName ? ", " : ""}{exp.city}{exp.city && exp.state ? ", " : ""}{exp.state}</h5>
-                      <div className="text-sm text-gray-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: exp.workSummary }}></div>
+                      {exp.workSummary ? (
+                        <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600 leading-relaxed">
+                          {normalizeBullets(exp.workSummary).map((item, bulletIndex) => (
+                            <li key={bulletIndex}>{item}</li>
+                          ))}
+                        </ul>
+                      ) : null}
                     </div>
                   ))}
                 </div>
@@ -143,7 +164,13 @@ const ElegantPortfolioTemplate = ({ resumeInfo }) => {
                         </div>
                       </div>
                       {project.techStack && <p className="text-xs text-gray-500 mb-1">{project.techStack}</p>}
-                      <div className="text-sm text-gray-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: project.projectSummary }}></div>
+                      {project.projectSummary ? (
+                        <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600 leading-relaxed">
+                          {normalizeBullets(project.projectSummary).map((item, bulletIndex) => (
+                            <li key={bulletIndex}>{item}</li>
+                          ))}
+                        </ul>
+                      ) : null}
                     </div>
                   ))}
                 </div>

@@ -10,6 +10,21 @@ const formatUrl = (url) => {
   return url;
 };
 
+const normalizeBullets = (text) => {
+  if (!text) return [];
+
+  return String(text)
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>|<\/div>|<\/li>|<\/h[1-6]>/gi, "\n")
+    .replace(/<li[^>]*>/gi, "")
+    .replace(/<\/ul>|<\/ol>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .split(/\r?\n|•|â€¢/)
+    .map((item) => item.replace(/^[-*]\s*/, "").trim())
+    .filter(Boolean);
+};
+
 const themeColor = resumeInfo?.themeColor || "#1c2434"; // Default to a deep navy
 
 return (
@@ -198,7 +213,13 @@ return (
                   <span className="text-xs text-gray-500">{exp.startDate} {exp.startDate && (exp.endDate || exp.currentlyWorking) ? " - " : ""}{exp.currentlyWorking ? "Present" : exp.endDate}</span>
                 </div>
                 <h5 className="text-xs font-medium text-gray-600 mb-2">{exp.companyName}{exp.city && exp.companyName ? ", " : ""}{exp.city}{exp.city && exp.state ? ", " : ""}{exp.state}</h5>
-                <div className="text-xs text-gray-700" dangerouslySetInnerHTML={{ __html: exp.workSummary }}></div>
+                {exp.workSummary ? (
+                  <ul className="pl-5 list-disc space-y-1 text-xs text-gray-700">
+                    {normalizeBullets(exp.workSummary).map((item, itemIndex) => (
+                      <li key={itemIndex}>{item}</li>
+                    ))}
+                  </ul>
+                ) : null}
               </div>
             ))}
           </div>
@@ -254,7 +275,13 @@ return (
                   </div>
                 </div>
                 {project.techStack && <div className="text-xs text-gray-600 mb-1"><span className="font-medium">Technologies:</span> {project.techStack}</div>}
-                <div className="text-xs text-gray-700" dangerouslySetInnerHTML={{ __html: project.projectSummary }}></div>
+                {project.projectSummary ? (
+                  <ul className="pl-5 list-disc space-y-1 text-xs text-gray-700">
+                    {normalizeBullets(project.projectSummary).map((item, itemIndex) => (
+                      <li key={itemIndex}>{item}</li>
+                    ))}
+                  </ul>
+                ) : null}
               </div>
             ))}
           </div>

@@ -7,8 +7,7 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "job:send-reminders": "node src/jobs/sendReminders.job.js",
-    "backfill": "node scripts/backfillDriveLinks.js",
-    "postinstall": "puppeteer browsers install chrome"
+    "backfill": "node scripts/backfillDriveLinks.js"
   },
   "keywords": [],
   "author": "",
@@ -28,7 +27,6 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.5.1",
     "nodemailer": "^7.0.5",
-    "pdfkit": "^0.17.1",
-    "puppeteer": "^22.15.0"
+    "pdfkit": "^0.17.1"
   }
 }

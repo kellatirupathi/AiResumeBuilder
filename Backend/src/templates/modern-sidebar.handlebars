@@ -28,27 +28,18 @@
       box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
       border-radius: 0.25rem;
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    @media (min-width: 768px) {
-      .resume {
-        flex-direction: row;
-      }
+      display: table;
+      table-layout: fixed;
     }
     
     /* Sidebar Section */
     .sidebar {
       padding: 1.25rem;
       background-color: {{themeColor}};
-    }
-    
-    @media (min-width: 768px) {
-      .sidebar {
-        width: 33.333333%;
-        min-height: 100%;
-      }
+      display: table-cell;
+      width: 33.333333%;
+      vertical-align: top;
+      box-sizing: border-box;
     }
     
     .profile {
@@ -203,13 +194,10 @@
     .main-content {
       padding: 1.25rem;
       background-color: white;
-    }
-    
-    @media (min-width: 768px) {
-      .main-content {
-        width: 66.666667%;
-        margin-left: 0;
-      }
+      display: table-cell;
+      width: 66.666667%;
+      vertical-align: top;
+      box-sizing: border-box;
     }
     
     .content-section {
@@ -258,7 +246,7 @@
       justify-content: space-between;
       align-items: flex-start;
       flex-wrap: wrap;
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.05rem;
     }
     
     .job-title-text {
@@ -278,7 +266,7 @@
       font-size: 0.875rem;
       font-weight: 500;
       color: #4b5563;
-      margin-bottom: 0.25rem;
+      margin: 0 0 0.05rem 0;
     }
     
     .job-description {
@@ -479,6 +467,14 @@
       .resume {
         box-shadow: none;
         border-radius: 0;
+        display: table;
+        table-layout: fixed;
+      }
+
+      .sidebar,
+      .main-content {
+        display: table-cell;
+        vertical-align: top;
       }
       
       .experience-item, .project-item, .certification-item, .education-item, .additional-section {

@@ -11,6 +11,21 @@ const BoldImpactTemplate = ({ resumeInfo }) => {
   };
 
   const themeColor = resumeInfo?.themeColor || "#000000"; // Default to black
+
+  const normalizeBullets = (text) => {
+    if (!text) return [];
+
+    return String(text)
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/p>|<\/div>|<\/li>|<\/h[1-6]>/gi, "\n")
+      .replace(/<li[^>]*>/gi, "")
+      .replace(/<\/ul>|<\/ol>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/gi, " ")
+      .split(/\r?\n|•|â€¢/)
+      .map((item) => item.replace(/^[-*]\s*/, "").trim())
+      .filter(Boolean);
+  };
   
   return (
     <div className="shadow-xl bg-white h-full rounded-md overflow-hidden">
@@ -161,10 +176,13 @@ const BoldImpactTemplate = ({ resumeInfo }) => {
                       {exp.state}
                     </h5>
                     
-                    <div 
-                      className="text-sm text-gray-600 leading-relaxed" 
-                      dangerouslySetInnerHTML={{ __html: exp.workSummary }}
-                    ></div>
+                    {exp.workSummary ? (
+                      <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600 leading-relaxed">
+                        {normalizeBullets(exp.workSummary).map((item, itemIndex) => (
+                          <li key={itemIndex}>{item}</li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </div>
                 ))}
               </div>
@@ -229,10 +247,13 @@ const BoldImpactTemplate = ({ resumeInfo }) => {
                       </div>
                     )}
                     
-                    <div 
-                      className="text-sm text-gray-600 leading-relaxed" 
-                      dangerouslySetInnerHTML={{ __html: project.projectSummary }}
-                    ></div>
+                    {project.projectSummary ? (
+                      <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600 leading-relaxed">
+                        {normalizeBullets(project.projectSummary).map((item, itemIndex) => (
+                          <li key={itemIndex}>{item}</li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </div>
                 ))}
               </div>

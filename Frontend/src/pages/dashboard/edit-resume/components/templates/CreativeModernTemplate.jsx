@@ -10,6 +10,21 @@ const CreativeModernTemplate = ({ resumeInfo }) => {
     return url;
   };
 
+  const normalizeBullets = (text) => {
+    if (!text) return [];
+
+    return String(text)
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/p>|<\/div>|<\/li>|<\/h[1-6]>/gi, "\n")
+      .replace(/<li[^>]*>/gi, "")
+      .replace(/<\/ul>|<\/ol>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/gi, " ")
+      .split(/\r?\n|•|â€¢/)
+      .map((item) => item.replace(/^[-*]\s*/, "").trim())
+      .filter(Boolean);
+  };
+
   const themeColor = resumeInfo?.themeColor || "#4b5563"; // Default to a more neutral gray
   
   // Create a lighter version of the theme color for styling
@@ -141,12 +156,6 @@ const CreativeModernTemplate = ({ resumeInfo }) => {
                 {resumeInfo.experience.map((exp, index) => (
                   <div key={index} className="relative">
                     <div className="flex">
-                      <div className="flex-shrink-0 mt-1 mr-3">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: themeColor }}
-                        ></div>
-                      </div>
                       
                       <div className="flex-grow">
                         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-1">
@@ -165,7 +174,13 @@ const CreativeModernTemplate = ({ resumeInfo }) => {
                           {exp.state}
                         </h5>
                         
-                        <div className="text-sm text-gray-700" dangerouslySetInnerHTML={{ __html: exp.workSummary }}></div>
+                        {exp.workSummary ? (
+                          <ul className="pl-5 list-disc space-y-1 text-sm text-gray-700">
+                            {normalizeBullets(exp.workSummary).map((item, itemIndex) => (
+                              <li key={itemIndex}>{item}</li>
+                            ))}
+                          </ul>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -228,7 +243,13 @@ const CreativeModernTemplate = ({ resumeInfo }) => {
                       </div>
                     )}
                     
-                    <div className="text-sm text-gray-700" dangerouslySetInnerHTML={{ __html: project.projectSummary }}></div>
+                    {project.projectSummary ? (
+                      <ul className="pl-5 list-disc space-y-1 text-sm text-gray-700">
+                        {normalizeBullets(project.projectSummary).map((item, itemIndex) => (
+                          <li key={itemIndex}>{item}</li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </div>
                 ))}
               </div>
@@ -246,9 +267,6 @@ const CreativeModernTemplate = ({ resumeInfo }) => {
                 {resumeInfo.certifications.map((cert, index) => (
                   <div key={index} className="relative">
                     <div className="flex">
-                      <div className="flex-shrink-0 mt-1 mr-3">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: themeColor }}></div>
-                      </div>
                       <div className="flex-grow">
                         {/* First row: name on left, date on right */}
                         <div className="flex justify-between items-center">

@@ -46,16 +46,19 @@
     
     /* Name and title layout */
     .header-content {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      margin-bottom: 0rem;
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+      margin-bottom: 0;
     }
     
     .name-title {
+      display: table-cell;
+      width: 64%;
       text-align: left;
+      vertical-align: top;
+      box-sizing: border-box;
+      padding-right: 1rem;
     }
     
     .name {
@@ -77,10 +80,14 @@
     
     /* Contact info in right column */
     .contact-info {
+      display: table-cell;
+      width: 36%;
       text-align: right;
       font-size: 0.875rem;
       color: #6b7280;
       line-height: 1.25;
+      vertical-align: top;
+      box-sizing: border-box;
     }
     
     .contact-item {
@@ -91,7 +98,7 @@
     .divider {
       height: 1px;
       width: 4rem;
-      margin: 0.75rem auto;
+      margin: 0.3rem auto 0.75rem;
       background-color: {{themeColor}};
     }
     
@@ -155,9 +162,25 @@
     
     /* Grid layout - Reduced gap */
     .grid {
-      display: grid;
-      grid-template-columns: 1fr 2fr;
-      gap: 1.25rem;
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    .left-column,
+    .right-column {
+      display: table-cell;
+      vertical-align: top;
+      box-sizing: border-box;
+    }
+
+    .left-column {
+      width: 33.3333%;
+      padding-right: 1.25rem;
+    }
+
+    .right-column {
+      width: 66.6667%;
     }
     
     /* Sections - Ultra compact to maximize first page content */
@@ -297,20 +320,9 @@
     }
     
     .experience-description {
-      font-size: 0.75rem;
+      font-size: 0.875rem;
       color: #374151;
-      line-height: 1.2;
-    }
-    
-    /* Ultra compact spacing in experience description lists */
-    .experience-description ul {
-      margin: 0.1rem 0;
-      padding-left: 0.8rem;
-    }
-    
-    .experience-description li {
-      margin-bottom: 0.05rem;
-      line-height: 1.2;
+      line-height: 1.5;
     }
     
     /* Project items - Allow natural page breaks between projects */
@@ -353,20 +365,21 @@
     }
     
     .project-description {
-      font-size: 0.8rem;
+      font-size: 0.875rem;
       color: #374151;
-      line-height: 1.2;
+      line-height: 1.5;
     }
-    
-    /* Compact spacing in project description lists */
-    .project-description ul {
-      margin: 0.1rem 0;
-      padding-left: 0.8rem;
+
+    .bullet-list {
+      margin: 0.2rem 0 0;
+      padding-left: 1.15rem;
+      color: #374151;
+      font-size: 0.875rem;
+      line-height: 1.5;
     }
-    
-    .project-description li {
-      margin-bottom: 0.05rem;
-      line-height: 1.2;
+
+    .bullet-list li {
+      margin-bottom: 0.15rem;
     }
     
     /* Additional sections - More compact */
@@ -414,23 +427,6 @@
       font-weight: 500;
     }
     
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-      .grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-      }
-      
-      .header-content {
-        flex-direction: column;
-        text-align: center;
-      }
-      
-      .contact-info {
-        text-align: center;
-      }
-    }
-    
     /* Print-specific styles - Remove empty page creation */
     @media print {
       @page {
@@ -444,6 +440,21 @@
         width: 100%;
         height: auto;
         min-height: auto;
+      }
+
+      .header-content,
+      .grid {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+      }
+
+      .name-title,
+      .contact-info,
+      .left-column,
+      .right-column {
+        display: table-cell;
+        vertical-align: top;
       }
       
       /* Allow natural page breaks within sections */
@@ -661,7 +672,7 @@
                         {{#if this.state}}{{#if this.city}}, {{/if}}{{this.state}}{{/if}}
                       </div>
                       
-                      <div class="experience-description">{{{this.workSummary}}}</div>
+                      {{{bulletList this.workSummary}}}
                     </div>
                   {{/each}}
                 </div>
@@ -698,7 +709,7 @@
                         <p class="project-tech">{{this.techStack}}</p>
                       {{/if}}
                       
-                      <div class="project-description">{{{this.projectSummary}}}</div>
+                      {{{bulletList this.projectSummary}}}
                     </div>
                   {{/each}}
                 </div>

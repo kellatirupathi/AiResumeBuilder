@@ -32,23 +32,21 @@
     
     /* Header Section */
     .header {
-      padding: 1.5rem;
+      padding: 1.5rem 1.5rem 0.5rem;
     }
     
     .header-container {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    
-    @media (min-width: 768px) {
-      .header-container {
-        flex-direction: row;
-      }
+      display: table;
+      width: 100%;
+      table-layout: fixed;
     }
     
     .name-container {
-      flex: 1;
+      display: table-cell;
+      width: 62%;
+      vertical-align: top;
+      box-sizing: border-box;
+      padding-right: 1rem;
     }
     
     .name {
@@ -66,14 +64,10 @@
     }
     
     .contact-container {
-      margin-top: 0.75rem;
+      display: table-cell;
+      width: 38%;
+      vertical-align: top;
       text-align: right;
-    }
-    
-    @media (min-width: 768px) {
-      .contact-container {
-        margin-top: 0;
-      }
     }
     
     .contact-list {
@@ -105,14 +99,8 @@
       flex-wrap: wrap;
       gap: 0.75rem;
       margin-top: 0.75rem;
-      justify-content: center;
-      font-size: 0.75rem;
-    }
-    
-    @media (min-width: 768px) {
-      .social-links {
-        justify-content: flex-start;
-      }
+      justify-content: flex-start;
+      font-size: 0.69rem;
     }
     
     .social-link {
@@ -125,18 +113,30 @@
     }
     
     .summary {
-  font-size: 0.875rem;
-  color: #4b5563;
-  border-bottom: 1px solid #e5e7eb;
-}
+      font-size: 0.875rem;
+      color: #4b5563;
+      border-bottom: 1px solid #e5e7eb;
+      margin-top: 0.5rem;
+      padding-bottom: 0.35rem;
+    }
+
+    .summary p {
+      margin: 0;
+    }
     
     /* Main Content Section */
     .main-content {
-      padding: 0 1.5rem;
+      padding: 0 1.5rem 0.25rem;
+      margin-top: -0.15rem;
     }
     
     .section {
-      padding: 0.8rem 0;
+      padding: 0.45rem 0;
+      margin: 0;
+    }
+
+    .main-content .section:first-child {
+      padding-top: 0;
     }
     
     .section:last-child {
@@ -147,7 +147,7 @@
       font-size: 1rem;
       font-weight: 700;
       color: {{themeColor}};
-      margin: 0 0 0.75rem 0;
+      margin: 0 0 0.4rem 0;
       display: inline-block;
       border-bottom: 1px solid {{themeColorTransparent30}};
     }
@@ -437,6 +437,18 @@
       .resume {
         box-shadow: none;
         border-radius: 0;
+      }
+
+      .header-container {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+      }
+
+      .name-container,
+      .contact-container {
+        display: table-cell;
+        vertical-align: top;
       }
       
       .experience-item, .project-item, .certification-item, .education-item {

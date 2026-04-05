@@ -377,7 +377,7 @@ function HomePage() {
                     ))}
                   </div>
                   <div className="flex-1 mx-4 h-5 bg-gray-200 dark:bg-gray-700 rounded-full text-xs text-gray-400 flex items-center px-3">
-                    nxtresume.app/dashboard
+                    ai-resume-builder-ochre-five.vercel.app/
                   </div>
                 </div>
 
