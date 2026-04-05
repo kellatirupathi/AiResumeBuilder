@@ -4,7 +4,7 @@ import { addUserData } from '@/features/user/userFeatures';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import GenericRichTextEditor from '@/components/custom/GenericRichTextEditor';
-import { Briefcase, Plus, Trash2 } from 'lucide-react';
+import { Briefcase, Plus, Trash2, Sparkles, LoaderCircle, MessageSquareMore } from 'lucide-react';
 import DatePicker from '@/components/custom/DatePicker'; // Use the new reusable DatePicker
 
 const emptyExperience = {
@@ -12,7 +12,14 @@ const emptyExperience = {
   startDate: "", endDate: "", currentlyWorking: false, workSummary: ""
 };
 
-function ProfileExperience() {
+function ProfileExperience({
+  onGenerateExperience,
+  onEnhanceExperience,
+  loadingMap = {},
+  generateLoadingMap = {},
+  impactQuestions = {},
+  targetRole = "",
+}) {
   const dispatch = useDispatch();
   const profileData = useSelector(state => state.editUser.userData);
   const experienceList = profileData?.experience || [];
@@ -45,6 +52,48 @@ function ProfileExperience() {
         {experienceList.map((exp, index) => (
           <div key={index} className="p-4 border rounded-lg bg-gray-50/50 relative">
             <Button variant="ghost" size="sm" className="absolute top-2 right-2 text-red-500 hover:bg-red-100 hover:text-red-600" onClick={() => handleRemoveExperience(index)}><Trash2 className="h-4 w-4" /></Button>
+            <div className="mb-4 rounded-2xl border border-indigo-100 bg-white p-3">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-slate-900">AI Experience Enhancer</div>
+
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => onGenerateExperience?.(index)}
+                    disabled={generateLoadingMap[index]}
+                  >
+                    {generateLoadingMap[index] ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                    Generate
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => onEnhanceExperience?.(index)}
+                    disabled={loadingMap[index]}
+                  >
+                    {loadingMap[index] ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                    Enhance With AI
+                  </Button>
+                </div>
+              </div>
+              {impactQuestions[index]?.length > 0 && (
+                <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-amber-700">
+                    <MessageSquareMore className="h-3.5 w-3.5" />
+                    Impact Finder Questions
+                  </div>
+                  <ul className="mt-2 space-y-2 text-sm text-amber-900">
+                    {impactQuestions[index].map((question) => (
+                      <li key={question} className="flex gap-2">
+                        <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-500" />
+                        <span>{question}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-medium">Job Title</label>

@@ -10,13 +10,14 @@ import {
   processPendingResumeDriveLinks,
 } from "../services/resumeDrive.service.js";
 import { sendAdminInviteEmail } from "../services/email.service.js";
+import {
+  getAdminTokenExpiry,
+  getClearCookieOptions,
+  getCookieOptions,
+} from "../utils/authSession.js";
 
-const cookieOptions = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV !== "Dev",
-  sameSite: process.env.NODE_ENV !== "Dev" ? "none" : "lax",
-  path: "/",
-};
+const cookieOptions = getCookieOptions();
+const clearCookieOptions = getClearCookieOptions();
 
 const USER_FIELDS = [
   "fullName",
@@ -114,7 +115,7 @@ const signAdminToken = (admin) =>
       role: admin.role,
     },
     process.env.JWT_SECRET_KEY,
-    { expiresIn: "1d" }
+    { expiresIn: getAdminTokenExpiry() }
   );
 
 const PROFILE_COMPLETION_BUCKETS = [
@@ -265,7 +266,7 @@ export const loginAdmin = async (req, res) => {
 
 export const logoutAdmin = (req, res) =>
   res
-    .clearCookie("adminToken", cookieOptions)
+    .clearCookie("adminToken", clearCookieOptions)
     .status(200)
     .json(new ApiResponse(200, {}, "Admin logged out successfully"));
 

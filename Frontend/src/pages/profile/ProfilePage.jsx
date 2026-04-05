@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from "react-redux";
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   LoaderCircle,
   Save,
@@ -22,15 +23,29 @@ import {
   Github,
   ExternalLink,
   Copy,
-  AlertTriangle
+  AlertTriangle,
+  Bot,
+  MessageSquare,
+  Send,
+  Check,
+  LayoutTemplate,
+  Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Textarea } from '@/components/ui/textarea';
 
 import { updateProfile, generatePortfolio } from "@/Services/login";
 import { addUserData } from "@/features/user/userFeatures";
-import SelectPortfolioTemplateModal from './components/SelectPortfolioTemplateModal'; // <-- NEW IMPORT
 import { useProfileQuery } from "@/hooks/useAppQueryData";
 import { normalizeProfileData } from "@/lib/queryCacheUtils";
+import {
+  chatWithProfileAssistant,
+  enhanceExperienceWithAi,
+  enhanceProjectWithAi,
+  generateExperienceWithAi,
+  generateProjectWithAi,
+  generateAiSummary,
+} from "@/lib/profileAi";
 
 // Components
 import ProfilePersonalDetails from './components/ProfilePersonalDetails';
@@ -41,6 +56,21 @@ import ProfileEducation from './components/ProfileEducation';
 import ProfileSkills from './components/ProfileSkills';
 import ProfileCertifications from './components/ProfileCertifications';
 import ProfileAddSection from './components/ProfileAddSection';
+
+const portfolioTemplates = [
+  {
+    id: 'portfolio-classic',
+    name: 'Classic Portfolio',
+    description: 'Clean and structured layout for a polished, traditional portfolio presentation.',
+    previewUrl: 'https://res.cloudinary.com/dg8n2jeur/image/upload/v1755439652/Screenshot_2025-08-17_193545_calgbl.png'
+  },
+  {
+    id: 'portfolio-modern',
+    name: 'Modern Portfolio',
+    description: 'Bolder visual treatment with a modern layout for a more product-style portfolio.',
+    previewUrl: 'https://res.cloudinary.com/dg8n2jeur/image/upload/v1755439651/Screenshot_2025-08-17_193716_ftacb9.png'
+  }
+];
 
 function ProfilePage() {
     const navigate = useNavigate();
@@ -68,11 +98,251 @@ function ProfilePage() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [expandedSections, setExpandedSections] = useState({});
     const [showMobileNav, setShowMobileNav] = useState(false);
-    const [isTemplateModalOpen, setTemplateModalOpen] = useState(false);
+    const [portfolioMode, setPortfolioMode] = useState(false);
+    const [selectedPortfolioTemplate, setSelectedPortfolioTemplate] = useState(portfolioTemplates[0].id);
+    const [portfolioConfirmOpen, setPortfolioConfirmOpen] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
+    const [targetRole, setTargetRole] = useState("");
+    const [assistantMessage, setAssistantMessage] = useState("");
+    const [assistantMessages, setAssistantMessages] = useState([]);
+    const [aiLoading, setAiLoading] = useState({
+      summary: false,
+      assistant: false,
+    });
+    const [experienceLoading, setExperienceLoading] = useState({});
+    const [experienceGenerateLoading, setExperienceGenerateLoading] = useState({});
+    const [projectLoading, setProjectLoading] = useState({});
+    const [projectGenerateLoading, setProjectGenerateLoading] = useState({});
+    const [experienceImpactQuestions, setExperienceImpactQuestions] = useState({});
+    const [projectImpactQuestions, setProjectImpactQuestions] = useState({});
     const lastSavedData = useRef(null);
     const isInitialLoad = useRef(true);
     const sectionsInitialized = useRef(false);
+
+    const buildProjectOptions = (profile, messageLower) => {
+      const projects = profile.projects || [];
+      const namedMatches = projects
+        .map((project, index) => ({
+          index,
+          label: project.projectName || `Project ${index + 1}`,
+          haystack: `${project.projectName || ""} ${project.techStack || ""}`.toLowerCase(),
+        }))
+        .filter((project) => project.label && messageLower.includes(project.label.toLowerCase()));
+
+      if (namedMatches.length === 1) {
+        return { type: "project", index: namedMatches[0].index, label: namedMatches[0].label };
+      }
+
+      if (namedMatches.length > 1) {
+        return {
+          type: "project",
+          requiresSelection: true,
+          options: namedMatches.map(({ index, label }) => ({ index, label })),
+        };
+      }
+
+      if (projects.length === 1) {
+        return {
+          type: "project",
+          index: 0,
+          label: projects[0].projectName || "Project 1",
+        };
+      }
+
+      if (projects.length > 1) {
+        return {
+          type: "project",
+          requiresSelection: true,
+          options: projects.map((project, index) => ({
+            index,
+            label: project.projectName || `Project ${index + 1}`,
+          })),
+        };
+      }
+
+      return { type: "project", unavailable: true };
+    };
+
+    const buildExperienceOptions = (profile, messageLower) => {
+      const experiences = profile.experience || [];
+      const namedMatches = experiences
+        .map((experience, index) => ({
+          index,
+          label: experience.title || experience.companyName || `Experience ${index + 1}`,
+          haystack: `${experience.title || ""} ${experience.companyName || ""}`.toLowerCase(),
+        }))
+        .filter((experience) => experience.label && messageLower.includes(experience.label.toLowerCase()));
+
+      if (namedMatches.length === 1) {
+        return { type: "experience", index: namedMatches[0].index, label: namedMatches[0].label };
+      }
+
+      if (namedMatches.length > 1) {
+        return {
+          type: "experience",
+          requiresSelection: true,
+          options: namedMatches.map(({ index, label }) => ({ index, label })),
+        };
+      }
+
+      if (experiences.length === 1) {
+        return {
+          type: "experience",
+          index: 0,
+          label: experiences[0].title || experiences[0].companyName || "Experience 1",
+        };
+      }
+
+      if (experiences.length > 1) {
+        return {
+          type: "experience",
+          requiresSelection: true,
+          options: experiences.map((experience, index) => ({
+            index,
+            label: experience.title || experience.companyName || `Experience ${index + 1}`,
+          })),
+        };
+      }
+
+      return { type: "experience", unavailable: true };
+    };
+
+    const hasText = (value) => typeof value === "string" && value.trim().length > 0;
+
+    const getMissingExperienceFields = (item, mode = "generate") => {
+      const missingFields = [];
+
+      if (!hasText(item?.title)) {
+        missingFields.push("Job Title");
+      }
+
+      if (!hasText(item?.companyName)) {
+        missingFields.push("Company Name");
+      }
+
+      if (mode === "enhance" && !hasText(item?.workSummary)) {
+        missingFields.push("Work Summary");
+      }
+
+      return missingFields;
+    };
+
+    const getMissingProjectFields = (item, mode = "generate") => {
+      const missingFields = [];
+
+      if (!hasText(item?.projectName)) {
+        missingFields.push("Project Name");
+      }
+
+      if (!hasText(item?.techStack)) {
+        missingFields.push("Tech Stack");
+      }
+
+      if (mode === "enhance" && !hasText(item?.projectSummary)) {
+        missingFields.push("Project Summary");
+      }
+
+      return missingFields;
+    };
+
+    const showMissingFieldsError = (entityLabel, missingFields) => {
+      toast.error(`${entityLabel} details are incomplete.`, {
+        description: `Fill these fields first: ${missingFields.join(", ")}.`,
+      });
+    };
+
+    const inferAssistantTarget = (message, profile) => {
+      const messageLower = String(message || "").toLowerCase();
+
+      if (/\bproject\b|\bprojects\b|\bproject summary\b/.test(messageLower)) {
+        return buildProjectOptions(profile, messageLower);
+      }
+
+      if (/\bexperience\b|\bwork experience\b|\bwork summary\b|\bbullet points for job\b|\bbullet\b|\bbullets\b/.test(messageLower)) {
+        return buildExperienceOptions(profile, messageLower);
+      }
+
+      if (/\bprofessional summary\b|\bprofile summary\b/.test(messageLower)) {
+        return { type: "summary" };
+      }
+
+      if (/\bsummary\b/.test(messageLower) && !/\bproject\b|\bprojects\b|\bexperience\b|\bwork experience\b|\bwork summary\b/.test(messageLower)) {
+        return { type: "summary" };
+      }
+
+      return null;
+    };
+
+    const getApplyButtonLabel = (target) => {
+      if (!target) return null;
+      if (target.type === "summary") return "Add to Summary";
+      if (target.type === "project" && !target.requiresSelection && !target.unavailable) {
+        return `Add to ${target.label}`;
+      }
+      if (target.type === "experience" && !target.requiresSelection && !target.unavailable) {
+        return `Add to ${target.label}`;
+      }
+      if (target.type === "project") return "Add to Project";
+      if (target.type === "experience") return "Add to Experience";
+      return "Add to Profile";
+    };
+
+    const toggleAssistantSelector = (messageId, isOpen) => {
+      setAssistantMessages((prev) =>
+        prev.map((message) =>
+          message.id === messageId ? { ...message, showSelector: isOpen } : message
+        )
+      );
+    };
+
+    const applyAssistantContent = (messageId, selection) => {
+      const message = assistantMessages.find((entry) => entry.id === messageId);
+      if (!message?.applyTarget) {
+        return;
+      }
+
+      const target = selection || message.applyTarget;
+      const content = message.content;
+
+      if (target.unavailable) {
+        toast.error(`No ${target.type} items exist yet to update.`);
+        return;
+      }
+
+      if (target.requiresSelection) {
+        toggleAssistantSelector(messageId, true);
+        return;
+      }
+
+      if (target.type === "summary") {
+        updateProfileState({ summary: content });
+        toast.success("Added to Professional Summary.");
+      }
+
+      if (target.type === "project") {
+        const nextProjects = (profileForAi.projects || []).map((project, index) =>
+          index === target.index ? { ...project, projectSummary: content } : project
+        );
+        updateProfileState({ projects: nextProjects });
+        toast.success(`Added to ${target.label || "project"}.`);
+      }
+
+      if (target.type === "experience") {
+        const nextExperience = (profileForAi.experience || []).map((experience, index) =>
+          index === target.index ? { ...experience, workSummary: content } : experience
+        );
+        updateProfileState({ experience: nextExperience });
+        toast.success(`Added to ${target.label || "experience"}.`);
+      }
+
+      setAssistantMessages((prev) =>
+        prev.map((entry) =>
+          entry.id === messageId
+            ? { ...entry, applied: true, showSelector: false }
+            : entry
+        )
+      );
+    };
 
     const sections = [
       { id: 'details', name: 'Personal Details', icon: User, component: ProfilePersonalDetails },
@@ -163,12 +433,11 @@ function ProfilePage() {
         }
     };
     
-    const handleGeneratePortfolio = async (templateName) => { // <-- MODIFIED to accept templateName
-        setTemplateModalOpen(false); // Close the modal
+    const handleGeneratePortfolio = async (templateName) => {
         setIsGenerating(true);
         const toastId = toast.loading("Generating your portfolio... This might take a moment.");
         try {
-            const response = await generatePortfolio(templateName); // <-- PASS templateName
+            const response = await generatePortfolio(templateName);
             const updatedProfile = normalizeProfileData(response.data || {});
             dispatch(addUserData(updatedProfile));
             lastSavedData.current = JSON.stringify(updatedProfile);
@@ -177,6 +446,7 @@ function ProfilePage() {
                 id: toastId,
                 description: "Your new portfolio is live. The link has been updated in your portfolio.",
             });
+            setPortfolioMode(false);
         } catch (error) {
             toast.error("Generation Failed", { id: toastId, description: error.message });
         } finally {
@@ -221,6 +491,253 @@ function ProfilePage() {
           toggleSection(sectionId);
         }
       }
+    };
+
+    const profileForAi = normalizedReduxProfile || {};
+    const resolvedTargetRole = targetRole.trim() || profileForAi.jobTitle || "";
+
+    const setAiTaskState = (key, value) => {
+      setAiLoading((prev) => ({ ...prev, [key]: value }));
+    };
+
+    const updateProfileState = (partial) => {
+      dispatch(addUserData({ ...profileForAi, ...partial }));
+    };
+
+    const handleGenerateSummary = async () => {
+      setAiTaskState("summary", true);
+      try {
+        const summary = await generateAiSummary(profileForAi, resolvedTargetRole);
+        updateProfileState({ summary });
+        toast.success("AI summary generated.");
+      } catch (error) {
+        toast.error("Failed to generate summary.", { description: error.message });
+      } finally {
+        setAiTaskState("summary", false);
+      }
+    };
+
+    const handlePortfolioReadyNo = () => {
+      setPortfolioConfirmOpen(false);
+      setPortfolioMode(false);
+    };
+
+    const handlePortfolioReadyYes = async () => {
+      setPortfolioConfirmOpen(false);
+      await handleGeneratePortfolio(selectedPortfolioTemplate);
+    };
+
+    const handleExperienceEnhance = async (index) => {
+      const item = profileForAi.experience?.[index];
+      if (!item) return;
+      const missingFields = getMissingExperienceFields(item, "enhance");
+
+      if (missingFields.length > 0) {
+        showMissingFieldsError("Experience", missingFields);
+        return;
+      }
+
+      setExperienceLoading((prev) => ({ ...prev, [index]: true }));
+      try {
+        const response = await enhanceExperienceWithAi(profileForAi, item, resolvedTargetRole);
+        const newExperience = (profileForAi.experience || []).map((entry, entryIndex) =>
+          entryIndex === index
+            ? {
+                ...entry,
+                title: response.title || entry.title,
+                workSummary: response.workSummary || entry.workSummary,
+              }
+            : entry
+        );
+        updateProfileState({ experience: newExperience });
+        setExperienceImpactQuestions((prev) => ({
+          ...prev,
+          [index]: response.impactQuestions || [],
+        }));
+        toast.success("Experience enhanced.");
+      } catch (error) {
+        toast.error("Failed to enhance experience.", { description: error.message });
+      } finally {
+        setExperienceLoading((prev) => ({ ...prev, [index]: false }));
+      }
+    };
+
+    const handleExperienceGenerate = async (index) => {
+      const item = profileForAi.experience?.[index];
+      if (!item) return;
+      const missingFields = getMissingExperienceFields(item, "generate");
+
+      if (missingFields.length > 0) {
+        showMissingFieldsError("Experience", missingFields);
+        return;
+      }
+
+      setExperienceGenerateLoading((prev) => ({ ...prev, [index]: true }));
+      try {
+        const response = await generateExperienceWithAi(item);
+        const newExperience = (profileForAi.experience || []).map((entry, entryIndex) =>
+          entryIndex === index
+            ? {
+                ...entry,
+                title: response.title || entry.title,
+                workSummary: response.workSummary || entry.workSummary,
+              }
+            : entry
+        );
+        updateProfileState({ experience: newExperience });
+        toast.success("Experience summary generated.");
+      } catch (error) {
+        toast.error("Failed to generate experience summary.", { description: error.message });
+      } finally {
+        setExperienceGenerateLoading((prev) => ({ ...prev, [index]: false }));
+      }
+    };
+
+    const handleProjectEnhance = async (index) => {
+      const item = profileForAi.projects?.[index];
+      if (!item) return;
+      const missingFields = getMissingProjectFields(item, "enhance");
+
+      if (missingFields.length > 0) {
+        showMissingFieldsError("Project", missingFields);
+        return;
+      }
+
+      setProjectLoading((prev) => ({ ...prev, [index]: true }));
+      try {
+        const response = await enhanceProjectWithAi(profileForAi, item, resolvedTargetRole);
+        const newProjects = (profileForAi.projects || []).map((entry, entryIndex) =>
+          entryIndex === index
+            ? {
+                ...entry,
+                projectSummary: response.projectSummary || entry.projectSummary,
+              }
+            : entry
+        );
+        updateProfileState({ projects: newProjects });
+        setProjectImpactQuestions((prev) => ({
+          ...prev,
+          [index]: response.impactQuestions || [],
+        }));
+        toast.success("Project description enhanced.");
+      } catch (error) {
+        toast.error("Failed to enhance project.", { description: error.message });
+      } finally {
+        setProjectLoading((prev) => ({ ...prev, [index]: false }));
+      }
+    };
+
+    const handleProjectGenerate = async (index) => {
+      const item = profileForAi.projects?.[index];
+      if (!item) return;
+      const missingFields = getMissingProjectFields(item, "generate");
+
+      if (missingFields.length > 0) {
+        showMissingFieldsError("Project", missingFields);
+        return;
+      }
+
+      setProjectGenerateLoading((prev) => ({ ...prev, [index]: true }));
+      try {
+        const response = await generateProjectWithAi(item);
+        const newProjects = (profileForAi.projects || []).map((entry, entryIndex) =>
+          entryIndex === index
+            ? {
+                ...entry,
+                projectSummary: response.projectSummary || entry.projectSummary,
+              }
+            : entry
+        );
+        updateProfileState({ projects: newProjects });
+        toast.success("Project summary generated.");
+      } catch (error) {
+        toast.error("Failed to generate project summary.", { description: error.message });
+      } finally {
+        setProjectGenerateLoading((prev) => ({ ...prev, [index]: false }));
+      }
+    };
+
+    const handleAssistantSend = async () => {
+      const message = assistantMessage.trim();
+      if (!message) {
+        return;
+      }
+
+      const nextMessages = [
+        ...assistantMessages,
+        { id: `user-${Date.now()}`, role: "user", content: message }
+      ];
+      setAssistantMessages(nextMessages);
+      setAssistantMessage("");
+      setAiTaskState("assistant", true);
+
+      try {
+        const response = await chatWithProfileAssistant(profileForAi, message, resolvedTargetRole);
+        setAssistantMessages([
+          ...nextMessages,
+          {
+            id: `assistant-${Date.now()}`,
+            role: "assistant",
+            content: response,
+            applyTarget: inferAssistantTarget(message, profileForAi),
+            applied: false,
+            showSelector: false,
+          },
+        ]);
+      } catch (error) {
+        toast.error("Profile assistant failed.", { description: error.message });
+        setAssistantMessages([
+          ...nextMessages,
+          {
+            id: `assistant-${Date.now()}`,
+            role: "assistant",
+            content: "I could not generate a response right now. Try again in a moment.",
+            applied: false,
+            showSelector: false,
+          },
+        ]);
+      } finally {
+        setAiTaskState("assistant", false);
+      }
+    };
+
+    const getSectionProps = (sectionId) => {
+      if (sectionId === "summary") {
+        return {
+          onGenerateSummary: handleGenerateSummary,
+          isAiLoading: aiLoading.summary || aiLoading.role,
+          targetRole,
+          onTargetRoleChange: setTargetRole,
+        };
+      }
+
+      if (sectionId === "experience") {
+        return {
+          onGenerateExperience: handleExperienceGenerate,
+          onEnhanceExperience: handleExperienceEnhance,
+          loadingMap: experienceLoading,
+          generateLoadingMap: experienceGenerateLoading,
+          impactQuestions: experienceImpactQuestions,
+          targetRole: resolvedTargetRole,
+        };
+      }
+
+      if (sectionId === "projects") {
+        return {
+          onGenerateProject: handleProjectGenerate,
+          onEnhanceProject: handleProjectEnhance,
+          loadingMap: projectLoading,
+          generateLoadingMap: projectGenerateLoading,
+          impactQuestions: projectImpactQuestions,
+          targetRole: resolvedTargetRole,
+        };
+      }
+
+      if (sectionId === "skills") {
+        return {};
+      }
+
+      return {};
     };
 
     if (isLoading) {
@@ -366,7 +883,7 @@ function ProfilePage() {
                 
                 <div className="flex items-center gap-3">
                    <Button
-                       onClick={() => setTemplateModalOpen(true)} // <-- MODIFIED onClick
+                       onClick={() => setPortfolioMode(true)}
                        disabled={isSaving || isGenerating}
                        size="sm"
                        className="bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -421,7 +938,260 @@ function ProfilePage() {
             )}
 
             {/* Main scrollable content */}
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="w-full px-4 sm:px-6 lg:pl-6 lg:pr-0 pt-8">
+                {portfolioMode ? (
+                  <div className="max-w-6xl xl:pr-4">
+                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                      <div className="border-b border-slate-200 px-6 py-6 sm:px-8">
+                        <button
+                          type="button"
+                          onClick={() => setPortfolioMode(false)}
+                          className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                          Back to Profile
+                        </button>
+
+                        <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                          <div className="max-w-2xl">
+                            <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">
+                              <LayoutTemplate className="h-3.5 w-3.5" />
+                              Portfolio Mode
+                            </div>
+                            <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+                              Generate your portfolio without leaving the profile page
+                            </h2>
+                            <p className="mt-3 text-sm leading-7 text-slate-600">
+                              Pick a template and generate your portfolio from this page. The generated portfolio link
+                              will be added back into your profile after completion.
+                            </p>
+                          </div>
+
+                          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 lg:w-[320px]">
+                            <div className="text-sm font-semibold text-slate-900">Before you generate</div>
+                            <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                              <li className="flex gap-2">
+                                <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" />
+                                <span>Portfolio content will use your current saved profile data.</span>
+                              </li>
+                              <li className="flex gap-2">
+                                <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" />
+                                <span>Save profile changes first if you edited sections recently.</span>
+                              </li>
+                              <li className="flex gap-2">
+                                <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" />
+                                <span>The generated portfolio link will be added back into your profile.</span>
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-6 px-6 py-6 sm:px-8 xl:grid-cols-[minmax(0,1fr)_320px]">
+                        <div className="min-w-0">
+                          <div className="grid gap-5 lg:grid-cols-2">
+                            {portfolioTemplates.map((template) => {
+                              const isSelected = selectedPortfolioTemplate === template.id;
+
+                              return (
+                                <button
+                                  key={template.id}
+                                  type="button"
+                                  onClick={() => setSelectedPortfolioTemplate(template.id)}
+                                  className={`group overflow-hidden rounded-xl border bg-white text-left transition-all ${
+                                    isSelected
+                                      ? "border-emerald-500 ring-2 ring-emerald-100"
+                                      : "border-slate-200 hover:border-slate-300"
+                                  }`}
+                                >
+                                  <div className="relative overflow-hidden border-b border-slate-100 bg-slate-50">
+                                    <img
+                                      src={template.previewUrl}
+                                      alt={template.name}
+                                      className="h-[220px] w-full object-cover"
+                                    />
+                                    {isSelected && (
+                                      <div className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-white shadow-lg">
+                                        <CheckCircle className="h-3.5 w-3.5" />
+                                        Selected
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="p-5">
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div>
+                                        <h3 className="text-lg font-semibold text-slate-900">{template.name}</h3>
+                                        <p className="mt-2 text-sm leading-6 text-slate-600">{template.description}</p>
+                                      </div>
+                                      <Sparkles className={`h-5 w-5 flex-shrink-0 ${isSelected ? "text-emerald-500" : "text-slate-300"}`} />
+                                    </div>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="self-start rounded-xl border border-slate-200 bg-slate-50 p-5">
+                          <div className="text-sm font-semibold text-slate-900">Selected Template</div>
+                          <div className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">
+                            {portfolioTemplates.find((template) => template.id === selectedPortfolioTemplate)?.name}
+                          </div>
+                          <p className="mt-3 text-sm leading-6 text-slate-600">
+                            Generate a portfolio from your saved profile data using the selected template.
+                          </p>
+
+                          <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
+                            <div className="text-sm font-medium text-slate-900">Profile readiness</div>
+                            <div className="mt-3 flex items-center justify-between text-sm">
+                              <span className="text-slate-500">Completed sections</span>
+                              <span className="font-semibold text-slate-900">{completedSections}/{totalSections}</span>
+                            </div>
+                            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-200">
+                              <div
+                                className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                                style={{ width: `${completionPercentage}%` }}
+                              />
+                            </div>
+                            <div className="mt-2 text-xs text-slate-500">
+                              {completionPercentage}% profile completion
+                            </div>
+                          </div>
+
+                          <div className="mt-6 space-y-3">
+                            <Button
+                              onClick={() => setPortfolioConfirmOpen(true)}
+                              disabled={isSaving || isGenerating}
+                              className="w-full bg-emerald-600 text-white hover:bg-emerald-700"
+                            >
+                              {isGenerating ? (
+                                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                              ) : (
+                                <Github className="mr-2 h-4 w-4" />
+                              )}
+                              {isGenerating ? "Generating Portfolio..." : "Generate Portfolio"}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-stretch">
+                <div className="xl:order-2 xl:sticky xl:top-24 self-start h-[calc(100vh-7rem)]">
+                  <div className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                    <Bot className="h-4 w-4 text-indigo-500" />
+                    Profile Assistant
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    Ask for summary rewrites, stronger bullets, role alignment, or missing impact ideas using your current profile as context.
+                  </p>
+
+                  <div className="mt-4 flex-1 overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50 p-3 mb-4">
+                    {assistantMessages.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">
+                        Try: “Rewrite my summary for a backend developer role” or “What is weak in my current projects?”
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {assistantMessages.map((message, index) => {
+                          if (message.role === "user") {
+                            return (
+                              <div
+                                key={message.id || `${message.role}-${index}`}
+                                className="ml-6 rounded-2xl bg-indigo-600 px-4 py-3 text-sm leading-6 text-white"
+                              >
+                                {message.content}
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div
+                              key={message.id || `${message.role}-${index}`}
+                              className="mr-6 rounded-2xl bg-white px-4 py-3 text-sm leading-6 text-slate-700 shadow-sm ring-1 ring-slate-200"
+                            >
+                              <div className="whitespace-pre-wrap">{message.content}</div>
+
+                              {getApplyButtonLabel(message.applyTarget) && (
+                                <div className="mt-3 space-y-2">
+                                  <button
+                                    type="button"
+                                    className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 disabled:text-slate-400"
+                                    onClick={() => applyAssistantContent(message.id)}
+                                    disabled={message.applied}
+                                  >
+                                    {message.applied ? <Check className="h-3.5 w-3.5" /> : <PlusCircle className="h-3.5 w-3.5" />}
+                                    <span>{message.applied ? "Added to Profile" : getApplyButtonLabel(message.applyTarget)}</span>
+                                  </button>
+
+                                  {!message.applied && message.applyTarget?.requiresSelection && (
+                                    <button
+                                      type="button"
+                                      className="block text-xs font-medium text-slate-500 hover:text-slate-700"
+                                      onClick={() => toggleAssistantSelector(message.id, !message.showSelector)}
+                                    >
+                                      Choose target
+                                    </button>
+                                  )}
+
+                                  {message.showSelector && message.applyTarget?.options?.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 pt-1">
+                                      {message.applyTarget.options.map((option) => (
+                                        <button
+                                          key={`${message.id}-${option.index}`}
+                                          type="button"
+                                          className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700"
+                                          onClick={() =>
+                                            applyAssistantContent(message.id, {
+                                              ...message.applyTarget,
+                                              ...option,
+                                              requiresSelection: false,
+                                            })
+                                          }
+                                        >
+                                          <PlusCircle className="h-3.5 w-3.5" />
+                                          <span>{option.label}</span>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                        {aiLoading.assistant && (
+                          <div className="mr-6 rounded-2xl bg-white px-4 py-3 text-sm text-slate-500 shadow-sm ring-1 ring-slate-200">
+                            <LoaderCircle className="h-4 w-4 animate-spin" />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    <Textarea
+                      value={assistantMessage}
+                      onChange={(event) => setAssistantMessage(event.target.value)}
+                      placeholder="Ask AI to improve any part of your profile..."
+                      className="min-h-28"
+                    />
+                    <Button
+                      className="w-full bg-slate-900 text-white hover:bg-slate-800"
+                      onClick={handleAssistantSend}
+                      disabled={aiLoading.assistant}
+                    >
+                      {aiLoading.assistant ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                      Ask Profile Assistant
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="min-w-0 xl:order-1 xl:pr-2">
               {sections.map((section) => {
                 const SectionComponent = section.component;
                 const isComplete = isSectionComplete(section.id);
@@ -465,23 +1235,36 @@ function ProfilePage() {
                     
                     {isExpanded && (
                       <div className="p-5">
-                        <SectionComponent />
+                        <SectionComponent {...getSectionProps(section.id)} />
                       </div>
                     )}
                   </div>
                 );
               })}
-              
-              
+              </div>
+              </div>
+                )}
             </div>
           </div>
-        {/* NEW: Template selection modal */}
-        <SelectPortfolioTemplateModal
-          isOpen={isTemplateModalOpen}
-          onClose={() => setTemplateModalOpen(false)}
-          onSelect={handleGeneratePortfolio}
-          loading={isGenerating}
-        />
+          <Dialog open={portfolioConfirmOpen} onOpenChange={setPortfolioConfirmOpen}>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Ready to Generate?</DialogTitle>
+                <DialogDescription>
+                  For the best results, ensure your profile details are complete. This creates the most comprehensive portfolio.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="gap-2 sm:justify-end">
+                <Button type="button" variant="outline" onClick={handlePortfolioReadyNo} disabled={isGenerating}>
+                  I need to update my profile
+                </Button>
+                <Button type="button" onClick={handlePortfolioReadyYes} disabled={isGenerating} className="bg-emerald-600 text-white hover:bg-emerald-700">
+                  {isGenerating ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                  Yes, my profile is ready
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
     );
 }
