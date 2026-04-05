@@ -164,6 +164,57 @@ const scoreBg    = (s) => s >= 75 ? "bg-emerald-50 dark:bg-emerald-900/20 text-e
                         : s >= 50 ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300"
                         :           "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300";
 const scoreLabel = (s) => s >= 75 ? "Great Match" : s >= 50 ? "Moderate Match" : "Low Match";
+const URL_ONLY_PATTERN = /^(https?:\/\/|www\.)\S+$/i;
+const JOB_DESCRIPTION_HINT_PATTERN =
+  /\b(requirements?|responsibilit(?:y|ies)|qualifications?|skills?|experience|role|job|candidate|preferred|must have|nice to have)\b/i;
+const SENTENCE_LIKE_PATTERN = /[A-Z][^.?!\n]{20,}[.?!]/;
+const RESPONSIBILITY_SENTENCE_PATTERN =
+  /\b(responsibilities?|requirements?|qualifications?|you will|we are looking for|the ideal candidate|must have|preferred)\b[^.?!\n]{15,}[.?!]/i;
+
+const getJobDescriptionValidationError = (value) => {
+  const trimmedValue = value.trim();
+  const normalizedValue = trimmedValue.replace(/\s+/g, " ").trim();
+  const uniqueWords = new Set(
+    normalizedValue
+      .toLowerCase()
+      .match(/[a-z]{3,}/g) || []
+  );
+  const lines = trimmedValue
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const repetitiveKeywordOnly = /^[a-z\s,\/-]+$/i.test(trimmedValue) && !/[.?!]/.test(trimmedValue);
+
+  if (trimmedValue.length < 50) {
+    return "Job description is too short";
+  }
+
+  if (URL_ONLY_PATTERN.test(trimmedValue)) {
+    return "Invalid JD input. Paste the actual job description text, not only a link.";
+  }
+
+  if (!JOB_DESCRIPTION_HINT_PATTERN.test(trimmedValue)) {
+    return "Invalid JD input. Paste a real job description with requirements and responsibilities.";
+  }
+
+  if (uniqueWords.size < 15) {
+    return "Invalid JD input. Add a real job description with enough unique requirement details.";
+  }
+
+  if (repetitiveKeywordOnly) {
+    return "Invalid JD input. Keyword-only text is not accepted. Paste full job description sentences.";
+  }
+
+  if (lines.length < 2 && !SENTENCE_LIKE_PATTERN.test(trimmedValue)) {
+    return "Invalid JD input. Add multiple lines or clear sentence-based job description text.";
+  }
+
+  if (!RESPONSIBILITY_SENTENCE_PATTERN.test(trimmedValue) && !SENTENCE_LIKE_PATTERN.test(trimmedValue)) {
+    return "Invalid JD input. Include at least one full requirement or responsibility sentence.";
+  }
+
+  return "";
+};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function ATSCheckerPage() {
@@ -292,7 +343,8 @@ export default function ATSCheckerPage() {
   };
 
   const handleAnalyze = async () => {
-    if (jobDescription.trim().length < 50) return toast.error("Job description is too short");
+    const jobDescriptionError = getJobDescriptionValidationError(jobDescription);
+    if (jobDescriptionError) return toast.error(jobDescriptionError);
 
     let content = "";
 
@@ -341,6 +393,7 @@ export default function ATSCheckerPage() {
   };
 
   const selectedTitle = resumeList.find((r) => r._id === selectedId)?.title || "";
+  const jobDescriptionError = getJobDescriptionValidationError(jobDescription);
   const isReadyToAnalyze = sourceType === "saved"
     ? Boolean(selectedId && resumeData && !loadingResume)
     : Boolean(uploadedResumeText && !loadingUploadedPdf);
@@ -514,7 +567,12 @@ export default function ATSCheckerPage() {
                 rows={14}
                 className="w-full px-3.5 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 dark:focus:border-indigo-500 transition-colors leading-relaxed"
               />
-              <p className="text-xs text-gray-400 mt-1.5 text-right">{jobDescription.length} characters {jobDescription.length < 50 && jobDescription.length > 0 && <span className="text-amber-500">(minimum 50)</span>}</p>
+              <div className="mt-1.5 flex items-start justify-between gap-3">
+                <div className="text-xs text-red-500">
+                  {jobDescription.trim().length > 0 && jobDescriptionError && jobDescriptionError}
+                </div>
+                <p className="text-xs text-gray-400 text-right">{jobDescription.length} characters {jobDescription.length < 50 && jobDescription.length > 0 && <span className="text-amber-500">(minimum 50)</span>}</p>
+              </div>
             </div>
           </div>
 
@@ -522,7 +580,7 @@ export default function ATSCheckerPage() {
           <div className="flex-shrink-0 px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
             <button
               onClick={handleAnalyze}
-              disabled={isAnalyzing || loadingResume || loadingUploadedPdf || jobDescription.trim().length < 50 || !isReadyToAnalyze}
+              disabled={isAnalyzing || loadingResume || loadingUploadedPdf || Boolean(jobDescriptionError) || !isReadyToAnalyze}
               className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-emerald-500 hover:from-indigo-700 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm py-3 rounded-xl shadow-md shadow-indigo-900/20 transition-all duration-200"
             >
               {isAnalyzing ? (
