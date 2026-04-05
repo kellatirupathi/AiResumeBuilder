@@ -356,7 +356,7 @@ function HomePage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.9, delay: 0.4, ease: "easeOut" }}
-              className="flex-1 w-full max-w-2xl relative"
+              className="w-[750px] xl:w-[850px] 2xl:w-[950px] relative"
             >
               {/* Glow */}
               <div className="absolute -inset-4 bg-gradient-to-r from-emerald-400/20 via-blue-400/20 to-indigo-400/20 rounded-3xl blur-2xl" />
@@ -457,10 +457,10 @@ function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap justify-center gap-10 md:gap-20">
             {[
-              { value: "10,000+", label: "Resumes Created" },
+              { value: "1000+", label: "Resumes Created" },
               { value: "95%", label: "ATS Pass Rate" },
-              { value: "3 min", label: "Avg. Build Time" },
-              { value: "50+", label: "Templates Available" },
+              { value: "5 min", label: "Avg. Build Time" },
+              { value: "15+", label: "Templates Available" },
             ].map((stat, i) => (
               <div key={i} className="text-center">
                 <div className="text-2xl font-extrabold bg-gradient-to-r from-emerald-500 to-indigo-600 bg-clip-text text-transparent">{stat.value}</div>
