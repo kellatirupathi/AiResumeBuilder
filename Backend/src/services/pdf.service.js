@@ -1,4 +1,3 @@
-import puppeteer from 'puppeteer';
 import handlebars from 'handlebars';
 import fs from 'fs';
 import path from 'path';
@@ -53,6 +52,27 @@ handlebars.registerHelper('replaceSeparator', function(str, oldSep, newSep) {
   return str.split(oldSep).join(newSep);
 });
 
+handlebars.registerHelper('bulletList', function(text) {
+  if (!text) return '';
+
+  const normalized = String(text)
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>|<\/div>|<\/li>|<\/h[1-6]>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '')
+    .replace(/<\/ul>|<\/ol>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .split(/\r?\n|\u2022/)
+    .map((item) => item.replace(/^[-*\u2022]\s*/, '').trim())
+    .filter(Boolean);
+
+  if (!normalized.length) return '';
+
+  return new handlebars.SafeString(
+    `<ul class="bullet-list">${normalized.map((item) => `<li>${handlebars.escapeExpression(item)}</li>`).join('')}</ul>`
+  );
+});
+
 // Helper to get first character of a string
 handlebars.registerHelper('firstChar', function(str) {
   if (!str) return '';
@@ -77,85 +97,80 @@ handlebars.registerHelper('if_odd', function(index, options) {
   }
 });
 
-// Main PDF generation function
-export const generatePDF = async (resumeData) => {
-  try {
-    // Ensure we have template data
-    const template = resumeData.template || 'modern';
-    const themeColor = resumeData.themeColor || '#059669';
-    
-    // Convert the hex color to RGB for use in rgba() values
-    const hexToRgb = (hex) => {
-      // Remove the # if present
-      hex = hex.replace('#', '');
-      
-      // Parse the hex value
-      const r = parseInt(hex.substring(0, 2), 16);
-      const g = parseInt(hex.substring(2, 4), 16);
-      const b = parseInt(hex.substring(4, 6), 16);
-      
-      return `${r}, ${g}, ${b}`;
-    };
-    
-    // Add the RGB version of the theme color and create transparent versions
-    const themeColorRGB = hexToRgb(themeColor);
-    const themeColorTransparent80 = `${themeColor}99`;
-    const themeColorTransparent50 = `${themeColor}55`;
-    const themeColorTransparent20 = `${themeColor}33`;
-    const themeColorTransparent10 = `${themeColor}22`;
-    const themeColorTransparent05 = `${themeColor}10`;
-    
-    // Load the appropriate template based on the template name
-    const templatePath = path.join(__dirname, '..', 'templates', `${template}.handlebars`);
-    
-    // Use default template if the requested one doesn't exist
-    let templateContent;
-    try {
-      templateContent = fs.readFileSync(templatePath, 'utf8');
-    } catch (error) {
-      console.warn(`Template ${template} not found, using modern template instead`);
-      templateContent = fs.readFileSync(
-        path.join(__dirname, '..', 'templates', 'modern.handlebars'), 
-        'utf8'
-      );
-    }
-    
-    // Compile the template with handlebars
-    const compiledTemplate = handlebars.compile(templateContent);
-    
-    // Process tech stack for better display if needed
-    if (resumeData.projects && Array.isArray(resumeData.projects)) {
-      resumeData.projects.forEach(project => {
-        if (project.techStack) {
-          // Replace commas with pipe separators in techStack
-          project.techStack = project.techStack.split(',').map(item => item.trim()).join(' | ');
-        }
-      });
-    }
-    
-    // Render the HTML with the resume data and color variables
-    const html = compiledTemplate({
-      ...resumeData,
-      themeColor,
-      themeColorRGB,
-      themeColorTransparent80,
-      themeColorTransparent50,
-      themeColorTransparent20,
-      themeColorTransparent10,
-      themeColorTransparent05
-    });
+const PDFSPARK_API_URL = process.env.PDFSPARK_API_URL || 'https://pdfspark.dev/api/v1/pdf/from-html';
+const PDFSPARK_TIMEOUT_MS = Number(process.env.PDFSPARK_TIMEOUT_MS || 30000);
 
-    // Add page break styles for proper section breaks
-    const htmlWithPageBreakStyles = html.replace('</style>', `
+export const renderResumeHtml = (resumeData) => {
+  // Ensure we have template data
+  const template = resumeData.template || 'modern';
+  const themeColor = resumeData.themeColor || '#059669';
+
+  // Convert the hex color to RGB for use in rgba() values
+  const hexToRgb = (hex) => {
+    hex = hex.replace('#', '');
+
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+
+    return `${r}, ${g}, ${b}`;
+  };
+
+  const themeColorRGB = hexToRgb(themeColor);
+  const themeColorTransparent80 = `${themeColor}99`;
+  const themeColorTransparent50 = `${themeColor}55`;
+  const themeColorTransparent30 = `${themeColor}30`;
+  const themeColorTransparent20 = `${themeColor}33`;
+  const themeColorTransparent10 = `${themeColor}22`;
+  const themeColorTransparent05 = `${themeColor}10`;
+
+  const templatePath = path.join(__dirname, '..', 'templates', `${template}.handlebars`);
+
+  let templateContent;
+  try {
+    templateContent = fs.readFileSync(templatePath, 'utf8');
+  } catch (error) {
+    console.warn(`Template ${template} not found, using modern template instead`);
+    templateContent = fs.readFileSync(
+      path.join(__dirname, '..', 'templates', 'modern.handlebars'),
+      'utf8'
+    );
+  }
+
+  const compiledTemplate = handlebars.compile(templateContent);
+  const normalizedResumeData = JSON.parse(JSON.stringify(resumeData));
+
+  if (template !== 'creative' && normalizedResumeData.projects && Array.isArray(normalizedResumeData.projects)) {
+    normalizedResumeData.projects.forEach((project) => {
+      if (project.techStack) {
+        project.techStack = project.techStack
+          .split(',')
+          .map((item) => item.trim())
+          .join(' | ');
+      }
+    });
+  }
+
+  const html = compiledTemplate({
+    ...normalizedResumeData,
+    themeColor,
+    themeColorRGB,
+    themeColorTransparent80,
+    themeColorTransparent50,
+    themeColorTransparent30,
+    themeColorTransparent20,
+    themeColorTransparent10,
+    themeColorTransparent05
+  });
+
+  return html.replace('</style>', `
       /* Page break styles */
       @media print {
         @page {
-          /* Add a top margin for all pages after the first one */
           margin-top: 50px;
           margin-bottom: 50px;
         }
         @page:first {
-          /* The first page has its own padding, so no top margin is needed here */
           margin-top: 0;
           margin-bottom: 50px;
         }
@@ -174,31 +189,35 @@ export const generatePDF = async (resumeData) => {
         }
       }
     </style>`);
+};
 
-    // Launch puppeteer for PDF generation
-    const browser = await puppeteer.launch({
-      headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+// Main PDF generation function
+export const generatePDF = async (resumeData) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), PDFSPARK_TIMEOUT_MS);
+
+  try {
+    const html = renderResumeHtml(resumeData);
+    const response = await fetch(PDFSPARK_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ html }),
+      signal: controller.signal
     });
-    const page = await browser.newPage();
-    
-    // Set the page content
-    await page.setContent(htmlWithPageBreakStyles, { waitUntil: 'networkidle0' });
-    
-    // Generate PDF with proper page break settings
-    const pdf = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      displayHeaderFooter: false,
-      preferCSSPageSize: true
-    });
-    
-    // Close the browser
-    await browser.close();
-    
-    return pdf;
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => '');
+      throw new Error(`PDFSpark request failed with status ${response.status}${errorBody ? `: ${errorBody}` : ''}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    return Buffer.from(arrayBuffer);
   } catch (error) {
-    console.error('Error generating PDF:', error);
+    console.error('Error generating PDF with PDFSpark:', error);
     throw new Error('Failed to generate PDF');
+  } finally {
+    clearTimeout(timeout);
   }
 };

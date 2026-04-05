@@ -40,20 +40,17 @@
     .header-content {
       position: relative;
       z-index: 10;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 0.5rem;
-    }
-    
-    @media (min-width: 768px) {
-      .header-content {
-        flex-direction: row;
-      }
+      display: table;
+      width: 100%;
+      table-layout: fixed;
     }
     
     .name-container {
-      margin-bottom: 0.25rem;
+      display: table-cell;
+      width: 64%;
+      vertical-align: top;
+      box-sizing: border-box;
+      padding-right: 1rem;
     }
     
     .name {
@@ -69,15 +66,17 @@
     }
     
     .contact-container {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
+      display: table-cell;
+      width: 36%;
+      vertical-align: top;
       font-size: 0.875rem;
+      text-align: left;
     }
     
     .contact-item {
       display: flex;
       align-items: center;
+      margin-bottom: 0.25rem;
     }
     
     .contact-icon {
@@ -92,14 +91,8 @@
       padding: 0.25rem 1rem;
       display: flex;
       flex-wrap: wrap;
-      justify-content: center;
+      justify-content: flex-end;
       gap: 0.75rem;
-    }
-    
-    @media (min-width: 768px) {
-      .social-bar {
-        justify-content: flex-end;
-      }
     }
     
     .social-link {
@@ -150,22 +143,27 @@
     
     /* Two-Column Layout */
     .columns {
-      display: grid;
-      grid-template-columns: 1fr;
+      display: table;
+      width: 100%;
+      table-layout: fixed;
       gap: 0.5rem;
-    }
-    
-    @media (min-width: 768px) {
-      .columns {
-        grid-template-columns: 2fr 1fr;
-      }
     }
     
     .left-column,
     .right-column {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem; /* Reduced gap */
+      display: table-cell;
+      vertical-align: top;
+      box-sizing: border-box;
+    }
+
+    .left-column {
+      width: 67%;
+      padding-right: 0.75rem;
+    }
+
+    .right-column {
+      width: 33%;
+      padding-left: 0.25rem;
     }
     
     /* Section Styling */
@@ -207,17 +205,11 @@
     
     .experience-header {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.25rem;
       margin-bottom: 0.125rem;
-    }
-    
-    @media (min-width: 768px) {
-      .experience-header {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 0.25rem;
-      }
     }
     
     .job-title-text {
@@ -225,6 +217,7 @@
       font-weight: 700;
       color: #1f2937;
       margin: 0;
+      flex: 1;
     }
     
     .job-date {
@@ -235,6 +228,8 @@
       border-radius: 0.25rem;
       background-color: {{themeColorTransparent10}};
       color: {{themeColor}};
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     
     .company {
@@ -439,6 +434,21 @@
       .resume {
         box-shadow: none;
         border-radius: 0;
+      }
+
+      .header-content,
+      .columns {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+      }
+
+      .name-container,
+      .contact-container,
+      .left-column,
+      .right-column {
+        display: table-cell;
+        vertical-align: top;
       }
       
       .experience-item, .project-item, .certification-item, .education-item {

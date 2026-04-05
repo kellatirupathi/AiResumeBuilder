@@ -121,15 +121,26 @@
     }
     
     .columns {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 3rem;
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: separate;
+      border-spacing: 0;
     }
-    
-    @media (min-width: 768px) {
-      .columns {
-        grid-template-columns: 1fr 2fr;
-      }
+
+    .column {
+      display: table-cell;
+      vertical-align: top;
+      box-sizing: border-box;
+    }
+
+    .column:first-child {
+      width: 33.3333%;
+      padding-right: 2rem;
+    }
+
+    .column:last-child {
+      width: 66.6667%;
     }
     
     /* Section Styling */
@@ -298,7 +309,7 @@
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: baseline;
-      margin-bottom: 0rem;
+      margin-bottom: 0;
     }
     
     .job-title-text {
@@ -317,12 +328,24 @@
       font-size: 0.875rem;
       color: #4b5563;
       font-style: italic;
-      margin-bottom: 0.75rem;
+      margin: 0 0 0.75rem 0;
     }
     
     .job-description {
       font-size: 0.875rem;
       color: #4b5563;
+    }
+
+    .bullet-list {
+      margin: 0;
+      padding-left: 1.2rem;
+      color: #4b5563;
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+
+    .bullet-list li {
+      margin-bottom: 0.2rem;
     }
     
     /* Project Section */
@@ -381,6 +404,17 @@
       .resume {
         box-shadow: none;
         border-radius: 0;
+      }
+
+      .columns {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+      }
+
+      .column {
+        display: table-cell;
+        vertical-align: top;
       }
       
       .experience-item, .project-item, .certification-item, .education-item, .additional-section {
@@ -554,7 +588,7 @@
                         {{#if this.state}}{{#if this.city}}, {{/if}}{{this.state}}{{/if}}
                       </h5>
                       
-                      <div class="job-description">{{{this.workSummary}}}</div>
+                      {{{bulletList this.workSummary}}}
                     </div>
                   {{/each}}
                 </div>
@@ -587,7 +621,7 @@
                         <p class="project-tech">{{this.techStack}}</p>
                       {{/if}}
                       
-                      <div class="project-description">{{{this.projectSummary}}}</div>
+                      {{{bulletList this.projectSummary}}}
                     </div>
                   {{/each}}
                 </div>

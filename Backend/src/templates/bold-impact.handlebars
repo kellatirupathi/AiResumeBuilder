@@ -36,22 +36,17 @@
     }
     
     .header-container {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 1rem;
-    }
-    
-    @media (min-width: 768px) {
-      .header-container {
-        flex-direction: row;
-        align-items: flex-start;
-      }
+      display: table;
+      width: 100%;
+      table-layout: fixed;
     }
     
     .name-container {
-      flex-grow: 1; /* Allow this to take up more space */
+      display: table-cell;
+      width: 68%;
+      vertical-align: top;
+      box-sizing: border-box;
+      padding-right: 1rem;
     }
     
     .name {
@@ -85,7 +80,10 @@
       border-radius: 0.25rem;
       text-align: right;
       background-color: rgba(46, 119, 188, 0.03);
-      flex-shrink: 0; /* Prevent this from shrinking */
+      display: table-cell;
+      width: 32%;
+      vertical-align: top;
+      box-sizing: border-box;
     }
     
     .contact-list {
@@ -131,28 +129,39 @@
     /* Main Content */
     .main-content {
       padding: 1rem 1.5rem;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1.25rem;
-    }
-    
-    @media (min-width: 768px) {
-      .main-content {
-        grid-template-columns: 8fr 4fr;
-      }
+      display: table;
+      width: 100%;
+      table-layout: fixed;
     }
     
     .left-column, .right-column {
+      display: table-cell;
+      vertical-align: top;
+      box-sizing: border-box;
+    }
+
+    .left-column {
+      width: 66.6667%;
+      padding-right: 0.75rem;
+    }
+
+    .right-column {
+      width: 33.3333%;
+      padding-left: 0.25rem;
+    }
+
+    .left-column-inner,
+    .right-column-inner {
       display: flex;
       flex-direction: column;
-      gap: 1.25rem;
+      gap: 0.75rem;
     }
     
     /* Section Styling */
     .section-title {
       font-size: 1.25rem;
       font-weight: 700;
-      margin: 0 0 0.5rem 0;
+      margin: 0 0 0.2rem 0;
       color: {{themeColor}};
     }
     
@@ -220,7 +229,7 @@
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.1rem;
     }
     
     .project-title {
@@ -366,6 +375,7 @@
       background-color: {{themeColorTransparent10}};
       color: {{themeColor}};
       font-size: 0.75rem;
+      margin-right: 2rem;
     }
     .school {
       font-size: 0.875rem;
@@ -376,6 +386,12 @@
 
     @media print {
       .resume { box-shadow: none; border-radius: 0; }
+      .header-container,
+      .main-content { display: table; width: 100%; table-layout: fixed; }
+      .name-container,
+      .contact-container,
+      .left-column,
+      .right-column { display: table-cell; vertical-align: top; }
       .experience-item, .project-item, .certification-item, .education-item, .additional-item { page-break-inside: avoid; }
     }
   </style>
@@ -432,6 +448,7 @@
     <div class="main-content">
       <!-- Left Column -->
       <div class="left-column">
+        <div class="left-column-inner">
         {{#if experience.length}}
           <div class="section">
             <h3 class="section-title">EXPERIENCE</h3>
@@ -504,10 +521,12 @@
                 </div>
             </div>
         {{/if}}
+        </div>
       </div>
       
       <!-- Right Column -->
       <div class="right-column">
+        <div class="right-column-inner">
         {{#if skills.length}}
           <div class="section">
             <h3 class="section-title">SKILLS</h3>
@@ -553,6 +572,7 @@
               </div>
             {{/each}}
         {{/if}}
+        </div>
       </div>
     </div>
   </div>

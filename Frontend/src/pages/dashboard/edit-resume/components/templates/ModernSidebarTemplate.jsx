@@ -12,6 +12,21 @@ const ModernSidebarTemplate = ({ resumeInfo }) => {
 
   const themeColor = resumeInfo?.themeColor || "#0ea5e9"; // Default to sky-500
 
+  const normalizeBullets = (text) => {
+    if (!text) return [];
+
+    return String(text)
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/p>|<\/div>|<\/li>|<\/h[1-6]>/gi, "\n")
+      .replace(/<li[^>]*>/gi, "")
+      .replace(/<\/ul>|<\/ol>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/gi, " ")
+      .split(/\r?\n|•|â€¢/)
+      .map((item) => item.replace(/^[-*]\s*/, "").trim())
+      .filter(Boolean);
+  };
+
   return (
     <div className="shadow-md bg-white h-full rounded overflow-hidden flex flex-col md:flex-row">
       {/* Left Sidebar - Modified to fill full height */}
@@ -225,7 +240,13 @@ const ModernSidebarTemplate = ({ resumeInfo }) => {
                     {exp.state}
                   </h5>
                   
-                  <div className="text-sm text-gray-700" dangerouslySetInnerHTML={{ __html: exp.workSummary }}></div>
+                  {exp.workSummary ? (
+                    <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700">
+                      {normalizeBullets(exp.workSummary).map((item, itemIndex) => (
+                        <li key={itemIndex}>{item}</li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </div>
               ))}
             </div>
@@ -287,7 +308,13 @@ const ModernSidebarTemplate = ({ resumeInfo }) => {
                     </div>
                   )}
                   
-                  <div className="text-sm text-gray-700" dangerouslySetInnerHTML={{ __html: project.projectSummary }}></div>
+                  {project.projectSummary ? (
+                    <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700">
+                      {normalizeBullets(project.projectSummary).map((item, itemIndex) => (
+                        <li key={itemIndex}>{item}</li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </div>
               ))}
             </div>
