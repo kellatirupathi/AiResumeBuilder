@@ -4,11 +4,18 @@ import { addUserData } from '@/features/user/userFeatures';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import GenericRichTextEditor from '@/components/custom/GenericRichTextEditor';
-import { FolderGit, Plus, Trash2 } from 'lucide-react';
+import { FolderGit, Plus, Trash2, Sparkles, LoaderCircle, MessageSquareMore } from 'lucide-react';
 
 const emptyProject = { projectName: "", techStack: "", projectSummary: "", githubLink: "", deployedLink: "" };
 
-function ProfileProjects() {
+function ProfileProjects({
+    onGenerateProject,
+    onEnhanceProject,
+    loadingMap = {},
+    generateLoadingMap = {},
+    impactQuestions = {},
+    targetRole = "",
+}) {
     const dispatch = useDispatch();
     const profileData = useSelector(state => state.editUser.userData);
     const projectList = profileData?.projects || [];
@@ -41,6 +48,47 @@ function ProfileProjects() {
                         <Button variant="ghost" size="sm" className="absolute top-2 right-2 text-red-500 hover:bg-red-100 hover:text-red-600" onClick={() => handleRemoveProject(index)}>
                             <Trash2 className="h-4 w-4" />
                         </Button>
+                        <div className="mb-4 rounded-2xl border border-emerald-100 bg-white p-3">
+                            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                                <div>
+                                    <div className="text-sm font-semibold text-slate-900">AI Project Generator</div>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => onGenerateProject?.(index)}
+                                        disabled={generateLoadingMap[index]}
+                                    >
+                                        {generateLoadingMap[index] ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                                        Generate
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => onEnhanceProject?.(index)}
+                                        disabled={loadingMap[index]}
+                                    >
+                                        {loadingMap[index] ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                                        Enhance With AI
+                                    </Button>
+                                </div>
+                            </div>
+                            {impactQuestions[index]?.length > 0 && (
+                                <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                                        <MessageSquareMore className="h-3.5 w-3.5" />
+                                        Impact Finder Questions
+                                    </div>
+                                    <ul className="mt-2 space-y-2 text-sm text-emerald-900">
+                                        {impactQuestions[index].map((question) => (
+                                            <li key={question} className="flex gap-2">
+                                                <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-500" />
+                                                <span>{question}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="text-xs font-medium">Project Name</label>

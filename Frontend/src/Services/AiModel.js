@@ -7,7 +7,7 @@ import {
   OPENAI_MODEL,
 } from "../config/config";
 
-const REQUEST_TIMEOUT_MS = 30000;
+const REQUEST_TIMEOUT_MS = 60000;
 const JSON_PROMPT_PATTERN = /\bjson\b/i;
 const PLAIN_TEXT_OVERRIDE_PATTERN =
   /do not wrap.*json|not a json object|only the enhanced summary text|response must be only|must be only the enhanced summary text/i;
@@ -30,6 +30,28 @@ const normalizeResponseText = (prompt, text) => {
   }
 
   return cleanText;
+};
+
+const toUserFacingErrorMessage = (error, providerName) => {
+  if (error?.name === "AbortError") {
+    return "AI provider took too long. Please try again.";
+  }
+
+  const message = String(error?.message || "");
+
+  if (/status 401|unauthorized/i.test(message)) {
+    return `${providerName} authentication failed. Please check the API configuration.`;
+  }
+
+  if (/status 429|rate limit|capacity exceeded|service tier capacity exceeded/i.test(message)) {
+    return `${providerName} is busy right now. Please try again in a moment.`;
+  }
+
+  if (/status 500|status 502|status 503|status 504|server error/i.test(message)) {
+    return `${providerName} is temporarily unavailable. Please try again.`;
+  }
+
+  return `${providerName} request failed. Please try again.`;
 };
 
 const buildMessages = (prompt) => [{ role: "user", content: prompt }];
@@ -90,8 +112,7 @@ const extractChatCompletionText = (data, providerName) => {
   throw new Error(`${providerName} returned no message content.`);
 };
 
-const fetchWithTimeout = async (url, options, timeoutMs) => {
-  const controller = new AbortController();
+const fetchWithTimeout = async (url, options, timeoutMs, controller = new AbortController()) => {
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
@@ -119,7 +140,7 @@ const providers = [
   },
 ].filter((provider) => provider.apiKey && provider.endpoint);
 
-const callProvider = async (provider, prompt, wantsJson) => {
+const callProvider = async (provider, prompt, wantsJson, controller) => {
   const response = await fetchWithTimeout(
     provider.endpoint,
     {
@@ -130,7 +151,8 @@ const callProvider = async (provider, prompt, wantsJson) => {
       },
       body: JSON.stringify(provider.buildBody(prompt, wantsJson)),
     },
-    REQUEST_TIMEOUT_MS
+    REQUEST_TIMEOUT_MS,
+    controller
   );
 
   if (!response.ok) {
@@ -161,23 +183,47 @@ export const AIChatSession = {
 
     const wantsJson = shouldRequestJson(prompt);
     const errors = [];
+    const userFacingErrors = [];
+    const controllers = providers.map(() => new AbortController());
 
-    for (const provider of providers) {
-      try {
-        const text = await callProvider(provider, prompt, wantsJson);
-
-        return {
+    const providerPromises = providers.map((provider, index) =>
+      callProvider(provider, prompt, wantsJson, controllers[index])
+        .then((text) => ({
           provider: provider.name,
           response: {
             text: () => text,
           },
-        };
-      } catch (error) {
-        console.warn(`[AI] ${provider.name} failed, trying fallback if available.`, error);
-        errors.push(`${provider.name}: ${error.message}`);
-      }
+        }))
+        .catch((error) => {
+          console.warn(`[AI] ${provider.name} failed, trying fallback if available.`, error);
+          errors.push(`${provider.name}: ${error.message}`);
+          userFacingErrors.push(toUserFacingErrorMessage(error, provider.name));
+          throw error;
+        })
+    );
+
+    try {
+      const result = await Promise.any(providerPromises);
+
+      controllers.forEach((controller, index) => {
+        if (providers[index].name !== result.provider && !controller.signal.aborted) {
+          controller.abort();
+        }
+      });
+
+      return result;
+    } catch {
+      controllers.forEach((controller) => {
+        if (!controller.signal.aborted) {
+          controller.abort();
+        }
+      });
     }
 
-    throw new Error(`All AI providers failed. ${errors.join(" | ")}`);
+    const uniqueMessages = [...new Set(userFacingErrors)].filter(Boolean);
+
+    throw new Error(
+      uniqueMessages[0] || `All AI providers failed. ${errors.join(" | ")}`
+    );
   },
 };

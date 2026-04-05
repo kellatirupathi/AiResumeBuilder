@@ -13,6 +13,11 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { OAuth2Client } from 'google-auth-library';
+import {
+  getClearCookieOptions,
+  getCookieOptions,
+  getUserTokenExpiry,
+} from "../utils/authSession.js";
 
 // --- START: REGISTER ALL HANDLEBARS HELPERS ---
 handlebars.registerHelper('split', function(string, separator) {
@@ -259,16 +264,9 @@ const loginUser = async (req, res) => {
     const jwtToken = jwt.sign(
       { id: user.id },
       process.env.JWT_SECRET_KEY,
-      { expiresIn: process.env.JWT_SECRET_EXPIRES_IN }
+      { expiresIn: getUserTokenExpiry() }
     );
-    
-    const cookieOptions = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV !== "Dev",
-      sameSite: process.env.NODE_ENV !== "Dev" ? "none" : "lax",
-      path: "/",
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000)
-    };
+    const cookieOptions = getCookieOptions();
 
     console.log("Login Successful");
     return res
@@ -330,16 +328,9 @@ const googleLogin = async (req, res) => {
     const jwtToken = jwt.sign(
       { id: user.id },
       process.env.JWT_SECRET_KEY,
-      { expiresIn: process.env.JWT_SECRET_EXPIRES_IN }
+      { expiresIn: getUserTokenExpiry() }
     );
-    
-    const cookieOptions = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV !== "Dev",
-      sameSite: process.env.NODE_ENV !== "Dev" ? "none" : "lax",
-      path: "/",
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000)
-    };
+    const cookieOptions = getCookieOptions();
 
     return res
       .cookie("token", jwtToken, cookieOptions)
@@ -369,13 +360,7 @@ const googleLogin = async (req, res) => {
 
 const logoutUser = (req, res) => {
   console.log("Logout attempt");
-  
-  const cookieOptions = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV !== "Dev",
-    sameSite: process.env.NODE_ENV !== "Dev" ? "none" : "lax",
-    path: "/"
-  };
+  const cookieOptions = getClearCookieOptions();
   
   return res
     .clearCookie("token", cookieOptions)
