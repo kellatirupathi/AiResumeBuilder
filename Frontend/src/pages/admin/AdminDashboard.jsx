@@ -316,6 +316,8 @@ export default function AdminDashboard() {
   const stats = statsQuery.data;
   const loading = statsQuery.isPending && !stats;
   const refreshing = statsQuery.isFetching && !loading;
+  const userGrowth = useMemo(() => fillDays(stats?.userGrowth || [], period), [stats?.userGrowth, period]);
+  const resumeGrowth = useMemo(() => fillDays(stats?.resumeGrowth || [], period), [stats?.resumeGrowth, period]);
 
   const handlePeriodChange = (days) => {
     setPeriod(days);
@@ -333,9 +335,6 @@ export default function AdminDashboard() {
       </div>
     );
   }
-
-  const userGrowth = useMemo(() => fillDays(stats?.userGrowth || [], period), [stats?.userGrowth, period]);
-  const resumeGrowth = useMemo(() => fillDays(stats?.resumeGrowth || [], period), [stats?.resumeGrowth, period]);
 
   return (
     <div className="flex flex-col h-full overflow-y-auto">
