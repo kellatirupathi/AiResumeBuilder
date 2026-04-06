@@ -124,16 +124,6 @@ function ResumeForm({ onOpenAIReview, isAIReviewOpen = false }) {
           <Button
             size="sm"
             variant="outline"
-            className="flex items-center gap-1 border-emerald-300 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-400 transition-colors px-2.5"
-            onClick={() => navigate(`/dashboard/view-resume/${resume_id}`)}
-          >
-            <Eye className="h-3.5 w-3.5" />
-            <span className="text-xs hidden sm:inline">Preview</span>
-          </Button>
-
-          <Button
-            size="sm"
-            variant="outline"
             className="flex items-center gap-1 border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 px-2.5"
             disabled={!enanbledPrev}
             onClick={() => setCurrentIndex(currentIndex - 1)}

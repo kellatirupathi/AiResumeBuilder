@@ -7,6 +7,7 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "job:send-reminders": "node src/jobs/sendReminders.job.js",
+    "job:process-resume-links": "node src/jobs/processResumeLinks.job.js",
     "backfill": "node scripts/backfillDriveLinks.js"
   },
   "keywords": [],

@@ -182,6 +182,60 @@ export const getDashboardStats = async (days = 30) => {
   }
 };
 
+export const getExternalInvites = async () => {
+  try {
+    const response = await adminAxios.get("/external-invites");
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to fetch external invites.");
+  }
+};
+
+export const getExternalInviteById = async (inviteId) => {
+  try {
+    const response = await adminAxios.get(`/external-invites/${inviteId}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to fetch external invite details.");
+  }
+};
+
+export const createExternalInvite = async (payload) => {
+  try {
+    const response = await adminAxios.post("/external-invites", payload);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to create external invite.");
+  }
+};
+
+export const updateExternalInvite = async (inviteId, payload) => {
+  try {
+    const response = await adminAxios.put(`/external-invites/${inviteId}`, payload);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to update external invite.");
+  }
+};
+
+export const deleteExternalInvite = async (inviteId) => {
+  try {
+    const response = await adminAxios.delete(`/external-invites/${inviteId}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to delete external invite.");
+  }
+};
+
+export const getExternalUsers = async () => {
+  try {
+    const response = await adminAxios.get("/external-users");
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to fetch external users.");
+  }
+};
+
 export const getUsersPaginated = async ({
   page = 1,
   limit = 20,

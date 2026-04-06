@@ -65,10 +65,10 @@ function App() {
   }, [dispatch, navigate, sessionQuery.error?.message, sessionQuery.isError, sessionQuery.isSuccess, sessionUser]);
 
   useEffect(() => {
-    if (user?.niatIdVerified === false && location.pathname !== "/complete-profile") {
+    if (user?.userType !== "external" && user?.niatIdVerified === false && location.pathname !== "/complete-profile") {
       navigate("/complete-profile");
     }
-  }, [location.pathname, navigate, user?.niatIdVerified]);
+  }, [location.pathname, navigate, user?.niatIdVerified, user?.userType]);
 
   // Dark mode logic
   useEffect(() => {

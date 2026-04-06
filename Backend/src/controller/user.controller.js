@@ -2,6 +2,7 @@
 import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import NiatId from "../models/niatId.model.js";
+import ExternalInvite from "../models/externalInvite.model.js";
 import jwt from "jsonwebtoken";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -116,6 +117,65 @@ const sanitizeUserPayload = (userDocument) => {
   return userObject;
 };
 
+const hashInviteToken = (token) =>
+  crypto.createHash("sha256").update(String(token || "")).digest("hex");
+
+const buildInviteQuery = (token) => ({
+  tokenHash: hashInviteToken(token),
+  status: "active",
+  expiresAt: { $gt: new Date() },
+});
+
+const getInvitePublicData = (inviteDocument) => {
+  if (!inviteDocument) {
+    return null;
+  }
+
+  return {
+    id: inviteDocument._id,
+    code: inviteDocument.code,
+    expiresAt: inviteDocument.expiresAt,
+    status: inviteDocument.status,
+  };
+};
+
+const resolveValidInvite = async (token, { markOpened = false } = {}) => {
+  if (!token) {
+    return null;
+  }
+
+  const invite = await ExternalInvite.findOne(buildInviteQuery(token));
+
+  if (!invite) {
+    return null;
+  }
+
+  if (markOpened) {
+    invite.openCount += 1;
+    invite.lastOpenedAt = new Date();
+    invite.openedAt.push(invite.lastOpenedAt);
+    await invite.save();
+  }
+
+  return invite;
+};
+
+const markInviteSignup = async (inviteId) => {
+  if (!inviteId) {
+    return;
+  }
+
+  const invite = await ExternalInvite.findById(inviteId);
+  if (!invite) {
+    return;
+  }
+
+  invite.signupCount += 1;
+  invite.lastSignedUpAt = new Date();
+  invite.usedAt.push(invite.lastSignedUpAt);
+  await invite.save();
+};
+
 const start = async (req, res) => {
   if (req.user) {
     return res.status(200).json(new ApiResponse(200, sanitizeUserPayload(req.user), "User Found"));
@@ -153,32 +213,82 @@ const getSession = async (req, res) => {
   }
 };
 
-const registerUser = async (req, res) => {
-  console.log("Registration Started");
-  const { fullName, email, password, niatId } = req.body;
+const getExternalInviteDetails = async (req, res) => {
+  const token = String(req.query.token || "");
+  const markOpened = String(req.query.markOpened || "true").toLowerCase() !== "false";
 
-  if (!fullName || !email || !password || !niatId) {
-    console.log("Registration Failed data insufficient");
+  if (!token) {
     return res
       .status(400)
-      .json(
-        new ApiError(
-          400,
-          "Please provide all required fields: Full Name, NIAT ID, Email, and Password."
-        )
-      );
+      .json(new ApiError(400, "Invite token is required."));
   }
 
   try {
-    const niatIdRecord = await NiatId.findOne({ niatId: niatId });
-    if (!niatIdRecord) {
-        console.log(`Registration Failed: NIAT ID not found in the database - ${niatId}`);
-        return res
-            .status(400)
-            .json(new ApiError(400, "Your NIAT ID is not registered in our system. Please crosscheck and enter the correct NIAT ID."));
+    const invite = await resolveValidInvite(token, { markOpened });
+
+    if (!invite) {
+      return res
+        .status(400)
+        .json(new ApiError(400, "This invite link is invalid or has expired."));
     }
 
-    const existingUser = await User.findOne({ email });
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          getInvitePublicData(invite),
+          "Invite link is valid."
+        )
+      );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to validate invite link.", [], error.stack));
+  }
+};
+
+const registerUser = async (req, res) => {
+  console.log("Registration Started");
+  const { fullName, email, password, niatId, inviteToken } = req.body;
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const normalizedNiatId = String(niatId || "").trim().toUpperCase();
+
+  try {
+    const invite = inviteToken ? await resolveValidInvite(inviteToken) : null;
+    const isExternalInviteFlow = Boolean(invite);
+
+    if (!fullName || !normalizedEmail || !password || (!isExternalInviteFlow && !normalizedNiatId)) {
+      console.log("Registration Failed data insufficient");
+      return res
+        .status(400)
+        .json(
+          new ApiError(
+            400,
+            isExternalInviteFlow
+              ? "Please provide all required fields: Full Name, Email, and Password."
+              : "Please provide all required fields: Full Name, NIAT ID, Email, and Password."
+          )
+        );
+    }
+
+    if (inviteToken && !invite) {
+      return res
+        .status(400)
+        .json(new ApiError(400, "This invite link is invalid or has expired."));
+    }
+
+    if (!isExternalInviteFlow) {
+      const niatIdRecord = await NiatId.findOne({ niatId: normalizedNiatId });
+      if (!niatIdRecord) {
+          console.log(`Registration Failed: NIAT ID not found in the database - ${normalizedNiatId}`);
+          return res
+              .status(400)
+              .json(new ApiError(400, "Your NIAT ID is not registered in our system. Please crosscheck and enter the correct NIAT ID."));
+      }
+    }
+
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       console.log("Registration Failed already registered user");
       return res
@@ -186,21 +296,30 @@ const registerUser = async (req, res) => {
         .json(new ApiError(409, "User with this email already registered."));
     }
 
-    const existingNiatId = await User.findOne({ niatId });
-    if (existingNiatId) {
-      console.log("Registration Failed already registered user with this NIAT ID");
-      return res
-        .status(409)
-        .json(new ApiError(409, "This NIAT ID has already been used to create an account."));
+    if (!isExternalInviteFlow) {
+      const existingNiatId = await User.findOne({ niatId: normalizedNiatId });
+      if (existingNiatId) {
+        console.log("Registration Failed already registered user with this NIAT ID");
+        return res
+          .status(409)
+          .json(new ApiError(409, "This NIAT ID has already been used to create an account."));
+      }
     }
 
     const newUser = await User.create({
       fullName,
-      niatId,
-      email,
+      niatId: isExternalInviteFlow ? undefined : normalizedNiatId,
+      email: normalizedEmail,
       password,
-      niatIdVerified: true, 
+      niatIdVerified: !isExternalInviteFlow,
+      userType: isExternalInviteFlow ? "external" : "internal",
+      authProvider: "password",
+      externalInvite: invite?._id || null,
     });
+
+    if (invite?._id) {
+      await markInviteSignup(invite._id);
+    }
 
     sendWelcomeEmail(newUser.fullName, newUser.email).catch(err => {
       console.error(`[Non-blocking Error] Failed to send welcome email to ${newUser.email}:`, err.message);
@@ -216,6 +335,9 @@ const registerUser = async (req, res) => {
             fullName: newUser.fullName,
             email: newUser.email,
             niatId: newUser.niatId,
+            niatIdVerified: newUser.niatIdVerified,
+            userType: newUser.userType,
+            externalInvite: newUser.externalInvite,
           },
         },
         "User successfully registered."
@@ -281,6 +403,8 @@ const loginUser = async (req, res) => {
             fullName: user.fullName,
             niatId: user.niatId,
             niatIdVerified: user.niatIdVerified,
+            userType: user.userType,
+            externalInvite: user.externalInvite,
           },
           "User logged in successfully."
         )
@@ -295,7 +419,7 @@ const loginUser = async (req, res) => {
 };
 
 const googleLogin = async (req, res) => {
-  const { credential } = req.body;
+  const { credential, inviteToken } = req.body;
   if (!credential) {
     return res.status(400).json(new ApiError(400, "Google credential is required."));
   }
@@ -310,15 +434,28 @@ const googleLogin = async (req, res) => {
     const payload = ticket.getPayload();
 
     const { email, name: fullName } = payload;
-    let user = await User.findOne({ email });
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const invite = inviteToken ? await resolveValidInvite(inviteToken) : null;
+    let user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
+      if (inviteToken && !invite) {
+        return res.status(400).json(new ApiError(400, "This invite link is invalid or has expired."));
+      }
+
       const password = crypto.randomBytes(16).toString('hex');
       user = await User.create({
         fullName,
-        email,
+        email: normalizedEmail,
         password,
+        userType: invite ? "external" : "internal",
+        authProvider: "google",
+        externalInvite: invite?._id || null,
       });
+
+      if (invite?._id) {
+        await markInviteSignup(invite._id);
+      }
 
       sendWelcomeEmail(user.fullName, user.email).catch(err => {
         console.error(`[Non-blocking Error] Failed to send Google welcome email to ${user.email}:`, err.message);
@@ -343,7 +480,9 @@ const googleLogin = async (req, res) => {
             email: user.email,
             fullName: user.fullName,
             niatId: user.niatId,
-            niatIdVerified: user.niatIdVerified
+            niatIdVerified: user.niatIdVerified,
+            userType: user.userType,
+            externalInvite: user.externalInvite,
           },
           "User authenticated successfully with Google."
         )
@@ -556,6 +695,12 @@ const completeProfile = async (req, res) => {
       return res.status(400).json(new ApiError(400, "Profile is already complete."));
     }
 
+    if (user.userType === "external") {
+      return res
+        .status(400)
+        .json(new ApiError(400, "External invited users do not require Student ID completion."));
+    }
+
     // Validate the NIAT ID
     const niatIdRecord = await NiatId.findOne({ niatId });
     if (!niatIdRecord) {
@@ -634,6 +779,7 @@ const updateNotificationPreferences = async (req, res) => {
 export {
   start,
   getSession,
+  getExternalInviteDetails,
   loginUser,
   logoutUser,
   registerUser,

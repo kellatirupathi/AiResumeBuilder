@@ -1,21 +1,18 @@
-import { useState, useEffect, useRef } from "react";
+import { useMemo, useState, useRef } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { getNiatIds, addSingleNiatId, addBulkNiatIds, deleteNiatId } from "@/Services/adminApi";
+import { addSingleNiatId, addBulkNiatIds, deleteNiatId } from "@/Services/adminApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Search, Plus, Trash2, RefreshCw, Download, Pencil } from "lucide-react";
 import { DeleteConfirmDialog } from "./AdminCrudDialogs";
+import { useAdminStudentIdsQuery } from "@/hooks/useAdminQueryData";
 
 const PAGE_SIZE = 50;
 
 export default function AdminStudentIdsPage() {
-  const [allIds, setAllIds] = useState([]);
-  const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [selected, setSelected] = useState([]);
   const [activeTab, setActiveTab] = useState("single");
   const [singleInput, setSingleInput] = useState("");
@@ -27,39 +24,20 @@ export default function AdminStudentIdsPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [page, setPage] = useState(1);
   const fileInputRef = useRef(null);
-
-  const fetchIds = async () => {
-    try {
-      const res = await getNiatIds();
-      const ids = res.data || [];
-      setAllIds(ids);
-      applyFilter(ids, search);
-    } catch (err) {
-      toast.error("Failed to fetch Student IDs", { description: err.message });
-    }
-  };
-
-  const applyFilter = (ids, q) => {
-    const f = q.trim()
-      ? ids.filter((id) => id.niatId.toLowerCase().includes(q.toLowerCase()))
-      : ids;
-    setFiltered(f);
-    setPage(1);
-  };
-
-  useEffect(() => {
-    setLoading(true);
-    fetchIds().finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    applyFilter(allIds, search);
-  }, [search, allIds]);
+  const studentIdsQuery = useAdminStudentIdsQuery();
+  const allIds = studentIdsQuery.data || [];
+  const filtered = useMemo(
+    () =>
+      search.trim()
+        ? allIds.filter((id) => id.niatId.toLowerCase().includes(search.toLowerCase()))
+        : allIds,
+    [allIds, search]
+  );
+  const loading = studentIdsQuery.isPending && !allIds.length;
+  const refreshing = studentIdsQuery.isFetching && !loading;
 
   const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchIds();
-    setRefreshing(false);
+    await studentIdsQuery.refetch();
     toast.success("Refreshed");
   };
 
@@ -86,7 +64,7 @@ export default function AdminStudentIdsPage() {
       await addSingleNiatId(singleInput.trim());
       toast.success("Student ID added successfully.");
       setSingleInput("");
-      await fetchIds();
+      await studentIdsQuery.refetch();
     } catch (err) {
       toast.error("Failed to add ID", { description: err.message });
     } finally {
@@ -102,7 +80,7 @@ export default function AdminStudentIdsPage() {
       const res = await addBulkNiatIds(ids);
       toast.success(res.message);
       setBulkInput("");
-      await fetchIds();
+      await studentIdsQuery.refetch();
     } catch (err) {
       toast.error("Bulk add failed", { description: err.message });
     } finally {
@@ -120,7 +98,7 @@ export default function AdminStudentIdsPage() {
       const ids = text.split(/\r?\n/).map((id) => id.trim()).filter(Boolean);
       const res = await addBulkNiatIds(ids);
       toast.success(res.message);
-      await fetchIds();
+      await studentIdsQuery.refetch();
     } catch (err) {
       toast.error("File upload failed", { description: err.message });
     } finally {
@@ -144,7 +122,7 @@ export default function AdminStudentIdsPage() {
       await addSingleNiatId(editValue.trim());
       toast.success("Student ID updated.");
       cancelEdit();
-      await fetchIds();
+      await studentIdsQuery.refetch();
     } catch (err) {
       toast.error("Failed to update ID", { description: err.message });
     }
@@ -157,7 +135,7 @@ export default function AdminStudentIdsPage() {
       toast.success(deleteDialog.records.length > 1 ? `${deleteDialog.records.length} IDs deleted` : "Student ID deleted");
       setSelected((s) => s.filter((x) => !deleteDialog.records.find((r) => r._id === x)));
       setDeleteDialog({ open: false, records: [] });
-      await fetchIds();
+      await studentIdsQuery.refetch();
     } catch (err) {
       toast.error("Delete failed", { description: err.message });
     } finally {
@@ -196,7 +174,7 @@ export default function AdminStudentIdsPage() {
             </div>
           </div>
           <div className="relative">
-            <Input placeholder="Search Student ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-56 pl-9 border-indigo-200" />
+            <Input placeholder="Search Student ID..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-56 pl-9 border-indigo-200" />
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-indigo-400" />
           </div>
           {selected.length > 0 ? (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -16,6 +17,18 @@ function CompleteProfilePage() {
     const [showError, setShowError] = useState(false);
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const user = useSelector((state) => state.editUser.userData);
+
+    useEffect(() => {
+        if (!user) {
+            navigate('/auth/sign-in', { replace: true });
+            return;
+        }
+
+        if (user.userType === 'external' || user.niatIdVerified === true) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [navigate, user]);
 
     // Auto-hide error after 2 seconds
     useEffect(() => {

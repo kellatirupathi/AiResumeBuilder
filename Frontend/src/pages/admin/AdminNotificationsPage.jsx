@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import {
   cancelNotification,
   cancelReminderNotification,
-  getNotifications,
   resendNotification,
   sendReminderNotification,
 } from "@/Services/adminApi";
@@ -22,6 +21,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useAdminNotificationsQuery } from "@/hooks/useAdminQueryData";
 
 const TYPE_LABELS = {
   reminder: "Signup Reminder",
@@ -134,13 +134,7 @@ function EmptyState({ title, description }) {
 }
 
 export default function AdminNotificationsPage() {
-  const [reminderControls, setReminderControls] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [actionId, setActionId] = useState(null);
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -148,40 +142,22 @@ export default function AdminNotificationsPage() {
   const [searchInput, setSearchInput] = useState("");
 
   const limit = 20;
-
-  const fetchData = useCallback(
-    async (opts = {}) => {
-      try {
-        const response = await getNotifications({
-          page: opts.page ?? page,
-          limit,
-          type: opts.type ?? filterType,
-          status: opts.status ?? filterStatus,
-          search: opts.search ?? search,
-        });
-
-        setReminderControls(response.data?.reminderControls ?? []);
-        setNotifications(response.data?.notifications ?? []);
-        setTotal(response.data?.total ?? 0);
-        setTotalPages(response.data?.totalPages ?? 1);
-      } catch (error) {
-        toast.error("Failed to load notifications", {
-          description: error.message,
-        });
-      }
-    },
-    [page, filterType, filterStatus, search]
-  );
-
-  useEffect(() => {
-    setLoading(true);
-    fetchData().finally(() => setLoading(false));
-  }, [fetchData]);
+  const notificationsQuery = useAdminNotificationsQuery({
+    page,
+    limit,
+    type: filterType,
+    status: filterStatus,
+    search,
+  });
+  const reminderControls = notificationsQuery.data?.reminderControls ?? [];
+  const notifications = notificationsQuery.data?.notifications ?? [];
+  const total = notificationsQuery.data?.total ?? 0;
+  const totalPages = notificationsQuery.data?.totalPages ?? 1;
+  const loading = notificationsQuery.isPending && !reminderControls.length && !notifications.length;
+  const refreshing = notificationsQuery.isFetching && !loading;
 
   const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchData();
-    setRefreshing(false);
+    await notificationsQuery.refetch();
     toast.success("Refreshed");
   };
 
@@ -221,7 +197,7 @@ export default function AdminNotificationsPage() {
             ? "Reminder email resent"
             : "Reminder email sent")
       );
-      await fetchData();
+      await notificationsQuery.refetch();
     } catch (error) {
       toast.error("Reminder send failed", {
         description: error.message,
@@ -238,7 +214,7 @@ export default function AdminNotificationsPage() {
     try {
       const response = await cancelReminderNotification(userId);
       toast.success(response.message || "Reminder cancelled");
-      await fetchData();
+      await notificationsQuery.refetch();
     } catch (error) {
       toast.error("Reminder cancel failed", {
         description: error.message,
@@ -255,7 +231,7 @@ export default function AdminNotificationsPage() {
     try {
       const response = await resendNotification(id);
       toast.success(response.message || "Notification resent");
-      await fetchData();
+      await notificationsQuery.refetch();
     } catch (error) {
       toast.error("Resend failed", {
         description: error.message,
@@ -272,7 +248,7 @@ export default function AdminNotificationsPage() {
     try {
       const response = await cancelNotification(id);
       toast.success(response.message || "Notification cancelled");
-      await fetchData();
+      await notificationsQuery.refetch();
     } catch (error) {
       toast.error("Cancel failed", {
         description: error.message,

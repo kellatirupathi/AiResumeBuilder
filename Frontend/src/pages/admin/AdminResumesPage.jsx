@@ -1,12 +1,10 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
-  getResumesPaginated,
   updateAdminResume,
   deleteAdminResume,
-  getAllUsers,
   processPendingResumeLinks,
 } from "@/Services/adminApi";
 import { Button } from "@/components/ui/button";
@@ -14,17 +12,15 @@ import { Input } from "@/components/ui/input";
 import { Search, Pencil, Trash2, RefreshCw, Download, ChevronLeft, ChevronRight, LoaderCircle } from "lucide-react";
 import { ResumeFormDialog, DeleteConfirmDialog } from "./AdminCrudDialogs";
 import ResumePreviewModal from "./ResumePreviewModal";
+import { useAdminResumesQuery, useAdminUsersLiteQuery } from "@/hooks/useAdminQueryData";
 
 const PAGE_SIZE = 20;
 
 export default function AdminResumesPage() {
   const navigate = useNavigate();
-  const [resumes, setResumes] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
+  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [selected, setSelected] = useState([]);
   const [resumeDialog, setResumeDialog] = useState({ open: false, record: null });
   const [deleteDialog, setDeleteDialog] = useState({ open: false, records: [] });
@@ -32,35 +28,31 @@ export default function AdminResumesPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [previewResume, setPreviewResume] = useState(null);
   const searchTimer = useRef(null);
-
-  const fetchPage = useCallback(async (page, q) => {
-    try {
-      const res = await getResumesPaginated({ page, limit: PAGE_SIZE, search: q });
-      setResumes(res.data.resumes || []);
-      setPagination(res.data.pagination || { page: 1, totalPages: 1, total: 0 });
-      setSelected([]);
-    } catch (err) {
-      toast.error("Failed to load resumes", { description: err.message });
-    }
-  }, []);
+  const resumesQuery = useAdminResumesQuery({ page, limit: PAGE_SIZE, search });
+  const usersQuery = useAdminUsersLiteQuery();
+  const resumes = useMemo(() => resumesQuery.data?.resumes || [], [resumesQuery.data?.resumes]);
+  const users = useMemo(() => usersQuery.data || [], [usersQuery.data]);
+  const pagination = resumesQuery.data?.pagination || { page: 1, totalPages: 1, total: 0 };
+  const loading = (resumesQuery.isPending && !resumes.length) || (usersQuery.isPending && !users.length);
+  const refreshing = (resumesQuery.isFetching || usersQuery.isFetching) && !loading;
 
   useEffect(() => {
-    setLoading(true);
-    Promise.all([fetchPage(1, ""), getAllUsers().then((r) => setUsers(r.data || []))])
-      .finally(() => setLoading(false));
-  }, [fetchPage]);
+    setSelected([]);
+  }, [resumes]);
 
   const handleSearchChange = (e) => {
     const q = e.target.value;
-    setSearch(q);
+    setSearchInput(q);
     clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => fetchPage(1, q), 400);
+    searchTimer.current = setTimeout(() => {
+      setPage(1);
+      setSearch(q.trim());
+    }, 400);
   };
 
-  const handlePageChange = (p) => fetchPage(p, search);
+  const handlePageChange = (p) => setPage(p);
 
   const handleRefresh = async () => {
-    setRefreshing(true);
     let processingSummary = null;
 
     try {
@@ -72,8 +64,7 @@ export default function AdminResumesPage() {
       });
     }
 
-    await fetchPage(pagination.page, search);
-    setRefreshing(false);
+    await Promise.all([resumesQuery.refetch(), usersQuery.refetch()]);
 
     if (processingSummary) {
       const { attempted = 0, processed = 0, failed = 0, skipped = 0 } = processingSummary;
@@ -113,7 +104,7 @@ export default function AdminResumesPage() {
       await updateAdminResume(resumeDialog.record._id, payload);
       toast.success("Resume updated successfully");
       setResumeDialog({ open: false, record: null });
-      await fetchPage(pagination.page, search);
+      await resumesQuery.refetch();
     } catch (err) {
       toast.error("Failed to update resume", { description: err.message });
     } finally {
@@ -127,7 +118,7 @@ export default function AdminResumesPage() {
       for (const r of deleteDialog.records) await deleteAdminResume(r._id);
       toast.success(deleteDialog.records.length > 1 ? `${deleteDialog.records.length} resumes deleted` : "Resume deleted");
       setDeleteDialog({ open: false, records: [] });
-      await fetchPage(pagination.page, search);
+      await resumesQuery.refetch();
     } catch (err) {
       toast.error("Delete failed", { description: err.message });
     } finally {
@@ -144,7 +135,7 @@ export default function AdminResumesPage() {
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Input placeholder="Search by title, name, email..." value={search} onChange={handleSearchChange} className="w-72 pl-10 border-indigo-200" />
+            <Input placeholder="Search by title, name, email..." value={searchInput} onChange={handleSearchChange} className="w-72 pl-10 border-indigo-200" />
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-indigo-400" />
           </div>
           {selected.length > 0 ? (
@@ -184,6 +175,7 @@ export default function AdminResumesPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Resume Title</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Full Name</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">User Student ID</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">External</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">User Email</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Created At</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Last Updated</th>
@@ -213,6 +205,11 @@ export default function AdminResumesPage() {
                       <td className="whitespace-nowrap px-6 py-4">
                         <span className="rounded-md bg-blue-50 px-2 py-1 font-mono text-xs font-medium text-blue-700">{resume.user?.niatId || "—"}</span>
                       </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <span className={`rounded-md px-2 py-1 text-xs font-medium ${resume.user?.userType === "external" ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}>
+                          {resume.user?.userType === "external" ? "External" : "Internal"}
+                        </span>
+                      </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">{resume.user?.email || "—"}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">{format(new Date(resume.createdAt), "PP")}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">{format(new Date(resume.updatedAt), "PP")}</td>
@@ -232,7 +229,7 @@ export default function AdminResumesPage() {
                     </tr>
                   ))}
                   {resumes.length === 0 && (
-                    <tr><td colSpan="8" className="px-6 py-12 text-center text-gray-400">No resumes found</td></tr>
+                    <tr><td colSpan="9" className="px-6 py-12 text-center text-gray-400">No resumes found</td></tr>
                   )}
                 </tbody>
               </table>

@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { getResumesByUser } from "@/Services/adminApi";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft, FileText, Download, GraduationCap, Briefcase,
   Code, FolderOpen, Award, Layers, Globe, Linkedin, Github, Phone, MapPin
 } from "lucide-react";
+import { useAdminUserResumesQuery } from "@/hooks/useAdminQueryData";
 
 function Section({ title, icon: Icon, children }) {
   return (
@@ -222,19 +222,18 @@ function ResumeCard({ resume }) {
 export default function AdminUserResumesPage() {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const userResumesQuery = useAdminUserResumesQuery(userId);
+  const data = userResumesQuery.data;
+  const loading = userResumesQuery.isPending && !data;
 
   useEffect(() => {
-    setLoading(true);
-    getResumesByUser(userId)
-      .then((res) => setData(res.data))
-      .catch((err) => {
-        toast.error("Failed to load resumes", { description: err.message });
-        navigate("/admin/resumes");
-      })
-      .finally(() => setLoading(false));
-  }, [userId, navigate]);
+    if (!userResumesQuery.isError) {
+      return;
+    }
+
+    toast.error("Failed to load resumes");
+    navigate("/admin/resumes");
+  }, [navigate, userResumesQuery.isError]);
 
   if (loading) {
     return (

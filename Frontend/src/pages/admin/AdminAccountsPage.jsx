@@ -1,16 +1,16 @@
-import { useCallback, useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useOutletContext } from "react-router-dom";
 import {
   createAdminAccount,
   deleteAdminAccount,
-  getAdminAccounts,
   updateAdminAccount,
 } from "@/Services/adminApi";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, RefreshCw, Shield, ShieldCheck } from "lucide-react";
 import { AdminAccountFormDialog, DeleteConfirmDialog } from "./AdminCrudDialogs";
+import { useAdminAccountsQuery } from "@/hooks/useAdminQueryData";
 
 function RoleBadge({ role }) {
   const isOwner = role === "owner";
@@ -30,29 +30,15 @@ function RoleBadge({ role }) {
 
 export default function AdminAccountsPage() {
   const { admin: currentAdmin } = useOutletContext();
-  const [accounts, setAccounts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [selected, setSelected] = useState([]);
   const [accountDialog, setAccountDialog] = useState({ open: false, mode: "create", record: null });
   const [deleteDialog, setDeleteDialog] = useState({ open: false, records: [] });
   const [submitting, setSubmitting] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-
-  const fetchAccounts = useCallback(async () => {
-    try {
-      const response = await getAdminAccounts();
-      setAccounts(response.data || []);
-      setSelected([]);
-    } catch (error) {
-      toast.error("Failed to load admin accounts", { description: error.message });
-    }
-  }, []);
-
-  useEffect(() => {
-    setLoading(true);
-    fetchAccounts().finally(() => setLoading(false));
-  }, [fetchAccounts]);
+  const accountsQuery = useAdminAccountsQuery();
+  const accounts = useMemo(() => accountsQuery.data || [], [accountsQuery.data]);
+  const loading = accountsQuery.isPending && !accounts.length;
+  const refreshing = accountsQuery.isFetching && !loading;
 
   const toggleSelect = (id, checked) =>
     setSelected((currentValue) =>
@@ -66,9 +52,7 @@ export default function AdminAccountsPage() {
   const selectedAccounts = accounts.filter((account) => selected.includes(account._id));
 
   const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchAccounts();
-    setRefreshing(false);
+    await accountsQuery.refetch();
     toast.success("Refreshed");
   };
 
@@ -84,7 +68,8 @@ export default function AdminAccountsPage() {
       }
 
       setAccountDialog({ open: false, mode: "create", record: null });
-      await fetchAccounts();
+      await accountsQuery.refetch();
+      setSelected([]);
     } catch (error) {
       toast.error("Failed to save admin account", { description: error.message });
     } finally {
@@ -105,7 +90,8 @@ export default function AdminAccountsPage() {
           : "Admin account deleted"
       );
       setDeleteDialog({ open: false, records: [] });
-      await fetchAccounts();
+      await accountsQuery.refetch();
+      setSelected([]);
     } catch (error) {
       toast.error("Delete failed", { description: error.message });
     } finally {
@@ -115,6 +101,14 @@ export default function AdminAccountsPage() {
 
   if (currentAdmin?.role !== "owner") {
     return null;
+  }
+
+  if (accountsQuery.isError && !accounts.length) {
+    return (
+      <div className="flex h-full items-center justify-center bg-white">
+        <p className="text-sm text-slate-500">Failed to load admin accounts.</p>
+      </div>
+    );
   }
 
   return (

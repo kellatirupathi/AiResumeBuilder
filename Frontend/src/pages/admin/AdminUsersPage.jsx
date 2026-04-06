@@ -1,10 +1,8 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import {
-  getUsersPaginated, createAdminUser, updateAdminUser, deleteAdminUser,
-} from "@/Services/adminApi";
+import { createAdminUser, updateAdminUser, deleteAdminUser } from "@/Services/adminApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -31,6 +29,7 @@ import {
 } from "lucide-react";
 import { UserFormDialog, DeleteConfirmDialog } from "./AdminCrudDialogs";
 import { toast as sonnerToast } from "sonner";
+import { useAdminUsersQuery } from "@/hooks/useAdminQueryData";
 
 const PAGE_SIZE = 20;
 const DEFAULT_FILTERS = {
@@ -218,13 +217,14 @@ function UserFiltersSheet({
 
 function exportToCsv(users) {
   if (!users.length) { sonnerToast.warning("Nothing to export."); return; }
-  const headers = ["Full Name", "Student ID", "Email", "Resumes Count", "Student ID Status", "Created At"];
+  const headers = ["Full Name", "Student ID", "Email", "Resumes Count", "Student ID Status", "External", "Created At"];
   const rows = users.map((u) => [
     u.fullName,
     u.niatId,
     u.email,
     u.resumeCount || 0,
     u.niatIdVerified ? "Verified" : "Not Verified",
+    u.userType === "external" ? "External" : "Internal",
     format(new Date(u.createdAt), "PPpp"),
   ]);
   const csv = [headers, ...rows].map((r) => r.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -234,55 +234,47 @@ function exportToCsv(users) {
 
 export default function AdminUsersPage() {
   const navigate = useNavigate();
-  const [users, setUsers] = useState([]);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
+  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [draftFilters, setDraftFilters] = useState(DEFAULT_FILTERS);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [selected, setSelected] = useState([]);
   const [userDialog, setUserDialog] = useState({ open: false, mode: "create", record: null });
   const [deleteDialog, setDeleteDialog] = useState({ open: false, records: [] });
   const [submitting, setSubmitting] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const searchTimer = useRef(null);
-
-  const fetchPage = useCallback(async (page, q, activeFilters = DEFAULT_FILTERS) => {
-    try {
-      const res = await getUsersPaginated({
-        page,
-        limit: PAGE_SIZE,
-        search: q,
-        ...normalizeFilters(activeFilters),
-      });
-      setUsers(res.data.users || []);
-      setPagination(res.data.pagination || { page: 1, totalPages: 1, total: 0 });
-      setSelected([]);
-    } catch (err) {
-      toast.error("Failed to load users", { description: err.message });
-    }
-  }, []);
+  const usersQuery = useAdminUsersQuery({
+    page,
+    limit: PAGE_SIZE,
+    search,
+    ...normalizeFilters(filters),
+  });
+  const users = useMemo(() => usersQuery.data?.users || [], [usersQuery.data?.users]);
+  const pagination = usersQuery.data?.pagination || { page: 1, totalPages: 1, total: 0 };
+  const loading = usersQuery.isPending && !users.length;
+  const refreshing = usersQuery.isFetching && !loading;
 
   useEffect(() => {
-    setLoading(true);
-    fetchPage(1, "", DEFAULT_FILTERS).finally(() => setLoading(false));
-  }, [fetchPage]);
+    setSelected([]);
+  }, [users]);
 
   const handleSearchChange = (e) => {
     const q = e.target.value;
-    setSearch(q);
+    setSearchInput(q);
     clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => fetchPage(1, q, filters), 400);
+    searchTimer.current = setTimeout(() => {
+      setPage(1);
+      setSearch(q.trim());
+    }, 400);
   };
 
-  const handlePageChange = (p) => fetchPage(p, search, filters);
+  const handlePageChange = (p) => setPage(p);
 
   const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchPage(pagination.page, search, filters);
-    setRefreshing(false);
+    await usersQuery.refetch();
     toast.success("Refreshed");
   };
 
@@ -306,7 +298,7 @@ export default function AdminUsersPage() {
         toast.success("User created successfully");
       }
       setUserDialog({ open: false, mode: "create", record: null });
-      await fetchPage(pagination.page, search, filters);
+      await usersQuery.refetch();
     } catch (err) {
       toast.error("Failed to save user", { description: err.message });
     } finally {
@@ -320,7 +312,7 @@ export default function AdminUsersPage() {
       for (const u of deleteDialog.records) await deleteAdminUser(u._id);
       toast.success(deleteDialog.records.length > 1 ? `${deleteDialog.records.length} users deleted` : "User deleted");
       setDeleteDialog({ open: false, records: [] });
-      await fetchPage(pagination.page, search, filters);
+      await usersQuery.refetch();
     } catch (err) {
       toast.error("Delete failed", { description: err.message });
     } finally {
@@ -334,18 +326,14 @@ export default function AdminUsersPage() {
     const normalizedDraft = normalizeFilters(draftFilters);
     setFilters(normalizedDraft);
     setFiltersOpen(false);
-    setLoading(true);
-    await fetchPage(1, search, normalizedDraft);
-    setLoading(false);
+    setPage(1);
   };
 
   const handleResetFilters = async () => {
     setDraftFilters(DEFAULT_FILTERS);
     setFilters(DEFAULT_FILTERS);
     setFiltersOpen(false);
-    setLoading(true);
-    await fetchPage(1, search, DEFAULT_FILTERS);
-    setLoading(false);
+    setPage(1);
   };
 
   return (
@@ -357,7 +345,7 @@ export default function AdminUsersPage() {
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Input placeholder="Search by name, email, ID..." value={search} onChange={handleSearchChange} className="w-72 pl-10 border-indigo-200" />
+            <Input placeholder="Search by name, email, ID..." value={searchInput} onChange={handleSearchChange} className="w-72 pl-10 border-indigo-200" />
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-indigo-400" />
           </div>
           <Button
@@ -462,6 +450,7 @@ export default function AdminUsersPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Email</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Resumes Count</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Student ID</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">External</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Created At</th>
                   </tr>
                 </thead>
@@ -509,13 +498,18 @@ export default function AdminUsersPage() {
                           <span>{user.niatIdVerified ? "Verified" : "Not Verified"}</span>
                         </span>
                       </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <span className={`rounded-md px-2 py-1 text-xs font-medium ${user.userType === "external" ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}>
+                          {user.userType === "external" ? "External" : "Internal"}
+                        </span>
+                      </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
                         {format(new Date(user.createdAt), "PPp")}
                       </td>
                     </tr>
                   ))}
                   {users.length === 0 && (
-                    <tr><td colSpan="7" className="px-6 py-12 text-center text-gray-400">No users found</td></tr>
+                    <tr><td colSpan="8" className="px-6 py-12 text-center text-gray-400">No users found</td></tr>
                   )}
                 </tbody>
               </table>
