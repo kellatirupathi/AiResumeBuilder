@@ -295,10 +295,10 @@ function Dashboard() {
               key={key}
               ref={key === "profile" ? profileNavRef : null}
               onClick={() => {
-                if (key === "ats")     { navigate("/ats-checker");   return; }
-                if (key === "resumes") { navigate("/resumes");       return; }
+                if (key === "ats")     { navigate("/app/ats-checker");   return; }
+                if (key === "resumes") { navigate("/app/resumes");       return; }
                 if (key === "profile") { navigate("/profile");       return; }
-                if (key === "help")    { navigate("/documentation"); return; }
+                if (key === "help")    { navigate("/app/documentation"); return; }
                 setActiveNav(key);
               }}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${

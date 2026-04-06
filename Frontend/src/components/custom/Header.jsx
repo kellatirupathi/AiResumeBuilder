@@ -114,6 +114,17 @@ function Header({ user, darkMode, toggleDarkMode }) {
               </div>
             ) : (
               <div className="flex items-center gap-3">
+                <nav className="mr-2 flex items-center gap-5 text-sm font-medium text-slate-600 dark:text-slate-300">
+                  <Link to="/resumes" className="transition-colors hover:text-indigo-600 dark:hover:text-indigo-400">
+                    Resumes
+                  </Link>
+                  <Link to="/ats-checker" className="transition-colors hover:text-indigo-600 dark:hover:text-indigo-400">
+                    ATS Checker
+                  </Link>
+                  <Link to="/documentation" className="transition-colors hover:text-indigo-600 dark:hover:text-indigo-400">
+                    Documentation
+                  </Link>
+                </nav>
                 <Link to="/auth/sign-in">
                   <Button className="bg-gradient-to-r from-emerald-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
                     <FaUser className="w-3 h-3" />Get Started
@@ -164,6 +175,15 @@ function Header({ user, darkMode, toggleDarkMode }) {
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
+                  <Link to="/resumes" className="w-full text-sm font-medium text-slate-600 dark:text-slate-300" onClick={() => setMenuOpen(false)}>
+                    Resumes
+                  </Link>
+                  <Link to="/ats-checker" className="w-full text-sm font-medium text-slate-600 dark:text-slate-300" onClick={() => setMenuOpen(false)}>
+                    ATS Checker
+                  </Link>
+                  <Link to="/documentation" className="w-full text-sm font-medium text-slate-600 dark:text-slate-300" onClick={() => setMenuOpen(false)}>
+                    Documentation
+                  </Link>
                   <Link to="/auth/sign-in" className="w-full" onClick={() => setMenuOpen(false)}>
                     <Button className="w-full justify-center bg-gradient-to-r from-emerald-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 flex items-center gap-2"><FaUser className="w-3 h-3" />Get Started</Button>
                   </Link>
