@@ -34,6 +34,9 @@ import ATSCheckerPage from "./pages/ats/ATSCheckerPage.jsx";
 import ResumesPage from "./pages/resumes/ResumesPage.jsx";
 import ChangePasswordPage from "./pages/change-password/ChangePasswordPage.jsx";
 import UserNotificationsPage from "./pages/notifications/UserNotificationsPage.jsx";
+import PublicDocumentationPage from "./pages/public/PublicDocumentationPage.jsx";
+import PublicATSCheckerPage from "./pages/public/PublicATSCheckerPage.jsx";
+import PublicResumesPage from "./pages/public/PublicResumesPage.jsx";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { VITE_GOOGLE_CLIENT_ID } from './config/config.js';
 import { HelmetProvider } from 'react-helmet-async';
@@ -61,15 +64,15 @@ const router = createBrowserRouter([
         element: <ProfilePage />
       },
       {
-        path: "/documentation",
+        path: "/app/documentation",
         element: <Documentation />
       },
       {
-        path: "/ats-checker",
+        path: "/app/ats-checker",
         element: <ATSCheckerPage />
       },
       {
-        path: "/resumes",
+        path: "/app/resumes",
         element: <ResumesPage />
       },
       {
@@ -85,6 +88,18 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <HomePage />,
+  },
+  {
+    path: "/documentation",
+    element: <PublicDocumentationPage />,
+  },
+  {
+    path: "/ats-checker",
+    element: <PublicATSCheckerPage />,
+  },
+  {
+    path: "/resumes",
+    element: <PublicResumesPage />,
   },
   {
     path: "/auth/sign-in",

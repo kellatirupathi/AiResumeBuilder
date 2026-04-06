@@ -225,7 +225,7 @@ SectionHeader.propTypes = {
   subtitle: PropTypes.string.isRequired,
 };
 
-export default function Documentation() {
+export default function Documentation({ isPublic = false }) {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("overview");
 
@@ -242,11 +242,11 @@ export default function Documentation() {
         <aside className="sticky top-0 hidden h-screen w-72 flex-shrink-0 border-r border-slate-200 bg-white lg:flex lg:flex-col">
           <div className="border-b border-slate-200 px-5 py-5">
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate(isPublic ? "/" : "/dashboard")}
               className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-indigo-700 transition-colors hover:text-indigo-900"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
+              {isPublic ? "Back to Home" : "Back to Dashboard"}
             </button>
           </div>
 
@@ -586,11 +586,11 @@ export default function Documentation() {
                     Complete profile data, create a resume for a target role, use AI to improve section quality, validate against a real job description in ATS Checker, then generate a portfolio from the same saved profile.
                   </p>
                   <button
-                    onClick={() => navigate("/dashboard")}
+                    onClick={() => navigate(isPublic ? "/auth/sign-in" : "/dashboard")}
                     className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700"
                   >
                     <Plus className="h-4 w-4" />
-                    Go to Dashboard
+                    {isPublic ? "Get Started" : "Go to Dashboard"}
                   </button>
                 </div>
               </section>
@@ -601,3 +601,7 @@ export default function Documentation() {
     </div>
   );
 }
+
+Documentation.propTypes = {
+  isPublic: PropTypes.bool,
+};

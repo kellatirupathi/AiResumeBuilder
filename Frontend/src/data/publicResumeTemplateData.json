@@ -1,0 +1,80 @@
+{
+  "firstName": "Jhon",
+  "lastName": "Doe",
+  "fullName": "Jhon Doe",
+  "jobTitle": "Fullstack Developer",
+  "email": "jhon.doe@example.com",
+  "phone": "9532432652",
+  "address": "Gachibowli, Hyderabad, Telangana",
+  "summary": "Passionate and detail-oriented Full Stack Developer with hands-on experience in building responsive and scalable web applications. Skilled in modern web technologies and committed to writing clean, efficient code. Strong problem-solving abilities with a focus on delivering high-quality user experiences. Eager to contribute to dynamic development teams and continuously enhance technical expertise.",
+  "linkedinUrl": "https://www.linkedin.com/in/jhon-doe",
+  "githubUrl": "https://github.com/jhon-doe",
+  "portfolioUrl": "https://jhon-doe.github.io/ResumePortfolios/n01c00900/",
+  "skills": [
+    { "name": "HTML, CSS, JavaScript" },
+    { "name": "React.js, Node.js, MongoDB" },
+    { "name": "Express.js, REST APIs, JWT Authentication" },
+    { "name": "Git & GitHub, VS Code, Deployment Workflows" }
+  ],
+  "experience": [
+    {
+      "title": "Software Engineer",
+      "companyName": "Amazon",
+      "city": "Hyderabad",
+      "state": "Telangana",
+      "startDate": "2022-03-09",
+      "endDate": "",
+      "currentlyWorking": true,
+      "workSummary": "<ul><li>Developed and maintained full-stack web applications using modern technologies.</li><li>Collaborated with cross-functional teams to design and implement scalable solutions.</li><li>Wrote clean, maintainable, and efficient code following best practices.</li><li>Debugged and resolved technical issues to improve application performance.</li><li>Participated in code reviews and contributed to improving development workflows.</li></ul>"
+    }
+  ],
+  "projects": [
+    {
+      "projectName": "Smart Task Manager",
+      "techStack": "React.js, Node.js, Express.js, MongoDB",
+      "githubLink": "https://github.com/Jhon-doe/smart-task-manager",
+      "deployedLink": "https://smart-task-manager-jhon-doe.vercel.app",
+      "projectSummary": "<ul><li>Built dynamic, responsive front-end components using React.js with hooks and context API for state management.</li><li>Developed secure RESTful APIs using Node.js and Express.js to handle CRUD operations and user authentication.</li><li>Designed and optimized MongoDB schema with Mongoose for efficient data storage and retrieval of user tasks.</li><li>Implemented JWT-based authentication and authorization to ensure secure access to user data.</li></ul>"
+    },
+    {
+      "projectName": "DevConnect - Developer Social Platform",
+      "techStack": "React.js, Node.js, Express.js, MongoDB",
+      "githubLink": "https://github.com/Jhon-doe/devconnect",
+      "deployedLink": "https://jhon-doe-demo.vercel.app",
+      "projectSummary": "<ul><li>Created a social networking platform specifically for developers to connect and share knowledge.</li><li>Enabled user profiles, post creation, likes, and comments functionality.</li><li>Implemented authentication and protected routes.</li><li>Designed scalable backend APIs for handling user interactions and smooth navigation experience.</li></ul>"
+    }
+  ],
+  "education": [
+    {
+      "degree": "BTech",
+      "major": "EEE",
+      "universityName": "harvey university",
+      "startDate": "2020-04-08",
+      "endDate": "2023-05-10",
+      "gradeType": "CGPA",
+      "grade": "9"
+    }
+  ],
+  "certifications": [
+    {
+      "name": "Fullstack web Webdevelopment",
+      "issuer": "Amazon",
+      "date": "May 2023",
+      "credentialLink": "https://example.com/certificates/fullstack-web-development"
+    }
+  ],
+  "additionalSections": [
+    {
+      "title": "Hobbies",
+      "content": "<p>Playing BGMI, chess, and exploring modern UI patterns.</p>"
+    },
+    {
+      "title": "Languages",
+      "content": "<p>English</p><p>Telugu</p>"
+    },
+    {
+      "title": "Publications",
+      "content": "<p>IIIT-smart irrigation system using iot</p>"
+    }
+  ]
+}

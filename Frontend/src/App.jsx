@@ -96,9 +96,9 @@ function App() {
   const isViewResumePage = location.pathname.includes('/dashboard/view-resume');
   const isProfilePage = location.pathname === '/profile';
   const isDashboardPage = location.pathname === '/dashboard';
-  const isDocumentationPage = location.pathname === '/documentation';
-  const isATSPage     = location.pathname === '/ats-checker';
-  const isResumesPage        = location.pathname === '/resumes';
+  const isDocumentationPage = location.pathname === '/app/documentation';
+  const isATSPage     = location.pathname === '/app/ats-checker';
+  const isResumesPage        = location.pathname === '/app/resumes';
   const isChangePasswordPage = location.pathname === '/change-password';
   const isNotificationsPage = location.pathname === '/notifications';
   const shouldHideHeader = isEditResumePage || isViewResumePage || isProfilePage || isDashboardPage || isDocumentationPage || isATSPage || isResumesPage || isChangePasswordPage || isNotificationsPage;
