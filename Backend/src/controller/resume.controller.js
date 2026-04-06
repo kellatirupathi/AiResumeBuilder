@@ -256,7 +256,13 @@ const cloneResume = async (req, res) => {
     delete clonedData._id;
     delete clonedData.createdAt;
     delete clonedData.updatedAt;
-    delete clonedData.versions; 
+    delete clonedData.versions;
+
+    // A cloned resume must start with its own share lifecycle and never reuse
+    // the source resume's Drive file metadata or public link.
+    clonedData.googleDriveFileId = null;
+    clonedData.googleDriveLink = null;
+    clonedData.driveOutOfSync = false;
     
     clonedData.title = newTitle || `Copy of ${originalResume.title}`;
     clonedData.viewCount = 0;

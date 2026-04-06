@@ -15,10 +15,10 @@ import {
   FaTimes
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
-import { loginUser, registerUser, googleLogin } from "@/Services/login"; // <-- NEW: Import googleLogin
+import { loginUser, registerUser, googleLogin, getExternalInviteDetails } from "@/Services/login"; // <-- NEW: Import googleLogin
 import { GoogleLogin } from '@react-oauth/google'; // <-- NEW: Import GoogleLogin component
 import { Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
 
 // Toast component for displaying notifications
@@ -99,7 +99,12 @@ function AuthPage() {
   const [niatId, setNiatId] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false); // <-- NEW STATE
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteDetails, setInviteDetails] = useState(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get("invite") || "";
+  const isInviteFlow = Boolean(inviteDetails);
 
   // Toast notification state
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
@@ -121,12 +126,58 @@ function AuthPage() {
   const closeToast = () => {
     setToast({ ...toast, show: false });
   };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!inviteToken) {
+      setInviteDetails(null);
+      return undefined;
+    }
+
+    setInviteLoading(true);
+    setIsSignUp(true);
+
+    const inviteOpenedKey = `invite-opened:${inviteToken}`;
+    const hasAlreadyMarkedOpened =
+      typeof window !== "undefined" && window.sessionStorage.getItem(inviteOpenedKey);
+    const shouldMarkOpened = !hasAlreadyMarkedOpened;
+
+    if (shouldMarkOpened && typeof window !== "undefined") {
+      window.sessionStorage.setItem(inviteOpenedKey, "1");
+    }
+
+    getExternalInviteDetails(inviteToken, { markOpened: shouldMarkOpened })
+      .then((response) => {
+        if (!cancelled) {
+          setInviteDetails(response?.data || null);
+        }
+      })
+      .catch((error) => {
+        if (shouldMarkOpened && typeof window !== "undefined") {
+          window.sessionStorage.removeItem(inviteOpenedKey);
+        }
+        if (!cancelled) {
+          setInviteDetails(null);
+          showToast(error.message || "This invite link is invalid or expired.", "error");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setInviteLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [inviteToken]);
   
   // <-- NEW: Google login success handler -->
   const handleGoogleSuccess = async (credentialResponse) => {
     setGoogleLoading(true);
     try {
-        const user = await googleLogin(credentialResponse.credential);
+        const user = await googleLogin(credentialResponse.credential, inviteToken);
         if (user?.statusCode === 200) {
             showToast("Signed in with Google!", "success");
             setTimeout(() => navigate("/dashboard"), 1000);
@@ -174,7 +225,7 @@ function AuthPage() {
     event.preventDefault();
     
     // Validate form fields
-    if (!validateNiatId(niatId)) {
+    if (!isInviteFlow && !validateNiatId(niatId)) {
       showToast("Please enter a valid ID.", "error");
       return;
     }
@@ -191,7 +242,10 @@ function AuthPage() {
     }
     
     setLoading(true);
-    const data = { fullName, niatId, email, password };
+    const data = { fullName, email, password, inviteToken };
+    if (!isInviteFlow) {
+      data.niatId = niatId;
+    }
     
     try {
       const response = await registerUser(data);
@@ -205,7 +259,7 @@ function AuthPage() {
       }
     } catch (error) {
       // This is the specific NIAT ID error we want to show as a toast
-      if (error.message && error.message.includes("NIAT ID")) {
+      if (!isInviteFlow && error.message && error.message.includes("NIAT ID")) {
         showToast("Your Student ID is not registered in our system. Please crosscheck and enter the correct Student ID.", "error");
       } else {
         showToast(error.message || "Registration failed. Please try again.", "error");
@@ -325,8 +379,22 @@ function AuthPage() {
               >
                 <div className="mb-6">
                   <h2 className="text-2xl font-extrabold text-gray-900">Create your account</h2>
-                  <p className="text-sm text-gray-500 mt-1">Start building your professional resume today</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {isInviteFlow
+                      ? "You're joining through an admin invite. Student ID is not required for this account."
+                      : "Start building your professional resume today"}
+                  </p>
                 </div>
+
+                {inviteToken && (
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                    {inviteLoading
+                      ? "Validating your external-access invite..."
+                      : inviteDetails
+                        ? `Invite active until ${new Date(inviteDetails.expiresAt).toLocaleString()}.`
+                        : "This invite needs to be valid before you can create an external account."}
+                  </div>
+                )}
 
                 <InputField
                   id="fullName" label="Full Name"
@@ -334,12 +402,14 @@ function AuthPage() {
                   placeholder="Enter your full name"
                   value={fullName} onChange={(e) => setFullName(e.target.value)} required
                 />
-                <InputField
-                  id="niatId" label="Student ID"
-                  icon={<FaIdBadge className="w-4 h-4" />}
-                  placeholder="Enter your Student ID"
-                  value={niatId} onChange={handleNiatIdChange} required
-                />
+                {!isInviteFlow && (
+                  <InputField
+                    id="niatId" label="Student ID"
+                    icon={<FaIdBadge className="w-4 h-4" />}
+                    placeholder="Enter your Student ID"
+                    value={niatId} onChange={handleNiatIdChange} required
+                  />
+                )}
                 <InputField
                   id="email" label="Email Address"
                   icon={<FaEnvelope className="w-4 h-4" />}
@@ -362,7 +432,7 @@ function AuthPage() {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || (Boolean(inviteToken) && !inviteDetails)}
                   className={`w-full mt-2 py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-indigo-600 shadow-lg shadow-emerald-200 transition-all duration-200 ${loading ? "opacity-60 cursor-not-allowed" : "hover:from-emerald-600 hover:to-indigo-700 hover:shadow-xl hover:scale-[1.01]"}`}
                 >
                   {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <><span>Create Account</span><FaArrowRight className="w-3.5 h-3.5" /></>}
@@ -451,6 +521,7 @@ function AuthPage() {
                   text={isSignUp ? "signup_with" : "signin_with"}
                   shape="rectangular"
                   width="360"
+                  disabled={Boolean(inviteToken) && !inviteDetails}
                 />
               </div>
             )}

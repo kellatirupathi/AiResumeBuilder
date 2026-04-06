@@ -44,6 +44,17 @@ const userSchema = new Schema({
     type: String,
     required: true
   },
+  userType: {
+    type: String,
+    enum: ["internal", "external"],
+    default: "internal",
+    index: true,
+  },
+  authProvider: {
+    type: String,
+    enum: ["password", "google"],
+    default: "password",
+  },
   // <-- MODIFIED: ADDED niatIdVerified FIELD -->
   niatIdVerified: {
     type: Boolean,
@@ -100,6 +111,11 @@ const userSchema = new Schema({
   notificationPreferences: {
     reminder: { type: Boolean, default: true },
     downloadLink: { type: Boolean, default: true },
+  },
+  externalInvite: {
+    type: Schema.Types.ObjectId,
+    ref: "ExternalInvite",
+    default: null,
   },
 }, { timestamps: true });
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useParams } from "react-router-dom";
-import { LoaderCircle, User, HomeIcon } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { Eye, LoaderCircle, User, HomeIcon } from "lucide-react";
 import { toast } from "sonner";
 import ResumeForm from "../components/ResumeForm";
 import PreviewPage from "../components/PreviewPage";
@@ -34,6 +34,7 @@ const stripItemId = (value = {}) => {
 
 export function EditResume() {
   const { resume_id } = useParams();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const resumeInfo = useSelector((state) => state.editResume.resumeData);
   const containerRef = useRef(null);
@@ -229,6 +230,16 @@ export function EditResume() {
         )}
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 border-orange-300 text-orange-700 hover:bg-orange-50"
+            onClick={() => navigate(`/dashboard/view-resume/${resume_id}`)}
+          >
+            <Eye className="h-4 w-4" />
+            Preview
+          </Button>
+
           <ResumePublicLinkButton
             resumeId={resume_id}
             resumeInfo={resumeInfo}

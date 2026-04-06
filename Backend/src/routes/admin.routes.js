@@ -1,6 +1,11 @@
 import { Router } from "express";
 import {
   loginAdmin,
+  createExternalInvite,
+  deleteExternalInvite,
+  getExternalInviteById,
+  getExternalInvites,
+  getExternalUsers,
   getAdminInviteDetails,
   setAdminPasswordFromInvite,
   logoutAdmin,
@@ -23,6 +28,7 @@ import {
   updateResume,
   deleteResume,
   processPendingResumeLinks,
+  updateExternalInvite,
 } from "../controller/admin.controller.js";
 import {
   getNotifications,
@@ -50,6 +56,12 @@ router.post("/accounts", isOwnerAdmin, createAdminAccount);
 router.put("/accounts/:id", isOwnerAdmin, updateAdminAccount);
 router.delete("/accounts/:id", isOwnerAdmin, deleteAdminAccount);
 router.get("/stats", getDashboardStats);
+router.get("/external-invites", getExternalInvites);
+router.get("/external-invites/:id", getExternalInviteById);
+router.post("/external-invites", createExternalInvite);
+router.put("/external-invites/:id", updateExternalInvite);
+router.delete("/external-invites/:id", deleteExternalInvite);
+router.get("/external-users", getExternalUsers);
 router.get("/users", getAllUsers);
 router.get("/users/paginated", getUsersPaginated);
 router.get("/users/:id", getUserById);

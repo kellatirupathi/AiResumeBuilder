@@ -1,14 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { getUserById } from "@/Services/adminApi";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft, FileText, Download, Mail, Phone, MapPin, Briefcase,
   Github, Linkedin, Globe, BadgeCheck, BadgeX, GraduationCap,
   Code, FolderOpen, Award, BookOpen, Layers
 } from "lucide-react";
+import { useAdminUserDetailQuery } from "@/hooks/useAdminQueryData";
 
 function Section({ title, icon: Icon, children }) {
   return (
@@ -50,19 +50,18 @@ function Badge({ children, color = "indigo" }) {
 export default function AdminUserDetailPage() {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const userDetailQuery = useAdminUserDetailQuery(userId);
+  const data = userDetailQuery.data;
+  const loading = userDetailQuery.isPending && !data;
 
   useEffect(() => {
-    setLoading(true);
-    getUserById(userId)
-      .then((res) => setData(res.data))
-      .catch((err) => {
-        toast.error("Failed to load user", { description: err.message });
-        navigate("/admin/users");
-      })
-      .finally(() => setLoading(false));
-  }, [userId, navigate]);
+    if (!userDetailQuery.isError) {
+      return;
+    }
+
+    toast.error("Failed to load user");
+    navigate("/admin/users");
+  }, [navigate, userDetailQuery.isError]);
 
   if (loading) {
     return (
@@ -104,6 +103,8 @@ export default function AdminUserDetailPage() {
                 <InfoRow label="Address" value={user.address} />
                 <InfoRow label="Job Title" value={user.jobTitle} />
                 <InfoRow label="Student ID" value={user.niatId} />
+                <InfoRow label="User Type" value={user.userType} />
+                <InfoRow label="Auth Provider" value={user.authProvider} />
                 <div className="flex flex-col py-1.5">
                   <span className="text-xs text-gray-400">ID Verified</span>
                   <div className="flex items-center gap-1 mt-0.5">

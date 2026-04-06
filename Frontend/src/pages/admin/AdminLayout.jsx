@@ -1,14 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { toast } from "sonner";
-import { checkAdminSession, logoutAdmin } from "@/Services/adminApi";
+import { logoutAdmin } from "@/Services/adminApi";
 import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
-import { LayoutDashboard, Users, FileText, Fingerprint, Bell, LogOut, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Fingerprint, Bell, LogOut, ShieldCheck, Link2 } from "lucide-react";
+import { useAdminSessionQuery } from "@/hooks/useAdminQueryData";
 
 const NAV = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
   { label: "Users", icon: Users, path: "/admin/users" },
   { label: "Resumes", icon: FileText, path: "/admin/resumes" },
+  { label: "Invite Users", icon: Link2, path: "/admin/invite-users" },
   { label: "Student IDs", icon: Fingerprint, path: "/admin/student-ids" },
   { label: "Notifications", icon: Bell, path: "/admin/notifications" },
 ];
@@ -18,20 +20,18 @@ const OWNER_NAV = [{ label: "Accounts", icon: ShieldCheck, path: "/admin/account
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [checking, setChecking] = useState(true);
-  const [admin, setAdmin] = useState(null);
+  const adminSessionQuery = useAdminSessionQuery();
+  const admin = adminSessionQuery.data;
+  const checking = adminSessionQuery.isPending && !admin;
 
   useEffect(() => {
-    checkAdminSession()
-      .then((response) => {
-        setAdmin(response?.data?.admin || null);
-        setChecking(false);
-      })
-      .catch(() => {
-        toast.error("Session invalid or expired", { description: "Redirecting to admin login." });
-        navigate("/admin/login");
-      });
-  }, [navigate]);
+    if (!adminSessionQuery.isError) {
+      return;
+    }
+
+    toast.error("Session invalid or expired", { description: "Redirecting to admin login." });
+    navigate("/admin/login");
+  }, [adminSessionQuery.isError, navigate]);
 
   useEffect(() => {
     if (!checking && admin?.role !== "owner" && location.pathname.startsWith("/admin/accounts")) {

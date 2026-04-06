@@ -2,6 +2,7 @@
 import {
   start,
   getSession,
+  getExternalInviteDetails,
   loginUser,
   logoutUser,
   registerUser,
@@ -22,6 +23,7 @@ import { isUserAvailable } from "../middleware/auth.js";
 const router = Router();
 
 router.get("/session", getSession);
+router.get("/invite", getExternalInviteDetails);
 router.get("/", isUserAvailable, start);
 router.post("/register", registerUser);
 router.post("/login", loginUser);

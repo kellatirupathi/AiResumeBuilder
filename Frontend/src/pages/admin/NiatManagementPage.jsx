@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { 
-    getNiatIds, 
     addSingleNiatId, 
     addBulkNiatIds, 
-    deleteNiatId, 
-    checkAdminSession 
+    deleteNiatId
 } from '@/Services/adminApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +25,7 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useAdminSessionQuery, useAdminStudentIdsQuery } from '@/hooks/useAdminQueryData';
 
 // Tooltip component
 const Tooltip = ({ children, text }) => {
@@ -81,66 +80,46 @@ const ConfirmDialog = ({ isOpen, onClose, onConfirm, title, message }) => {
 };
 
 function NiatManagementPage({ embedded = false }) {
-    const [niatIds, setNiatIds] = useState([]);
-    const [filteredIds, setFilteredIds] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
     const [singleIdInput, setSingleIdInput] = useState('');
     const [bulkIdInput, setBulkIdInput] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
-    const [isRefreshing, setIsRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState('single');
     const [idToDelete, setIdToDelete] = useState(null);
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
     const [isSingleSubmitting, setIsSingleSubmitting] = useState(false);
     const [isBulkSubmitting, setIsBulkSubmitting] = useState(false);
     const [isFileUploading, setIsFileUploading] = useState(false);
-    const [stats, setStats] = useState({ total: 0, today: 0 });
     const fileInputRef = useRef(null);
     const navigate = useNavigate();
-
-    const fetchIds = async () => {
-        setIsLoading(true);
-        try {
-            const response = await getNiatIds();
-            const ids = response.data || [];
-            setNiatIds(ids);
-            setFilteredIds(ids);
-            
-            // Calculate statistics
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            setStats({
-                total: ids.length,
-                today: ids.filter(id => new Date(id.createdAt) >= today).length
-            });
-        } catch (error) {
-            toast.error("Failed to fetch Student IDs.", { description: error.message });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    
-    useEffect(() => {
-        if (embedded) {
-            fetchIds();
-        } else {
-            checkAdminSession().then(fetchIds).catch(() => navigate('/admin/login'));
-        }
-    }, [navigate, embedded]);
-    
-    // Filter IDs when search query changes
-    useEffect(() => {
+    const adminSessionQuery = useAdminSessionQuery({ enabled: !embedded });
+    const studentIdsQuery = useAdminStudentIdsQuery();
+    const niatIds = studentIdsQuery.data || [];
+    const filteredIds = useMemo(() => {
         if (!searchQuery.trim()) {
-            setFilteredIds(niatIds);
-            return;
+            return niatIds;
         }
-        
-        const filtered = niatIds.filter(id => 
+
+        return niatIds.filter(id =>
             id.niatId.toLowerCase().includes(searchQuery.toLowerCase())
         );
-        setFilteredIds(filtered);
-    }, [searchQuery, niatIds]);
+    }, [niatIds, searchQuery]);
+    const isLoading = studentIdsQuery.isPending && !niatIds.length;
+    const isRefreshing = studentIdsQuery.isFetching && !isLoading;
+    const stats = useMemo(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        return {
+            total: niatIds.length,
+            today: niatIds.filter(id => new Date(id.createdAt) >= today).length,
+        };
+    }, [niatIds]);
+
+    useEffect(() => {
+        if (!embedded && adminSessionQuery.isError) {
+            navigate('/admin/login');
+        }
+    }, [adminSessionQuery.isError, embedded, navigate]);
 
     const handleAddSingle = async () => {
         if (!singleIdInput.trim()) return;
@@ -150,7 +129,7 @@ function NiatManagementPage({ embedded = false }) {
             await addSingleNiatId(singleIdInput.trim());
             toast.success("Student ID added successfully.");
             setSingleIdInput('');
-            fetchIds();
+            await studentIdsQuery.refetch();
         } catch (error) {
             toast.error("Failed to add ID.", { description: error.message });
         } finally {
@@ -169,7 +148,7 @@ function NiatManagementPage({ embedded = false }) {
                 description: `Added ${response.data.addedCount} new IDs. ${response.data.duplicateCount || 0} duplicates skipped.` 
             });
             setBulkIdInput('');
-            fetchIds();
+            await studentIdsQuery.refetch();
         } catch (error) {
             toast.error("Error in bulk add.", { description: error.message });
         } finally {
@@ -214,7 +193,7 @@ function NiatManagementPage({ embedded = false }) {
                 toast.success(response.message, { 
                     description: `Added ${response.data.addedCount} IDs from the file. ${response.data.duplicateCount || 0} duplicates skipped.`
                 });
-                fetchIds();
+                await studentIdsQuery.refetch();
             } else {
                 toast.warning("No valid IDs found in file.");
             }
@@ -240,16 +219,14 @@ function NiatManagementPage({ embedded = false }) {
         try {
             await deleteNiatId(idToDelete);
             toast.success("Student ID deleted successfully.");
-            fetchIds();
+            await studentIdsQuery.refetch();
         } catch (error) {
             toast.error("Failed to delete ID.", { description: error.message });
         }
     };
     
     const handleRefresh = async () => {
-        setIsRefreshing(true);
-        await fetchIds();
-        setIsRefreshing(false);
+        await studentIdsQuery.refetch();
     };
     
     const exportToCSV = () => {

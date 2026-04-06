@@ -1,10 +1,10 @@
-import { useEffect, useState, useCallback } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { getDashboardStats } from "@/Services/adminApi";
 import { Users, FileText, UserCheck, TrendingUp, BarChart2, RefreshCw, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAdminDashboardStatsQuery } from "@/hooks/useAdminQueryData";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -311,35 +311,19 @@ const STAT_CARDS = (stats) => [
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [period, setPeriod] = useState(30);
-
-  const fetchStats = useCallback(async (days, showToast = false) => {
-    try {
-      const res = await getDashboardStats(days);
-      setStats(res.data);
-      if (showToast) toast.success("Stats refreshed");
-    } catch (error) {
-      toast.error("Failed to load dashboard stats", { description: error.message });
-    }
-  }, []);
-
-  useEffect(() => {
-    setLoading(true);
-    fetchStats(period).finally(() => setLoading(false));
-  }, []);  // only on mount
+  const statsQuery = useAdminDashboardStatsQuery(period);
+  const stats = statsQuery.data;
+  const loading = statsQuery.isPending && !stats;
+  const refreshing = statsQuery.isFetching && !loading;
 
   const handlePeriodChange = (days) => {
     setPeriod(days);
-    fetchStats(days);
   };
 
   const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchStats(period, true);
-    setRefreshing(false);
+    await statsQuery.refetch();
+    toast.success("Stats refreshed");
   };
 
   if (loading) {
@@ -350,8 +334,8 @@ export default function AdminDashboard() {
     );
   }
 
-  const userGrowth = fillDays(stats?.userGrowth || [], period);
-  const resumeGrowth = fillDays(stats?.resumeGrowth || [], period);
+  const userGrowth = useMemo(() => fillDays(stats?.userGrowth || [], period), [stats?.userGrowth, period]);
+  const resumeGrowth = useMemo(() => fillDays(stats?.resumeGrowth || [], period), [stats?.resumeGrowth, period]);
 
   return (
     <div className="flex flex-col h-full overflow-y-auto">

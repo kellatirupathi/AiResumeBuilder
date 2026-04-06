@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import User from "../models/user.model.js";
 import Resume from "../models/resume.model.js";
 import Admin from "../models/admin.model.js";
+import ExternalInvite from "../models/externalInvite.model.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import {
@@ -25,6 +26,9 @@ const USER_FIELDS = [
   "password",
   "niatId",
   "niatIdVerified",
+  "userType",
+  "authProvider",
+  "externalInvite",
   "jobTitle",
   "address",
   "phone",
@@ -65,6 +69,17 @@ const RESUME_FIELDS = [
 ];
 
 const ADMIN_FIELDS = ["name", "email", "password", "role"];
+const EXTERNAL_USER_FIELDS = [
+  "_id",
+  "fullName",
+  "email",
+  "userType",
+  "authProvider",
+  "niatId",
+  "niatIdVerified",
+  "createdAt",
+  "externalInvite",
+];
 
 const pickDefinedFields = (source, allowedFields) => {
   const result = {};
@@ -104,6 +119,39 @@ const sanitizeAdmin = (adminDocument) => {
   delete adminObject.inviteTokenExpiry;
 
   return adminObject;
+};
+
+const hashInviteToken = (token) =>
+  crypto.createHash("sha256").update(String(token || "")).digest("hex");
+
+const getInviteStatus = (invite) => {
+  if (!invite) {
+    return "expired";
+  }
+
+  if (invite.status === "revoked") {
+    return "revoked";
+  }
+
+  if (invite.expiresAt && invite.expiresAt <= new Date()) {
+    return "expired";
+  }
+
+  return invite.status || "active";
+};
+
+const serializeInvite = (inviteDocument) => {
+  const invite = inviteDocument?.toObject ? inviteDocument.toObject() : inviteDocument;
+
+  if (!invite) {
+    return null;
+  }
+
+  return {
+    ...invite,
+    status: getInviteStatus(invite),
+    inviteLink: `${process.env.ALLOWED_SITE}/auth/sign-in?invite=${invite.code}`,
+  };
 };
 
 const signAdminToken = (admin) =>
@@ -434,6 +482,194 @@ export const setAdminPasswordFromInvite = async (req, res) => {
     return res
       .status(500)
       .json(new ApiError(500, "Failed to set admin password", [error.message], error.stack));
+  }
+};
+
+export const createExternalInvite = async (req, res) => {
+  try {
+    const title = String(req.body.title || "").trim();
+    const expiresAtInput = req.body.expiresAt;
+    const expiresAt = expiresAtInput ? new Date(expiresAtInput) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    if (!title) {
+      return res.status(400).json(new ApiError(400, "Invite title is required."));
+    }
+
+    if (Number.isNaN(expiresAt.getTime())) {
+      return res.status(400).json(new ApiError(400, "A valid expiry date is required."));
+    }
+
+    if (expiresAt <= new Date()) {
+      return res.status(400).json(new ApiError(400, "Expiry date must be in the future."));
+    }
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = hashInviteToken(rawToken);
+
+    const invite = await ExternalInvite.create({
+      title,
+      tokenHash,
+      code: rawToken,
+      createdBy: req.admin.adminId,
+      expiresAt,
+      status: "active",
+    });
+
+    return res.status(201).json(
+      new ApiResponse(
+        201,
+        serializeInvite(invite),
+        "External invite link created successfully."
+      )
+    );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to create external invite link", [error.message], error.stack));
+  }
+};
+
+export const getExternalInvites = async (req, res) => {
+  try {
+    const invites = await ExternalInvite.find({})
+      .populate("createdBy", "name email")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        invites.map(serializeInvite),
+        "External invite links fetched successfully."
+      )
+    );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to fetch external invite links", [], error.stack));
+  }
+};
+
+export const getExternalInviteById = async (req, res) => {
+  try {
+    const invite = await ExternalInvite.findById(req.params.id)
+      .populate("createdBy", "name email")
+      .lean();
+
+    if (!invite) {
+      return res.status(404).json(new ApiError(404, "External invite link not found."));
+    }
+
+    const invitedUsers = await User.find({ externalInvite: invite._id })
+      .select(EXTERNAL_USER_FIELDS.join(" "))
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          invite: serializeInvite(invite),
+          invitedUsers,
+        },
+        "External invite details fetched successfully."
+      )
+    );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to fetch external invite details", [], error.stack));
+  }
+};
+
+export const getExternalUsers = async (req, res) => {
+  try {
+    const users = await User.find({ userType: "external" })
+      .populate("externalInvite", "code expiresAt createdAt status openCount signupCount")
+      .select(EXTERNAL_USER_FIELDS.join(" "))
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json(
+      new ApiResponse(200, users, "External invited users fetched successfully.")
+    );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to fetch external invited users", [], error.stack));
+  }
+};
+
+export const updateExternalInvite = async (req, res) => {
+  try {
+    const invite = await ExternalInvite.findById(req.params.id);
+
+    if (!invite) {
+      return res.status(404).json(new ApiError(404, "External invite link not found."));
+    }
+
+    const { expiresAt, status, title } = req.body;
+
+    if (title !== undefined) {
+      const normalizedTitle = String(title || "").trim();
+
+      if (!normalizedTitle) {
+        return res.status(400).json(new ApiError(400, "Invite title is required."));
+      }
+
+      invite.title = normalizedTitle;
+    }
+
+    if (expiresAt !== undefined) {
+      const parsedExpiresAt = new Date(expiresAt);
+      if (Number.isNaN(parsedExpiresAt.getTime())) {
+        return res.status(400).json(new ApiError(400, "A valid expiry date is required."));
+      }
+      invite.expiresAt = parsedExpiresAt;
+    }
+
+    if (status !== undefined) {
+      if (!["active", "revoked", "expired", "used"].includes(status)) {
+        return res.status(400).json(new ApiError(400, "Invalid invite status."));
+      }
+      invite.status = status;
+    }
+
+    await invite.save();
+
+    return res.status(200).json(
+      new ApiResponse(200, serializeInvite(invite), "External invite updated successfully.")
+    );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to update external invite", [error.message], error.stack));
+  }
+};
+
+export const deleteExternalInvite = async (req, res) => {
+  try {
+    const invite = await ExternalInvite.findById(req.params.id);
+
+    if (!invite) {
+      return res.status(404).json(new ApiError(404, "External invite link not found."));
+    }
+
+    const linkedUsersCount = await User.countDocuments({ externalInvite: invite._id });
+    if (linkedUsersCount > 0) {
+      return res.status(400).json(
+        new ApiError(400, "This invite already has registered users. Revoke it instead of deleting.")
+      );
+    }
+
+    await ExternalInvite.findByIdAndDelete(invite._id);
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, null, "External invite deleted successfully."));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to delete external invite", [error.message], error.stack));
   }
 };
 
@@ -808,7 +1044,7 @@ export const getResumesPaginated = async (req, res) => {
 
     const [resumes, total] = await Promise.all([
       Resume.find(resumeFilter)
-        .populate("user", "fullName email niatId")
+        .populate("user", "fullName email niatId userType externalInvite")
         .select("title template themeColor createdAt updatedAt viewCount googleDriveLink driveOutOfSync user")
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -942,7 +1178,7 @@ export const deleteUser = async (req, res) => {
 
 export const getAllResumes = async (req, res) => {
   try {
-    const resumes = await Resume.find({}).populate("user", "fullName email niatId");
+    const resumes = await Resume.find({}).populate("user", "fullName email niatId userType externalInvite");
     return res
       .status(200)
       .json(new ApiResponse(200, resumes, "All resumes fetched successfully"));
@@ -990,7 +1226,7 @@ export const createResume = async (req, res) => {
 
     generateAndUpload(createdResume);
 
-    const populatedResume = await Resume.findById(createdResume._id).populate("user", "fullName email niatId");
+    const populatedResume = await Resume.findById(createdResume._id).populate("user", "fullName email niatId userType externalInvite");
 
     return res
       .status(201)
@@ -1018,7 +1254,7 @@ export const updateResume = async (req, res) => {
       id,
       { $set: payload, $currentDate: { updatedAt: true } },
       { new: true }
-    ).populate("user", "fullName email niatId");
+    ).populate("user", "fullName email niatId userType externalInvite");
 
     if (!updatedResume) {
       return res.status(404).json(new ApiError(404, "Resume not found."));

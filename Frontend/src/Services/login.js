@@ -54,6 +54,22 @@ const getSessionUser = async () => {
   }
 };
 
+const getExternalInviteDetails = async (token, options = {}) => {
+  try {
+    const response = await axiosInstance.get("users/invite", {
+      params: {
+        token,
+        markOpened: options.markOpened ?? true,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error?.response?.data?.message || error?.message || "Failed to validate invite link."
+    );
+  }
+};
+
 const registerUser = async (data) => {
   try {
     const response = await axiosInstance.post("users/register", data);
@@ -84,9 +100,9 @@ const loginUser = async (data) => {
   }
 };
 
-const googleLogin = async (credential) => {
+const googleLogin = async (credential, inviteToken = "") => {
     try {
-        const response = await axiosInstance.post("users/google-login", { credential });
+        const response = await axiosInstance.post("users/google-login", { credential, inviteToken });
         const userData = resolveApiData(response.data);
         if (userData) {
           setUserCaches(userData);
@@ -231,6 +247,7 @@ const completeProfile = async (data) => {
 export {
   startUser,
   getSessionUser,
+  getExternalInviteDetails,
   registerUser,
   loginUser,
   googleLogin,

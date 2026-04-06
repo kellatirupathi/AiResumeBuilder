@@ -40,7 +40,8 @@ const createNewResume = async (data) => {
       "resumes/createResume",
       resumeData
     );
-    const createdResume = resolveApiData(response.data);
+    const createdResumePayload = resolveApiData(response.data);
+    const createdResume = createdResumePayload?.resume || createdResumePayload;
     if (createdResume) {
       upsertResumeInCaches(createdResume);
     } else {
