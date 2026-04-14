@@ -31,10 +31,11 @@ app.use(cors(corsOptions));
 // Add OPTIONS preflight response
 app.options("*", cors(corsOptions));
 
-// Debug middleware to log cookies
+// Request logging without leaking cookie contents into application logs
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
-  console.log("Cookies:", req.cookies);
+  const cookieKeys = Object.keys(req.cookies || {});
+  console.log("Cookie keys:", cookieKeys.length ? cookieKeys.join(", ") : "none");
   next();
 });
 
