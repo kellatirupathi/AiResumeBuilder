@@ -14,6 +14,18 @@ if (!GITHUB_PAT || !GITHUB_USERNAME || !PORTFOLIO_REPO) {
 const octokit = new Octokit({ auth: GITHUB_PAT });
 const owner = GITHUB_USERNAME;
 
+const toPortfolioSlug = (user = {}) => {
+    const candidate = user.niatId || user._id || user.id || user.fullName || 'portfolio';
+
+    const slug = String(candidate)
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+    return slug || 'portfolio';
+};
+
 /**
  * Ensures the main portfolio repository exists and has GitHub Pages enabled.
  * Creates the repository if it doesn't exist.
@@ -59,7 +71,8 @@ export const createOrUpdatePortfolio = async (user, htmlContent) => {
     // Ensure the main portfolio repository exists before proceeding
     await ensurePortfolioRepoExists();
 
-    const userFolder = user.niatId.toLowerCase();
+    const userFolder = toPortfolioSlug(user);
+    const userLabel = user.niatId || user.fullName || user._id?.toString?.() || "unknown-user";
     const filePath = `${userFolder}/index.html`;
 
     let existingFileSha = null;
@@ -70,10 +83,10 @@ export const createOrUpdatePortfolio = async (user, htmlContent) => {
             path: filePath,
         });
         existingFileSha = data.sha;
-        console.log(`Updating existing portfolio for user: ${user.niatId}`);
+        console.log(`Updating existing portfolio for user: ${userLabel}`);
     } catch (error) {
         if (error.status === 404) {
-            console.log(`Creating new portfolio file for user: ${user.niatId}`);
+            console.log(`Creating new portfolio file for user: ${userLabel}`);
         } else {
             // Log other potential errors with getContent
             console.error(`Error fetching content for ${filePath}:`, error);
@@ -85,12 +98,12 @@ export const createOrUpdatePortfolio = async (user, htmlContent) => {
         owner,
         repo: PORTFOLIO_REPO,
         path: filePath,
-        message: `Update portfolio for ${user.fullName} (${user.niatId})`,
+        message: `Update portfolio for ${user.fullName} (${userLabel})`,
         content: Buffer.from(htmlContent).toString('base64'),
         sha: existingFileSha, // Pass null if file is new, or the sha if updating
     });
 
-    console.log(`Successfully created/updated portfolio content for ${user.niatId}.`);
+    console.log(`Successfully created/updated portfolio content for ${userLabel}.`);
 
     // The GitHub Pages site is enabled on the repository root.
     // GitHub automatically serves files from subdirectories.

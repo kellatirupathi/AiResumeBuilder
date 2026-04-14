@@ -17,3 +17,9 @@ BROWSERLESS_TOKEN=
 BROWSERLESS_REGION=production-sfo.browserless.io
 # Example:
 # BROWSERLESS_WS_ENDPOINT=wss://production-sfo.browserless.io/?token=YOUR_API_TOKEN
+
+# Remote PDF rendering via PDFSpark
+PDFSPARK_API_URL=https://pdfspark.dev/api/v1/pdf/from-html
+PDFSPARK_TIMEOUT_MS=60000
+PDFSPARK_MAX_RETRIES=2
+PDFSPARK_RETRY_DELAY_MS=1500
