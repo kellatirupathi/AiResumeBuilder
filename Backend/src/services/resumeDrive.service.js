@@ -1,3 +1,4 @@
+import "../models/user.model.js";
 import Resume from "../models/resume.model.js";
 import { generatePDF } from "./pdf.service.js";
 import { uploadOrUpdatePdf } from "./drive.service.js";
