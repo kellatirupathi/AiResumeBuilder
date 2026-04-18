@@ -156,9 +156,9 @@ const ModernTimelineTemplate = ({ resumeInfo }) => {
                     </h5>
                     
                     {exp.workSummary ? (
-                      <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600">
+                      <ul className="list-disc ml-4 pl-1 text-gray-600 text-[13px] leading-[1.4]">
                         {normalizeBullets(exp.workSummary).map((item, itemIndex) => (
-                          <li key={itemIndex}>{item}</li>
+                          <li key={itemIndex} className="mb-1">{item}</li>
                         ))}
                       </ul>
                     ) : null}
@@ -219,9 +219,9 @@ const ModernTimelineTemplate = ({ resumeInfo }) => {
                     )}
                     
                     {project.projectSummary ? (
-                      <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600">
+                      <ul className="list-disc ml-4 pl-1 text-gray-600 text-[13px] leading-[1.4]">
                         {normalizeBullets(project.projectSummary).map((item, itemIndex) => (
-                          <li key={itemIndex}>{item}</li>
+                          <li key={itemIndex} className="mb-1">{item}</li>
                         ))}
                       </ul>
                     ) : null}
@@ -231,42 +231,6 @@ const ModernTimelineTemplate = ({ resumeInfo }) => {
             </section>
           )}
           
-          {/* Certifications Section for ModernTimelineTemplate */}
-          {resumeInfo?.certifications && resumeInfo.certifications.length > 0 && (
-            <section>
-              <h3 className="text-lg font-bold mb-2 pb-1 border-b border-gray-200">
-                Certifications
-              </h3>
-              <div className="space-y-1.5">
-                {resumeInfo.certifications.map((cert, index) => (
-                  <div key={index} className="mb-1.5">
-                    {/* First row: name on left, date on right */}
-                    <div className="flex justify-between items-center">
-                      <h4 className="text-base font-medium">{cert.name}</h4>
-                      {cert.date && (
-                        <span className="text-sm text-gray-600">{cert.date}</span>
-                      )}
-                    </div>
-                    
-                    {/* Second row: issuer on left, credential link on right */}
-                    <div className="flex justify-between items-center">
-                      <h5 className="text-sm font-medium text-gray-700">{cert.issuer}</h5>
-                      {cert.credentialLink && (
-                        <a href={formatUrl(cert.credentialLink)} target="_blank" rel="noopener noreferrer" 
-                          className="text-xs inline-flex items-center text-blue-600 hover:underline">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 10-5.656-5.656l-1.102 1.101" />
-                          </svg>
-                          View
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
         </div>
         
         {/* Right column - Skills, Education */}
@@ -331,6 +295,43 @@ const ModernTimelineTemplate = ({ resumeInfo }) => {
             </section>
           )}
           
+          {/* Certifications Section - moved to right column */}
+          {resumeInfo?.certifications && resumeInfo.certifications.length > 0 && (
+            <section>
+              <h3 className="text-lg font-bold mb-2 pb-1 border-b border-gray-200">
+                Certifications
+              </h3>
+              <div className="space-y-1.5">
+                {resumeInfo.certifications.map((cert, index) => (
+                  <div key={index} className="mb-1.5">
+                    {/* First row: name on left, date on right */}
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-base font-medium">{cert.name}</h4>
+                      {cert.date && (
+                        <span className="text-sm text-gray-600">{cert.date}</span>
+                      )}
+                    </div>
+
+                    {/* Second row: issuer on left, credential link on right */}
+                    <div className="flex justify-between items-center">
+                      <h5 className="text-sm font-medium text-gray-700">{cert.issuer}</h5>
+                      {cert.credentialLink && (
+                        <a href={formatUrl(cert.credentialLink)} target="_blank" rel="noopener noreferrer"
+                          className="text-xs inline-flex items-center text-blue-600 hover:underline">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 10-5.656-5.656l-1.102 1.101" />
+                          </svg>
+                          View
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Additional Sections - Now styled to match template */}
           {resumeInfo?.additionalSections && resumeInfo.additionalSections.length > 0 && (
             <>

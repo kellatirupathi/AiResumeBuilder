@@ -43,8 +43,8 @@ const BoldImpactTemplate = ({ resumeInfo }) => {
             
             {/* Summary statement */}
             {resumeInfo?.summary && (
-              <div className="max-w-2xl pr-4 mb-4">
-                <p className="text-sm text-gray-600 leading-relaxed">
+              <div className="max-w-2xl pr-4 mb-1">
+                <p className="text-gray-600" style={{ fontSize: "12px", lineHeight: "1.5" }}>
                   {resumeInfo.summary}
                 </p>
               </div>
@@ -137,7 +137,7 @@ const BoldImpactTemplate = ({ resumeInfo }) => {
       </div>
       
       {/* Main content with grid layout */}
-      <div className="p-4 grid grid-cols-1 md:grid-cols-12 gap-2">
+      <div className="px-4 pb-4 pt-1 grid grid-cols-1 md:grid-cols-12 gap-2">
         {/* Left column - 8 cols */}
         <div className="md:col-span-8 space-y-2">
           {/* Experience Section */}
@@ -177,9 +177,9 @@ const BoldImpactTemplate = ({ resumeInfo }) => {
                     </h5>
                     
                     {exp.workSummary ? (
-                      <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600 leading-relaxed">
+                      <ul className="list-disc ml-4 pl-1 text-gray-600 text-[13px] leading-[1.4]" style={{ marginTop: 0, marginBottom: 0 }}>
                         {normalizeBullets(exp.workSummary).map((item, itemIndex) => (
-                          <li key={itemIndex}>{item}</li>
+                          <li key={itemIndex} className="mb-1">{item}</li>
                         ))}
                       </ul>
                     ) : null}
@@ -248,9 +248,9 @@ const BoldImpactTemplate = ({ resumeInfo }) => {
                     )}
                     
                     {project.projectSummary ? (
-                      <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600 leading-relaxed">
+                      <ul className="list-disc ml-4 pl-1 text-gray-600 text-[13px] leading-[1.4]" style={{ marginTop: 0, marginBottom: 0 }}>
                         {normalizeBullets(project.projectSummary).map((item, itemIndex) => (
-                          <li key={itemIndex}>{item}</li>
+                          <li key={itemIndex} className="mb-1">{item}</li>
                         ))}
                       </ul>
                     ) : null}
@@ -260,58 +260,6 @@ const BoldImpactTemplate = ({ resumeInfo }) => {
             </section>
           )}
           
-          {/* Certifications Section - Moved to left column */}
-          {resumeInfo?.certifications && resumeInfo.certifications.length > 0 && (
-            <section>
-              <h3 
-                className="text-xl font-bold mb-1"
-                style={{ color: themeColor }}
-              >
-                CERTIFICATIONS
-              </h3>
-              
-              <div className="space-y-1.5">
-                {resumeInfo.certifications.map((cert, index) => (
-                  <div 
-                    key={index} 
-                    className="p-2 rounded-md"
-                    style={{ backgroundColor: `${themeColor}05` }}
-                  >
-                    <div className="flex justify-between items-center">
-                      <h4 className="text-base font-bold text-gray-800">{cert.name}</h4>
-                      {cert.date && (
-                        <span 
-                          className="text-xs px-3 py-1 rounded font-medium"
-                          style={{ backgroundColor: `${themeColor}20`, color: themeColor }}
-                        >
-                          {cert.date}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <h5 className="text-sm font-medium text-gray-700">{cert.issuer}</h5>
-                      {cert.credentialLink && (
-                        <a 
-                          href={formatUrl(cert.credentialLink)} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="text-xs flex items-center gap-1.5 hover:underline"
-                          style={{ color: themeColor }}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 10-5.656-5.656l-1.102 1.101" />
-                          </svg>
-                          View
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
         </div>
         
         {/* Right column - 4 cols */}
@@ -396,6 +344,59 @@ const BoldImpactTemplate = ({ resumeInfo }) => {
             </section>
           )}
           
+          {/* Certifications Section - moved to right column */}
+          {resumeInfo?.certifications && resumeInfo.certifications.length > 0 && (
+            <section>
+              <h3
+                className="text-xl font-bold mb-1"
+                style={{ color: themeColor }}
+              >
+                CERTIFICATIONS
+              </h3>
+
+              <div className="space-y-1.5">
+                {resumeInfo.certifications.map((cert, index) => (
+                  <div
+                    key={index}
+                    className="p-2 rounded-md"
+                    style={{ backgroundColor: `${themeColor}05` }}
+                  >
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-base font-bold text-gray-800">{cert.name}</h4>
+                      {cert.date && (
+                        <span
+                          className="text-xs px-3 py-1 rounded font-medium"
+                          style={{ backgroundColor: `${themeColor}20`, color: themeColor }}
+                        >
+                          {cert.date}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <h5 className="text-sm font-medium text-gray-700">{cert.issuer}</h5>
+                      {cert.credentialLink && (
+                        <a
+                          href={formatUrl(cert.credentialLink)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs flex items-center gap-1.5 hover:underline"
+                          style={{ color: themeColor }}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 10-5.656-5.656l-1.102 1.101" />
+                          </svg>
+                          View
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Additional Sections - Moved to right column */}
           {resumeInfo?.additionalSections && resumeInfo.additionalSections.length > 0 && (
             <>

@@ -215,9 +215,9 @@ const CreativeTemplate = ({ resumeInfo }) => {
                       </h5>
 
                       {exp.workSummary ? (
-                        <ul className="list-disc pl-4 space-y-1 text-sm text-gray-700">
+                        <ul className="list-disc ml-4 pl-1 text-gray-700 text-[13px] leading-[1.4]">
                           {normalizeBullets(exp.workSummary).map((item, i) => (
-                            <li key={i}>{item}</li>
+                            <li key={i} className="mb-1">{item}</li>
                           ))}
                         </ul>
                       ) : null}
@@ -285,9 +285,9 @@ const CreativeTemplate = ({ resumeInfo }) => {
                       )}
 
                       {project.projectSummary ? (
-                        <ul className="list-disc pl-4 space-y-1 text-sm text-gray-700">
+                        <ul className="list-disc ml-4 pl-1 text-gray-700 text-[13px] leading-[1.4]">
                           {normalizeBullets(project.projectSummary).map((item, i) => (
-                            <li key={i}>{item}</li>
+                            <li key={i} className="mb-1">{item}</li>
                           ))}
                         </ul>
                       ) : null}

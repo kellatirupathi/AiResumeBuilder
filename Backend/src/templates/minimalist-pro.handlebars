@@ -4,15 +4,41 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{firstName}} {{lastName}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     /* Base Styles */
     @page {
       size: A4;
-      margin: 0;
+      margin: 15mm 0 15mm 0;
+    }
+    @page :first {
+      margin-top: 0;
+    }
+
+    /* Pagination — fill page 1 first, then continue naturally on page 2 */
+    /* Only keep small inline atoms intact (pills/badges) */
+    .skill-tag, .skill-pill, .skill-item,
+    .item-date-badge, .job-date, .grade-badge, .cert-date-badge, .cert-date {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    /* Allow column cells to break across pages so content flows naturally */
+    .left-column, .right-column,
+    .main-column, .side-column,
+    .main-left, .main-right,
+    .sidebar, .main-content {
+      page-break-inside: auto;
+      break-inside: auto;
+    }
+    p, li {
+      orphans: 3;
+      widows: 3;
     }
     
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       line-height: 1.4;
       color: #333;
       margin: 0;
@@ -27,38 +53,39 @@
       background-color: white;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
       border-radius: 0.375rem;
-      overflow: hidden;
+      /* overflow:hidden REMOVED — was preventing pagination */
     }
     
     /* Header Section */
     .header {
-      padding: 1rem;
+      padding: 2rem;
     }
-    
+
     .header-container {
-      max-width: 48rem;
+      max-width: 56rem;
       margin: 0 auto;
     }
-    
+
     .name-container {
       text-align: center;
+      margin-bottom: 0.5rem;
     }
-    
+
     .name {
-      font-size: 2rem;
+      font-size: 2.25rem;
       font-weight: 300;
       letter-spacing: 0.025em;
       margin: 0 0 0.5rem 0;
       color: #111827;
     }
-    
+
     .divider {
       height: 1px;
       width: 4rem;
-      margin: 0.55rem auto;
+      margin: 0.75rem auto;
       background-color: {{themeColor}};
     }
-    
+
     .job-title {
       font-size: 1.125rem;
       font-weight: 300;
@@ -67,15 +94,15 @@
       color: #6b7280;
       margin: 0;
     }
-    
+
     .contact-row {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 1rem;
+      column-gap: 2rem;
       font-size: 0.75rem;
       color: #6b7280;
-      margin-bottom: 0.5rem;
+      margin-bottom: 1rem;
     }
     
     .contact-link {
@@ -100,14 +127,14 @@
       max-width: 48rem;
       margin: 0 auto;
     }
-    
+
     /* Content Section */
     .thin-divider {
       height: 1px;
       width: 100%;
       max-width: 64rem;
       margin: 0 auto;
-      background-color: {{themeColorTransparent20}};
+      background-color: {{themeColor}}33;
     }
     
     .main-content {
@@ -116,7 +143,7 @@
     }
     
     .content-container {
-      max-width: 48rem;
+      max-width: 56rem;
       margin: 0 auto;
     }
     
@@ -136,18 +163,19 @@
 
     .column:first-child {
       width: 33.3333%;
-      padding-right: 2rem;
+      padding-right: 1.5rem;
     }
 
     .column:last-child {
       width: 66.6667%;
+      padding-left: 1.5rem;
     }
-    
+
     /* Section Styling */
     .section {
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
     }
-    
+
     .section:last-child {
       margin-bottom: 0;
     }
@@ -172,50 +200,52 @@
       padding: 0.25rem 0.5rem;
       font-size: 0.75rem;
       background-color: #f3f4f6;
-      color: #4b5563;
+      color: #374151;
       border-radius: 0.375rem;
       display: inline-block;
     }
     
     /* Education Section */
     .education-container {
-      display: flex;
-      flex-direction: column;
+      display: block;
+    }
+    .education-container > * + * {
+      margin-top: 0;
     }
     
     .education-item {
-      margin-bottom: 0rem;
+      margin-bottom: 1rem;
     }
-    
+
     .education-item:last-child {
       margin-bottom: 0;
     }
-    
+
     .degree {
       font-size: 0.875rem;
       font-weight: 500;
       color: #1f2937;
       margin: 0;
     }
-    
+
     .school {
       font-size: 0.75rem;
       color: #4b5563;
       margin: 0.25rem 0;
     }
-    
+
     .education-date {
       font-size: 0.75rem;
       color: #6b7280;
     }
-    
+
     .grade {
       font-size: 0.75rem;
-      color: #4b5563;
+      color: #374151;
       font-style: italic;
       margin-top: 0.25rem;
     }
-    
+
     .education-description {
       font-size: 0.75rem;
       color: #4b5563;
@@ -224,14 +254,16 @@
     
     /* Certification Section */
     .certification-container {
-      display: flex;
-      flex-direction: column;
+      display: block;
+    }
+    .certification-container > * + * {
+      margin-top: 0;
     }
     
     .certification-item {
-      margin-bottom: 0rem;
+      margin-bottom: 1rem;
     }
-    
+
     .certification-item:last-child {
       margin-bottom: 0;
     }
@@ -269,16 +301,16 @@
     
     /* Additional Sections */
     .additional-section {
-      margin-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
     }
-    
+
     .additional-section:last-child {
       margin-bottom: 0;
     }
     
     .additional-section-content {
       font-size: 0.75rem;
-      color: #4b5563;
+      color: #374151;
     }
     
     .additional-section-content ul {
@@ -292,24 +324,26 @@
     
     /* Experience Section */
     .experience-container {
-      display: flex;
-      flex-direction: column;
+      display: block;
+    }
+    .experience-container > * + * {
+      margin-top: 0;
     }
     
     .experience-item {
-      margin-bottom: 0rem;
+      margin-bottom: 1rem;
     }
-    
+
     .experience-item:last-child {
       margin-bottom: 0;
     }
-    
+
     .experience-header {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: baseline;
-      margin-bottom: 0;
+      margin-bottom: 0.25rem;
     }
     
     .job-title-text {
@@ -337,37 +371,44 @@
     }
 
     .bullet-list {
-      margin: 0;
-      padding-left: 1.2rem;
-      color: #4b5563;
-      font-size: 0.875rem;
-      line-height: 1.6;
+      margin: 5px 0 5px 16px;
+      padding-left: 4px;
+      color: #374151;
+      font-size: 13px;
+      line-height: 1.4;
+      list-style: disc;
     }
 
     .bullet-list li {
-      margin-bottom: 0.2rem;
+      margin-bottom: 4px;
+    }
+
+    .bullet-list li::marker {
+      color: #555;
     }
     
     /* Project Section */
     .projects-container {
-      display: flex;
-      flex-direction: column;
+      display: block;
+    }
+    .projects-container > * + * {
+      margin-top: 0;
     }
     
     .project-item {
-      margin-bottom: 0rem;
+      margin-bottom: 1rem;
     }
-    
+
     .project-item:last-child {
       margin-bottom: 0;
     }
-    
+
     .project-header {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 0rem;
+      margin-bottom: 0.5rem;
     }
     
     .project-title {
@@ -392,12 +433,12 @@
       font-size: 0.75rem;
       color: #6b7280;
       font-style: italic;
-      margin-bottom: 0rem;
+      margin: 0 0 0.5rem 0;
     }
-    
+
     .project-description {
-      font-size: 0.8rem;
-      color: #4b5563;
+      font-size: 0.875rem;
+      color: #374151;
     }
     
     @media print {
@@ -417,9 +458,7 @@
         vertical-align: top;
       }
       
-      .experience-item, .project-item, .certification-item, .education-item, .additional-section {
-        page-break-inside: avoid;
-      }
+      /* Items allowed to break across pages — content fills page 1 first */
     }
   </style>
 </head>

@@ -87,10 +87,13 @@ function ExperiencePreview({ resumeInfo }) {
               )}
             </span>
           </h2>
-          <div
-            className="text-xs mt-1 rsw-ce"
-            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(experience?.workSummary || "") }}
-          />
+          <div className="mt-1 rsw-ce" style={{ fontSize: "13px", lineHeight: "1.4" }}>
+            <div
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(experience?.workSummary || "") }}
+              style={{ fontSize: "13px", lineHeight: "1.4" }}
+              className="[&>ul]:ml-4 [&>ul]:pl-1 [&>ul>li]:mb-1 [&>ul>li]:list-disc [&>ul>li]:marker:text-gray-600"
+            />
+          </div>
         </div>
       ))}
     </div>

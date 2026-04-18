@@ -4,10 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{firstName}} {{lastName}} - Resume</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     @page {
       size: A4;
-      margin: 0;
+      margin: 15mm 0 15mm 0;
+    }
+    @page :first {
+      margin-top: 0;
+    }
+
+    /* Pagination — fill page 1 first, then continue naturally on page 2 */
+    /* Only keep small inline atoms intact (pills/badges) */
+    .skill-tag, .skill-pill, .skill-item,
+    .item-date-badge, .job-date, .grade-badge, .cert-date-badge, .cert-date {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    /* Allow column cells to break across pages so content flows naturally */
+    .left-column, .right-column,
+    .main-column, .side-column,
+    .main-left, .main-right,
+    .sidebar, .main-content {
+      page-break-inside: auto;
+      break-inside: auto;
+    }
+    p, li {
+      orphans: 3;
+      widows: 3;
     }
 
     * {
@@ -15,7 +41,7 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       line-height: 1.5;
       color: #333;
       margin: 0;
@@ -29,12 +55,12 @@
       padding: 0;
       background-color: #ffffff;
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-      overflow: hidden;
+      /* overflow:hidden REMOVED — was preventing pagination */
     }
 
     .header {
       padding: 1rem;
-      border-bottom: 1px solid {{themeColorTransparent10}};
+      border-bottom: 1px solid {{themeColor}}30;
     }
 
     .header-content {
@@ -50,7 +76,7 @@
     }
 
     .header-left {
-      width: 68%;
+      width: 63%;
       padding-right: 1rem;
     }
 
@@ -69,13 +95,13 @@
       font-size: 0.875rem;
       font-weight: 500;
       margin: 0 0 0.5rem;
-      color: #6b7280;
+      color: #374151;
     }
 
     .summary {
       max-width: 36rem;
       margin-top: 0.25rem;
-      font-size: 0.875rem;
+      font-size: 13px;                     /* between text-xs (12px) and text-sm (14px) */
       color: #374151;
     }
 
@@ -149,22 +175,22 @@
     }
 
     .section-title {
-      font-size: 1rem;
+      font-size: 1.125rem;
       font-weight: 500;
-      margin: 0 0 0.25rem;
+      margin: 0 0 0.5rem;
       padding-bottom: 0.25rem;
-      border-bottom: 1px solid {{themeColorTransparent10}};
+      border-bottom: 1px solid {{themeColor}}30;
       color: {{themeColor}};
     }
 
     .skills-container {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.5rem;
+      gap: 0.25rem;
     }
 
     .skill-tag {
-      background-color: {{themeColorTransparent10}};
+      background-color: {{themeColor}}15;
       color: {{themeColor}};
       font-size: 0.875rem;
       padding: 0.25rem 0.5rem;
@@ -175,9 +201,14 @@
     .projects-container,
     .education-container,
     .certifications-container {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+      display: block;
+    }
+
+    .experience-container > * + *,
+    .projects-container > * + *,
+    .education-container > * + *,
+    .certifications-container > * + * {
+      margin-top: 0.5rem;
     }
 
     .experience-item,
@@ -187,7 +218,7 @@
       border-left: 2px solid {{themeColor}};
       padding-left: 0.75rem;
       padding-bottom: 0.25rem;
-      page-break-inside: avoid;
+      /* page-break-inside: avoid removed — items can split so page 1 fills first */
     }
 
     .experience-header,
@@ -204,12 +235,18 @@
 
     .experience-title,
     .project-title,
-    .education-degree,
-    .certification-title {
+    .education-degree {
       font-size: 1rem;
       font-weight: 500;
       margin: 0;
       color: #111827;
+    }
+
+    .certification-title {
+      font-size: 1rem;
+      font-weight: 500;
+      margin: 0;
+      color: {{themeColor}};
     }
 
     .experience-date,
@@ -220,19 +257,54 @@
       white-space: nowrap;
     }
 
-    .experience-company,
-    .education-university,
-    .certification-issuer {
+    .experience-company {
       font-size: 0.875rem;
-      color: #6b7280;
+      color: #374151;
       margin: 0 0 0.25rem;
     }
 
-    .experience-description,
-    .project-description,
-    .additional-section-content {
+    .education-university {
       font-size: 0.875rem;
+      font-weight: 500;
+      color: #374151;
+      margin: 0;
+    }
+
+    .certification-issuer {
+      font-size: 0.875rem;
+      color: #374151;
+      margin: 0;
+    }
+
+    /* Experience & Project descriptions reduced to text-xs; additional sections kept at text-sm */
+    .additional-section-content {
+      font-size: 0.875rem;                 /* text-sm */
       color: #4b5563;
+    }
+    .experience-description,
+    .project-description {
+      font-size: 13px;
+      line-height: 1.4;
+      color: #4b5563;
+    }
+
+    .experience-description ul.bullet-list,
+    .project-description ul.bullet-list {
+      padding-left: 4px;
+      margin: 5px 0 5px 16px;
+      list-style: disc;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .experience-description ul.bullet-list li,
+    .project-description ul.bullet-list li {
+      margin-bottom: 4px;
+    }
+
+    .experience-description ul.bullet-list li::marker,
+    .project-description ul.bullet-list li::marker {
+      color: #555;
     }
 
     .project-links {
@@ -241,19 +313,26 @@
       gap: 0.5rem;
     }
 
-    .project-link,
+    .project-link {
+      display: flex;
+      align-items: center;
+      gap: 0.125rem;
+      font-size: 0.75rem;
+      color: #4b5563;
+      text-decoration: none;
+    }
+
+    .project-link.demo-link {
+      color: #2563eb;
+    }
+
     .certification-link {
       display: flex;
       align-items: center;
       gap: 0.25rem;
       font-size: 0.75rem;
-      color: #6b7280;
-      text-decoration: none;
-    }
-
-    .project-link:hover,
-    .certification-link:hover {
       color: {{themeColor}};
+      text-decoration: none;
     }
 
     .project-link-icon,
@@ -283,12 +362,12 @@
 
     .education-grade {
       font-size: 0.75rem;
-      color: #6b7280;
+      color: #4b5563;
     }
 
     .education-description {
       font-size: 0.75rem;
-      color: #6b7280;
+      color: #4b5563;
       margin-top: 0.25rem;
     }
 
@@ -426,7 +505,9 @@
                 <h5 class="experience-company">
                   {{this.companyName}}{{#if this.city}}{{#if this.companyName}}, {{/if}}{{this.city}}{{/if}}{{#if this.state}}{{#if this.city}}, {{/if}}{{this.state}}{{/if}}
                 </h5>
-                <div class="experience-description">{{{this.workSummary}}}</div>
+                {{#if this.workSummary}}
+                  <div class="experience-description">{{{bulletList this.workSummary}}}</div>
+                {{/if}}
               </div>
             {{/each}}
           </div>
@@ -451,11 +532,11 @@
                       </a>
                     {{/if}}
                     {{#if this.deployedLink}}
-                      <a href="{{formatUrl this.deployedLink}}" target="_blank" rel="noopener noreferrer" class="project-link">
-                        <svg class="project-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <a href="{{formatUrl this.deployedLink}}" target="_blank" rel="noopener noreferrer" class="project-link demo-link">
+                        <svg class="project-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                           <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
-                        Live Demo
+                        Demo
                       </a>
                     {{/if}}
                   </div>
@@ -465,7 +546,9 @@
                     <span class="tech-label">Tech Stack: </span>{{this.techStack}}
                   </div>
                 {{/if}}
-                <div class="project-description">{{{this.projectSummary}}}</div>
+                {{#if this.projectSummary}}
+                  <div class="project-description">{{{bulletList this.projectSummary}}}</div>
+                {{/if}}
               </div>
             {{/each}}
           </div>

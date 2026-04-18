@@ -28,9 +28,9 @@ const normalizeBullets = (text) => {
 const themeColor = resumeInfo?.themeColor || "#1c2434"; // Default to a deep navy
 
 return (
-  <div className="shadow-xl bg-white h-full rounded-md overflow-hidden flex">
+  <div className="shadow-xl bg-white h-full rounded-md overflow-hidden relative">
     {/* Sidebar - Left side (25% width) */}
-    <div className="w-1/4 bg-gray-50 min-h-screen py-8 px-6">
+    <div className="absolute left-0 top-0 bottom-0 w-1/4 bg-gray-50 py-8 px-6">
       {/* Initials */}
       <div 
         className="w-20 h-20 rounded-full flex items-center justify-center text-white text-xl font-bold mb-6 mx-auto"
@@ -59,11 +59,11 @@ return (
           )}
           
           {resumeInfo?.email && (
-            <div className="flex gap-2 items-start text-xs">
-              <svg className="w-3 h-3 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: themeColor }}>
+            <div className="flex gap-2 items-start text-xs min-w-0">
+              <svg className="w-3 h-3 mt-0.5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: themeColor }}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
-              <span className="text-gray-700">{resumeInfo.email}</span>
+              <span className="text-gray-700 min-w-0 break-all">{resumeInfo.email}</span>
             </div>
           )}
           
@@ -184,8 +184,8 @@ return (
     </div>
     
     {/* Main content - 75% width */}
-    <div className="w-3/4 p-8">
-      <div className="pb-6 mb-6 border-b" style={{ borderColor: `${themeColor}30` }}>
+    <div className="w-3/4 ml-[25%] p-8">
+      <div className="pb-2 mb-2">
         <h1 className="text-2xl font-bold tracking-wide mb-1" style={{ color: themeColor }}>
           {resumeInfo?.firstName} {resumeInfo?.lastName}
         </h1>
@@ -214,9 +214,9 @@ return (
                 </div>
                 <h5 className="text-xs font-medium text-gray-600 mb-2">{exp.companyName}{exp.city && exp.companyName ? ", " : ""}{exp.city}{exp.city && exp.state ? ", " : ""}{exp.state}</h5>
                 {exp.workSummary ? (
-                  <ul className="pl-5 list-disc space-y-1 text-xs text-gray-700">
+                  <ul className="ml-4 pl-1 list-disc text-gray-700 text-[13px] leading-[1.4]">
                     {normalizeBullets(exp.workSummary).map((item, itemIndex) => (
-                      <li key={itemIndex}>{item}</li>
+                      <li key={itemIndex} className="mb-1">{item}</li>
                     ))}
                   </ul>
                 ) : null}
@@ -276,9 +276,9 @@ return (
                 </div>
                 {project.techStack && <div className="text-xs text-gray-600 mb-1"><span className="font-medium">Technologies:</span> {project.techStack}</div>}
                 {project.projectSummary ? (
-                  <ul className="pl-5 list-disc space-y-1 text-xs text-gray-700">
+                  <ul className="ml-4 pl-1 list-disc text-gray-700 text-[13px] leading-[1.4]">
                     {normalizeBullets(project.projectSummary).map((item, itemIndex) => (
-                      <li key={itemIndex}>{item}</li>
+                      <li key={itemIndex} className="mb-1">{item}</li>
                     ))}
                   </ul>
                 ) : null}

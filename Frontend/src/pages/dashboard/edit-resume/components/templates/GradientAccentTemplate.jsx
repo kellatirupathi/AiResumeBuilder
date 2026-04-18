@@ -195,9 +195,9 @@ const GradientAccentTemplate = ({ resumeInfo }) => {
                       </h5>
                       
                       {exp.workSummary ? (
-                        <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700">
+                        <ul className="list-disc ml-4 pl-1 text-gray-700 text-[13px] leading-[1.4]">
                           {normalizeBullets(exp.workSummary).map((item, itemIndex) => (
-                            <li key={itemIndex}>{item}</li>
+                            <li key={itemIndex} className="mb-1">{item}</li>
                           ))}
                         </ul>
                       ) : null}
@@ -270,9 +270,9 @@ const GradientAccentTemplate = ({ resumeInfo }) => {
                       )}
                       
                       {project.projectSummary ? (
-                        <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700">
+                        <ul className="list-disc ml-4 pl-1 text-gray-700 text-[13px] leading-[1.4]">
                           {normalizeBullets(project.projectSummary).map((item, itemIndex) => (
-                            <li key={itemIndex}>{item}</li>
+                            <li key={itemIndex} className="mb-1">{item}</li>
                           ))}
                         </ul>
                       ) : null}

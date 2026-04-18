@@ -4,22 +4,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{firstName}} {{lastName}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     /* Base Styles */
     @page {
       size: A4;
-      margin: 0;
+      margin: 15mm 0 15mm 0;
     }
-    
+    @page :first {
+      margin-top: 0;
+    }
+
+    /* Pagination — fill page 1 first, then continue naturally on page 2 */
+    /* Only keep small inline atoms intact (pills/badges) */
+    .skill-tag, .skill-pill, .skill-item,
+    .item-date-badge, .job-date, .grade-badge, .cert-date-badge, .cert-date {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    /* Allow column cells to break across pages so content flows naturally */
+    .left-column, .right-column,
+    .main-column, .side-column,
+    .main-left, .main-right,
+    .sidebar, .main-content {
+      page-break-inside: auto;
+      break-inside: auto;
+    }
+    p, li {
+      orphans: 3;
+      widows: 3;
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       line-height: 1.4;
       color: #333;
       margin: 0;
       padding: 0;
       background-color: white;
     }
-    
+
     .resume {
       width: 210mm;
       margin: 0;
@@ -27,20 +53,21 @@
       background-color: white;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
       border-radius: 0.375rem;
-      overflow: hidden;
+      /* overflow:hidden REMOVED — was preventing pagination */
     }
-    
-    /* Header Section */
+
+    /* Header Section - JSX: p-6 border-b-2 with themeColor */
     .header {
-      padding: 1.5rem 1.5rem 0.5rem;
+      padding: 1.5rem;
+      border-bottom: 2px solid {{themeColor}};
     }
-    
+
     .header-container {
       display: table;
       width: 100%;
       table-layout: fixed;
     }
-    
+
     .name-container {
       display: table-cell;
       width: 62%;
@@ -48,34 +75,37 @@
       box-sizing: border-box;
       padding-right: 1rem;
     }
-    
+
+    /* JSX: text-2xl (1.5rem) font-bold text-gray-800 */
     .name {
       font-size: 1.5rem;
       font-weight: 700;
       color: #1f2937;
       margin: 0 0 0.25rem 0;
     }
-    
+
+    /* JSX: text-lg (1.125rem) font-medium themeColor */
     .job-title {
       font-size: 1.125rem;
       font-weight: 500;
       color: {{themeColor}};
       margin: 0;
     }
-    
+
     .contact-container {
       display: table-cell;
       width: 38%;
       vertical-align: top;
       text-align: right;
     }
-    
+
     .contact-list {
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
     }
-    
+
+    /* JSX: text-sm (0.875rem) */
     .contact-item {
       display: flex;
       justify-content: flex-end;
@@ -83,356 +113,402 @@
       gap: 0.5rem;
       font-size: 0.875rem;
     }
-    
+
+    /* JSX: text-gray-700 (#374151) */
     .contact-text {
-      color: #4b5563;
+      color: #374151;
     }
-    
+
     .contact-icon {
       width: 1rem;
       height: 1rem;
       color: {{themeColor}};
     }
-    
+
+    /* JSX: text-xs (0.75rem) gap-3 (0.75rem) mt-3 */
     .social-links {
       display: flex;
       flex-wrap: wrap;
       gap: 0.75rem;
       margin-top: 0.75rem;
       justify-content: flex-start;
-      font-size: 0.69rem;
+      font-size: 0.75rem;
     }
-    
+
     .social-link {
       color: {{themeColor}};
       text-decoration: none;
     }
-    
+
     .social-link:hover {
       text-decoration: underline;
     }
-    
+
+    /* Tighter line-height for compact summary */
     .summary {
       font-size: 0.875rem;
       color: #4b5563;
-      border-bottom: 1px solid #e5e7eb;
-      margin-top: 0.5rem;
-      padding-bottom: 0.35rem;
+      line-height: 1.35;                   /* tighter — was 1.5 */
+      margin-top: 0.75rem;
     }
 
     .summary p {
       margin: 0;
     }
-    
+
     /* Main Content Section */
     .main-content {
-      padding: 0 1.5rem 0.25rem;
-      margin-top: -0.15rem;
-    }
-    
-    .section {
-      padding: 0.45rem 0;
-      margin: 0;
+      padding: 0 1.5rem;
     }
 
-    .main-content .section:first-child {
-      padding-top: 0;
+    /* Tightened: py-1 (was py-4) — matches frontend reduced spacing */
+    .section {
+      padding: 0.25rem 0;
+      border-bottom: 1px solid {{themeColor}}33;
     }
-    
+
     .section:last-child {
       border-bottom: none;
     }
-    
+
+    /* JSX: text-base (1rem) font-bold mb-3 themeColor */
     .section-title {
       font-size: 1rem;
       font-weight: 700;
       color: {{themeColor}};
-      margin: 0 0 0.4rem 0;
-      display: inline-block;
-      border-bottom: 1px solid {{themeColorTransparent30}};
+      margin: 0 0 0.75rem 0;
     }
-    
-    /* Skills Section - Single Column */
+
+    /* Skills Section - Single Column (JSX flex-col) */
     .skills-container {
       display: flex;
       flex-direction: column;
     }
-    
+
+    /* JSX: skill name (no explicit size — inherits, but parent text-sm context) */
     .skill-tag {
       font-size: 0.875rem;
     }
-    
+
     /* Experience Section */
     .experience-container {
-      display: flex;
-      flex-direction: column;
+      display: block;
     }
-    
+    .experience-container > * + * {
+      margin-top: 0;
+    }
+
+    /* mb-3 between items, NO inter-item border (only spacing) */
     .experience-item {
-      padding-bottom: 0.75rem;
+      margin-bottom: 0.75rem;
     }
-    
+
     .experience-item:last-child {
       margin-bottom: 0;
-      padding-bottom: 0;
-      border-bottom: none;
     }
-    
+
     .experience-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       flex-wrap: wrap;
     }
-    
+
+    /* JSX: text-base (1rem) font-bold text-gray-800 */
     .job-title-text {
       font-size: 1rem;
       font-weight: 700;
       color: #1f2937;
       margin: 0;
     }
-    
+
+    /* JSX: text-xs px-2 py-0.5 rounded-full bg themeColor10 color themeColor */
     .job-date {
       font-size: 0.75rem;
-      padding: 0 0.5rem;
+      padding: 0.125rem 0.5rem;
       border-radius: 9999px;
       background-color: {{themeColorTransparent10}};
       color: {{themeColor}};
     }
-    
+
+    /* JSX: text-sm font-medium text-gray-700 mt-1 */
     .company {
       font-size: 0.875rem;
       font-weight: 500;
-      color: #4b5563;
+      color: #374151;
       margin: 0.25rem 0 0 0;
     }
-    
+
+    /* JSX: text-sm text-gray-600 mt-2 */
     .job-description {
-      font-size: 0.875rem;
+      font-size: 13px;
+      line-height: 1.4;
       color: #4b5563;
       margin-top: 0.5rem;
     }
-    
+
+    .job-description .bullet-list,
+    .project-description .bullet-list,
+    .additional-section-content .bullet-list {
+      list-style: disc;
+      padding-left: 4px;
+      margin: 5px 0 5px 16px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .job-description .bullet-list li,
+    .project-description .bullet-list li {
+      margin-bottom: 4px;
+    }
+
+    .job-description .bullet-list li::marker,
+    .project-description .bullet-list li::marker {
+      color: #555;
+    }
+
     /* Project Section */
     .projects-container {
-      display: flex;
-      flex-direction: column;
+      display: block;
     }
-  
-    
+    .projects-container > * + * {
+      margin-top: 0;
+    }
+
+    /* mb-3 between items, NO inter-item border (only spacing) */
+    .project-item {
+      margin-bottom: 0.75rem;
+    }
+
     .project-item:last-child {
       margin-bottom: 0;
-      padding-bottom: 0;
-      border-bottom: none;
     }
-    
+
     .project-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       flex-wrap: wrap;
     }
-    
+
+    /* JSX: text-base (1rem) font-bold text-gray-800 */
     .project-title {
       font-size: 1rem;
       font-weight: 700;
       color: #1f2937;
       margin: 0;
     }
-    
+
     .project-links {
       display: flex;
       gap: 0.5rem;
     }
-    
+
+    /* JSX: text-xs border rounded px-2 py-0.5 — border 1px solid themeColor30 */
     .project-link-code {
       display: flex;
       align-items: center;
       gap: 0.25rem;
       font-size: 0.75rem;
-      padding: 0 0.5rem;
+      padding: 0.125rem 0.5rem;
       border-radius: 0.25rem;
-      border: 0.5px solid {{themeColorTransparent30}};
+      border: 1px solid {{themeColorTransparent30}};
       color: {{themeColor}};
       text-decoration: none;
     }
-    
+
+    /* JSX: text-xs rounded px-2 py-0.5 bg themeColor white */
     .project-link-demo {
       display: flex;
       align-items: center;
       gap: 0.25rem;
       font-size: 0.75rem;
-      padding: 0 0.5rem;
+      padding: 0.125rem 0.5rem;
       border-radius: 0.25rem;
       background-color: {{themeColor}};
       color: white;
       text-decoration: none;
     }
-    
+
     .project-link-icon {
       width: 0.75rem;
       height: 0.75rem;
     }
-    
+
+    /* JSX: text-xs mt-1 */
     .project-tech {
       font-size: 0.75rem;
       margin-top: 0.25rem;
     }
-    
+
     .tech-label {
       font-weight: 500;
       color: {{themeColor}};
     }
-    
+
+    /* JSX: text-sm text-gray-600 mt-1 */
     .project-description {
-      font-size: 0.8rem;
+      font-size: 13px;
+      line-height: 1.4;
       color: #4b5563;
       margin-top: 0.25rem;
     }
-    
+
     /* Education Section */
     .education-container {
-      display: flex;
-      flex-direction: column;
+      display: block;
     }
-    
+    .education-container > * + * {
+      margin-top: 0;
+    }
+
+    /* mb-3 between items, NO inter-item border (only spacing) */
     .education-item {
-      padding-bottom: 0.75rem;
+      margin-bottom: 0.75rem;
     }
-    
+
     .education-item:last-child {
       margin-bottom: 0;
-      padding-bottom: 0;
-      border-bottom: none;
     }
-    
+
     .education-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       flex-wrap: wrap;
     }
-    
+
     .education-info {
       flex: 1;
     }
-    
+
+    /* JSX: text-base (1rem) font-bold text-gray-800 */
     .degree {
       font-size: 1rem;
       font-weight: 700;
       color: #1f2937;
       margin: 0;
     }
-    
+
+    /* JSX: text-sm font-medium text-gray-700 mt-1 */
     .school {
       font-size: 0.875rem;
       font-weight: 500;
-      color: #4b5563;
+      color: #374151;
       margin: 0.25rem 0 0 0;
     }
-    
+
     .education-details {
       display: flex;
       flex-direction: column;
       align-items: flex-end;
     }
-    
+
+    /* JSX: text-xs text-gray-500 (#6b7280) */
     .edu-date {
       font-size: 0.75rem;
       color: #6b7280;
     }
-    
+
+    /* JSX: text-xs px-2 py-0.5 rounded-full mt-1 bg themeColor10 color themeColor */
     .grade {
       font-size: 0.75rem;
-      padding: 0 0.5rem;
+      padding: 0.125rem 0.5rem;
       border-radius: 9999px;
       background-color: {{themeColorTransparent10}};
       color: {{themeColor}};
       margin-top: 0.25rem;
     }
-    
+
+    /* JSX: text-xs text-gray-600 mt-1 */
     .education-description {
       font-size: 0.75rem;
       color: #4b5563;
-      margin-top: 0.25rem;
+      margin: 0.25rem 0 0 0;
     }
-    
+
     /* Certification Section */
     .certifications-container {
-      display: flex;
-      flex-direction: column;
+      display: block;
     }
-    
+    .certifications-container > * + * {
+      margin-top: 0;
+    }
+
+    /* mb-3 between items, NO inter-item border (only spacing) */
     .certification-item {
-      padding-bottom: 0.75rem;
+      margin-bottom: 0.75rem;
     }
-    
+
     .certification-item:last-child {
       margin-bottom: 0;
-      padding-bottom: 0;
-      border-bottom: none;
     }
-    
+
     .cert-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       flex-wrap: wrap;
     }
-    
+
+    /* JSX: text-base (1rem) font-bold text-gray-800 */
     .cert-title {
       font-size: 1rem;
       font-weight: 700;
       color: #1f2937;
       margin: 0;
     }
-    
+
+    /* JSX: text-xs px-2 py-0.5 rounded-full bg themeColor10 color themeColor */
     .cert-date {
       font-size: 0.75rem;
-      padding: 0 0.5rem;
+      padding: 0.125rem 0.5rem;
       border-radius: 9999px;
       background-color: {{themeColorTransparent10}};
       color: {{themeColor}};
     }
-    
+
     .cert-details {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-top: 0.25rem;
     }
-    
+
+    /* JSX: text-sm font-medium text-gray-700 */
     .cert-issuer {
       font-size: 0.875rem;
       font-weight: 500;
-      color: #4b5563;
+      color: #374151;
       margin: 0;
     }
-    
+
+    /* JSX: text-xs px-2 py-0.5 themeColor */
     .cert-link {
       display: flex;
       align-items: center;
       gap: 0.25rem;
       font-size: 0.75rem;
+      padding: 0.125rem 0.5rem;
       color: {{themeColor}};
       text-decoration: none;
     }
-    
+
     .cert-link:hover {
       text-decoration: underline;
     }
-    
+
     .cert-link-icon {
       width: 0.75rem;
       height: 0.75rem;
     }
-    
-    /* Additional Sections */
+
+    /* Additional Sections - JSX: text-sm text-gray-600 */
     .additional-section-content {
       font-size: 0.875rem;
       color: #4b5563;
     }
-    
+
     @media print {
       .resume {
         box-shadow: none;
@@ -450,10 +526,8 @@
         display: table-cell;
         vertical-align: top;
       }
-      
-      .experience-item, .project-item, .certification-item, .education-item {
-        page-break-inside: avoid;
-      }
+
+      /* Items allowed to break across pages — content fills page 1 first */
     }
   </style>
 </head>
@@ -468,7 +542,7 @@
             <h2 class="job-title">{{jobTitle}}</h2>
           {{/if}}
         </div>
-        
+
         <div class="contact-container">
           <div class="contact-list">
             {{#if email}}
@@ -479,7 +553,7 @@
                 </svg>
               </div>
             {{/if}}
-            
+
             {{#if phone}}
               <div class="contact-item">
                 <span class="contact-text">{{phone}}</span>
@@ -488,7 +562,7 @@
                 </svg>
               </div>
             {{/if}}
-            
+
             {{#if address}}
               <div class="contact-item">
                 <span class="contact-text">{{address}}</span>
@@ -501,7 +575,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- Social Links - Full URL display -->
       <div class="social-links">
         {{#if linkedinUrl}}
@@ -509,20 +583,20 @@
             {{formatUrl linkedinUrl}}
           </a>
         {{/if}}
-        
+
         {{#if githubUrl}}
           <a href="{{formatUrl githubUrl}}" target="_blank" rel="noopener noreferrer" class="social-link">
             {{formatUrl githubUrl}}
           </a>
         {{/if}}
-        
+
         {{#if portfolioUrl}}
           <a href="{{formatUrl portfolioUrl}}" target="_blank" rel="noopener noreferrer" class="social-link">
             {{formatUrl portfolioUrl}}
           </a>
         {{/if}}
       </div>
-      
+
       <!-- Summary Section -->
       {{#if summary}}
         <div class="summary">
@@ -530,14 +604,14 @@
         </div>
       {{/if}}
     </div>
-    
+
     <!-- Main Content -->
     <div class="main-content">
       <!-- Technical Skills Section - FIRST with SINGLE COLUMN layout -->
       {{#if skills.length}}
         <div class="section">
           <h3 class="section-title">Technical Skills</h3>
-          
+
           <div class="skills-container">
             {{#each skills}}
               <span class="skill-tag">{{this.name}}</span>
@@ -545,12 +619,12 @@
           </div>
         </div>
       {{/if}}
-      
+
       <!-- Experience Section - SECOND -->
       {{#if experience.length}}
         <div class="section">
           <h3 class="section-title">Experience</h3>
-          
+
           <div class="experience-container">
             {{#each experience}}
               <div class="experience-item">
@@ -561,31 +635,33 @@
                     {{#if this.currentlyWorking}}Present{{else}}{{this.endDate}}{{/if}}
                   </span>
                 </div>
-                
+
                 <h5 class="company">
                   {{this.companyName}}
                   {{#if this.city}}{{#if this.companyName}}, {{/if}}{{this.city}}{{/if}}
                   {{#if this.state}}{{#if this.city}}, {{/if}}{{this.state}}{{/if}}
                 </h5>
-                
-                <div class="job-description">{{{this.workSummary}}}</div>
+
+                {{#if this.workSummary}}
+                  <div class="job-description">{{{bulletList this.workSummary}}}</div>
+                {{/if}}
               </div>
             {{/each}}
           </div>
         </div>
       {{/if}}
-      
+
       <!-- Projects Section - THIRD -->
       {{#if projects.length}}
         <div class="section">
           <h3 class="section-title">Projects</h3>
-          
+
           <div class="projects-container">
             {{#each projects}}
               <div class="project-item">
                 <div class="project-header">
                   <h4 class="project-title">{{this.projectName}}</h4>
-                  
+
                   <div class="project-links">
                     {{#if this.githubLink}}
                       <a href="{{formatUrl this.githubLink}}" target="_blank" rel="noopener noreferrer" class="project-link-code">
@@ -595,7 +671,7 @@
                         Code
                       </a>
                     {{/if}}
-                    
+
                     {{#if this.deployedLink}}
                       <a href="{{formatUrl this.deployedLink}}" target="_blank" rel="noopener noreferrer" class="project-link-demo">
                         <svg class="project-link-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white">
@@ -606,25 +682,27 @@
                     {{/if}}
                   </div>
                 </div>
-                
+
                 {{#if this.techStack}}
                   <div class="project-tech">
                     <span class="tech-label">Tech:</span> {{this.techStack}}
                   </div>
                 {{/if}}
-                
-                <div class="project-description">{{{this.projectSummary}}}</div>
+
+                {{#if this.projectSummary}}
+                  <div class="project-description">{{{bulletList this.projectSummary}}}</div>
+                {{/if}}
               </div>
             {{/each}}
           </div>
         </div>
       {{/if}}
-      
+
       <!-- Education Section - FOURTH -->
       {{#if education.length}}
         <div class="section">
           <h3 class="section-title">Education</h3>
-          
+
           <div class="education-container">
             {{#each education}}
               <div class="education-item">
@@ -635,13 +713,13 @@
                     </h4>
                     <h5 class="school">{{this.universityName}}</h5>
                   </div>
-                  
+
                   <div class="education-details">
                     <span class="edu-date">
                       {{this.startDate}}{{#if this.startDate}}{{#if this.endDate}} - {{/if}}{{/if}}
                       {{this.endDate}}
                     </span>
-                    
+
                     {{#if this.grade}}
                       <span class="grade">
                         {{this.gradeType}}: {{this.grade}}
@@ -649,7 +727,7 @@
                     {{/if}}
                   </div>
                 </div>
-                
+
                 {{#if this.description}}
                   <p class="education-description">{{this.description}}</p>
                 {{/if}}
@@ -658,12 +736,12 @@
           </div>
         </div>
       {{/if}}
-      
+
       <!-- Certifications Section - FIFTH -->
       {{#if certifications.length}}
         <div class="section">
           <h3 class="section-title">Certifications</h3>
-          
+
           <div class="certifications-container">
             {{#each certifications}}
               <div class="certification-item">
@@ -673,7 +751,7 @@
                     <span class="cert-date">{{this.date}}</span>
                   {{/if}}
                 </div>
-                
+
                 <div class="cert-details">
                   <h5 class="cert-issuer">{{this.issuer}}</h5>
                   {{#if this.credentialLink}}
@@ -697,7 +775,7 @@
         {{#each additionalSections}}
           <div class="section">
             <h3 class="section-title">{{this.title}}</h3>
-            
+
             <div class="additional-section-content">{{{this.content}}}</div>
           </div>
         {{/each}}

@@ -4,15 +4,41 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{firstName}} {{lastName}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     /* Base Styles */
     @page {
       size: A4;
-      margin: 0;
+      margin: 15mm 0 15mm 0;
+    }
+    @page :first {
+      margin-top: 0;
+    }
+
+    /* Pagination — fill page 1 first, then continue naturally on page 2 */
+    /* Only keep small inline atoms intact (pills/badges) */
+    .skill-tag, .skill-pill, .skill-item,
+    .item-date-badge, .job-date, .grade-badge, .cert-date-badge, .cert-date {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    /* Allow column cells to break across pages so content flows naturally */
+    .left-column, .right-column,
+    .main-column, .side-column,
+    .main-left, .main-right,
+    .sidebar, .main-content {
+      page-break-inside: auto;
+      break-inside: auto;
+    }
+    p, li {
+      orphans: 3;
+      widows: 3;
     }
     
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       line-height: 1.4;
       color: #333;
       margin: 0;
@@ -27,7 +53,7 @@
       background-color: white;
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
       border-radius: 0.375rem;
-      overflow: hidden;
+      /* overflow:hidden REMOVED — was preventing pagination */
     }
     
     /* Header with Gradient */
@@ -120,87 +146,92 @@
     
     /* Summary Section */
     .summary {
-      margin-bottom: 0.25rem; /* Reduced margin */
+      margin-bottom: 0.5rem;
       padding: 0.5rem;
       border-radius: 0.25rem;
       position: relative;
-      background-color: {{themeColorTransparent05}};
-      border-left: 2px solid {{themeColorTransparent30}};
+      background-color: {{themeColor}}0d;
+      border-left: 3px solid {{themeColor}};
     }
-    
+
     .summary-title {
       font-size: 1rem;
       font-weight: 700;
       margin: 0 0 0.25rem 0;
       color: {{themeColor}};
     }
-    
+
     .summary-text {
       font-size: 0.875rem;
-      color: #4b5563;
+      color: #374151;
       margin: 0;
     }
     
     /* Two-Column Layout */
     .columns {
-      display: table;
+      display: block;
       width: 100%;
-      table-layout: fixed;
-      gap: 0.5rem;
     }
-    
-    .left-column,
-    .right-column {
-      display: table-cell;
-      vertical-align: top;
-      box-sizing: border-box;
+    .columns::after {
+      content: '';
+      display: block;
+      clear: both;
     }
 
     .left-column {
+      float: left;
       width: 67%;
       padding-right: 0.75rem;
+      box-sizing: border-box;
     }
 
     .right-column {
+      float: left;
       width: 33%;
       padding-left: 0.25rem;
+      box-sizing: border-box;
     }
     
     /* Section Styling */
     .section {
-      margin-bottom: 0.25rem; /* Reduced margin */
+      margin-bottom: 0.5rem;
     }
-    
+
     .section-title {
       font-size: 1rem;
       font-weight: 700;
       margin: 0 0 0.25rem 0;
       padding-bottom: 0.25rem;
-      border-bottom: 1px solid {{themeColorTransparent20}};
+      border-bottom: 1px solid {{themeColor}}40;
       color: {{themeColor}};
     }
-    
+
     .right-section-title {
-      font-size: 1rem;
+      font-size: 1.125rem;
       font-weight: 700;
-      margin: 0 0 0.25rem 0;
+      margin: 0 0 0.5rem 0;
       padding-bottom: 0.25rem;
-      border-bottom: 1px solid {{themeColorTransparent20}};
+      border-bottom: 1px solid {{themeColor}}40;
       color: {{themeColor}};
+    }
+
+    .right-column .section {
+      margin-bottom: 0.75rem;
     }
     
     /* Experience Items */
     .experience-container {
-      display: flex;
-      flex-direction: column;
-      gap: 0.125rem;
+      display: block;
+    }
+    .experience-container > * + * {
+      margin-top: 0.125rem;
     }
     
     .experience-item {
       position: relative;
       padding-left: 0.5rem;
       padding-bottom: 0.25rem;
-      border-left: 1px solid {{themeColorTransparent20}};
+      border-left: 2px solid {{themeColor}}4d;
     }
     
     .experience-header {
@@ -224,30 +255,51 @@
       font-size: 0.75rem;
       display: inline-flex;
       align-items: center;
-      padding: 0 0.5rem;
+      padding: 0.125rem 0.5rem;
       border-radius: 0.25rem;
-      background-color: {{themeColorTransparent10}};
+      background-color: {{themeColor}}1a;
       color: {{themeColor}};
       white-space: nowrap;
       flex-shrink: 0;
     }
-    
+
     .company {
       font-size: 0.875rem;
       font-weight: 500;
       color: #4b5563;
       margin: 0 0 0.25rem 0;
     }
-    
+
     .job-description {
-      font-size: 0.875rem;
-      color: #4b5563;
+      font-size: 13px;
+      line-height: 1.4;
+      color: #374151;
+    }
+
+    .job-description ul.bullet-list,
+    .project-description ul.bullet-list,
+    .additional-section-content ul.bullet-list {
+      margin: 5px 0 5px 16px;
+      padding-left: 4px;
+      list-style: disc;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .job-description ul.bullet-list li,
+    .project-description ul.bullet-list li,
+    .additional-section-content ul.bullet-list li {
+      margin-bottom: 4px;
+    }
+
+    .job-description ul.bullet-list li::marker,
+    .project-description ul.bullet-list li::marker {
+      color: #555;
     }
     
     /* Project Items */
     .projects-container {
-      display: flex;
-      flex-direction: column;
+      display: block;
     }
     
     .project-item {
@@ -290,31 +342,42 @@
       margin-right: 0.25rem;
     }
     
+    .project-tech-wrapper {
+      margin-bottom: 0.25rem;
+    }
+
     .project-tech {
       display: inline-block;
       font-size: 0.75rem;
-      padding: 0 0.5rem;
+      padding: 0.125rem 0.5rem;
       border-radius: 0.25rem;
-      background-color: {{themeColorTransparent10}};
+      background-color: {{themeColor}}26;
       color: {{themeColor}};
     }
-    
+
     .project-description {
-      font-size: 0.8rem;
-      color: #4b5563;
+      font-size: 13px;
+      line-height: 1.4;
+      color: #374151;
     }
     
     /* Certification Items */
     .certifications-container {
-      display: flex;
-      flex-direction: column;
-      gap: 0.125rem;
+      display: block;
+    }
+    .certifications-container > * + * {
+      margin-top: 0.125rem;
     }
     
     .certification-item {
-      position: relative;
-      padding-left: 0.5rem;
-      padding-bottom: 0.25rem;
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+      background-color: {{themeColor}}0d;
+      margin-bottom: 0.25rem;
+    }
+
+    .cert-details {
+      margin-top: 0.25rem;
     }
     
     .cert-header {
@@ -332,9 +395,9 @@
     
     .cert-date {
       font-size: 0.75rem;
-      padding: 0 0.5rem;
+      padding: 0.125rem 0.5rem;
       border-radius: 0.25rem;
-      background-color: {{themeColorTransparent10}};
+      background-color: {{themeColor}}1a;
       color: {{themeColor}};
     }
     
@@ -371,16 +434,16 @@
     
     /* Education Items */
     .education-container {
-      display: flex;
-      flex-direction: column;
+      display: block;
     }
     
     .education-item {
-      padding: 0.25rem; /* Reduced padding */
+      padding: 0.5rem;
       border-radius: 0.25rem;
-      background-color: {{themeColorTransparent05}};
+      background-color: {{themeColor}}0d;
+      margin-bottom: 0.25rem;
     }
-    
+
     .degree {
       font-size: 1rem;
       font-weight: 500;
@@ -388,19 +451,19 @@
       margin: 0;
       color: {{themeColor}};
     }
-    
+
     .school {
       font-size: 1rem;
       font-weight: 500;
-      color: #4b5563;
+      color: #374151;
       margin: 0.25rem 0;
     }
-    
+
     .education-details {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       color: #6b7280;
       margin-top: 0.25rem;
     }
@@ -421,13 +484,13 @@
       border-radius: 0.25rem;
       font-size: 1rem;
       letter-spacing: 0.025em;
-      background-color: {{themeColorTransparent10}};
+      background-color: {{themeColor}}26;
       color: {{themeColor}};
     }
 
     .additional-section-content {
       font-size: 0.875rem;
-      color: #4b5563;
+      color: #374151;
     }
     
     @media print {
@@ -436,31 +499,50 @@
         border-radius: 0;
       }
 
-      .header-content,
-      .columns {
+      .header-content {
         display: table;
         width: 100%;
         table-layout: fixed;
       }
 
       .name-container,
-      .contact-container,
-      .left-column,
-      .right-column {
+      .contact-container {
         display: table-cell;
         vertical-align: top;
       }
-      
-      .experience-item, .project-item, .certification-item, .education-item {
-        page-break-inside: avoid;
+
+      .columns {
+        display: block !important;
+        width: 100% !important;
       }
+      .columns::after {
+        content: '' !important;
+        display: block !important;
+        clear: both !important;
+      }
+      .left-column {
+        float: left !important;
+        width: 67% !important;
+        padding-right: 0.75rem !important;
+        box-sizing: border-box !important;
+        display: block !important;
+      }
+      .right-column {
+        float: left !important;
+        width: 33% !important;
+        padding-left: 0.25rem !important;
+        box-sizing: border-box !important;
+        display: block !important;
+      }
+
+      /* Items allowed to break across pages — content fills page 1 first */
     }
   </style>
 </head>
 <body>
   <div class="resume">
     <!-- Header -->
-    <div class="header" style="background: linear-gradient(135deg, {{themeColor}} 0%, {{themeColorTransparent80}} 100%);">
+    <div class="header" style="background: linear-gradient(135deg, {{themeColor}} 0%, {{themeColor}}85 100%);">
       <div class="header-content">
         <div class="name-container">
           <h1 class="name">{{firstName}} {{lastName}}</h1>
@@ -553,7 +635,7 @@
                     <h5 class="company">
                       {{this.companyName}}{{#if this.city}}{{#if this.companyName}}, {{/if}}{{this.city}}{{/if}}{{#if this.state}}{{#if this.city}}, {{/if}}{{this.state}}{{/if}}
                     </h5>
-                    <div class="job-description">{{{this.workSummary}}}</div>
+                    {{#if this.workSummary}}<div class="job-description">{{{bulletList this.workSummary}}}</div>{{/if}}
                   </div>
                 {{/each}}
               </div>
@@ -574,8 +656,8 @@
                         {{#if this.deployedLink}}<a href="{{formatUrl this.deployedLink}}" target="_blank" rel="noopener noreferrer" class="project-link"><svg class="project-link-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>Live Demo</a>{{/if}}
                       </div>
                     </div>
-                    {{#if this.techStack}}<div class="project-tech">{{this.techStack}}</div>{{/if}}
-                    <div class="project-description">{{{this.projectSummary}}}</div>
+                    {{#if this.techStack}}<div class="project-tech-wrapper"><span class="project-tech">{{replaceSeparator this.techStack "," " | "}}</span></div>{{/if}}
+                    {{#if this.projectSummary}}<div class="project-description">{{{bulletList this.projectSummary}}}</div>{{/if}}
                   </div>
                 {{/each}}
               </div>
@@ -586,11 +668,9 @@
           {{#if additionalSections.length}}
             {{#each additionalSections}}
               <div class="section">
-                <h3 class="section-title">{{this.title}}</h3>
-                <div class="additional-section-content experience-item">
-                  <div class="job-description">
-                      {{{this.content}}}
-                  </div>
+                <h3 class="section-title"><span style="text-transform:uppercase">{{this.title}}</span></h3>
+                <div class="additional-section-content">
+                  {{{this.content}}}
                 </div>
               </div>
             {{/each}}

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { downloadResumePDF } from "@/Services/resumeAPI";
 import ResumePreview from "../../edit-resume/components/PreviewPage";
+import PaginatedA4Preview from "../../edit-resume/components/PaginatedA4Preview";
 import ResumePublicLinkButton from "../../edit-resume/components/ResumePublicLinkButton";
 import ResumeDesignPanel from "../../edit-resume/components/ResumeDesignPanel";
 import { useDispatch, useSelector } from "react-redux";
@@ -246,14 +247,15 @@ function ViewResume() {
 
                       <div
                         id="resume-container"
-                        className="mx-auto overflow-hidden bg-white"
+                        className="mx-auto"
                         style={{
-                          width: "290mm",
                           maxWidth: "100%",
                           minHeight: "500px",
                         }}
                       >
-                        <ResumePreview />
+                        <PaginatedA4Preview>
+                          <ResumePreview />
+                        </PaginatedA4Preview>
                       </div>
                     </div>
                   )}
@@ -319,14 +321,14 @@ function ViewResume() {
             </div>
 
             <div className="flex flex-1 items-start justify-center overflow-auto p-8">
-              <div className="overflow-hidden rounded-xl bg-white shadow-2xl">
-                <div
-                  id="fullscreen-resume"
-                  className="print-area mx-auto"
-                  style={{ width: "250mm", maxWidth: "100%", boxSizing: "border-box" }}
-                >
+              <div
+                id="fullscreen-resume"
+                className="print-area mx-auto"
+                style={{ maxWidth: "100%", boxSizing: "border-box" }}
+              >
+                <PaginatedA4Preview>
                   <ResumePreview />
-                </div>
+                </PaginatedA4Preview>
               </div>
             </div>
           </motion.div>

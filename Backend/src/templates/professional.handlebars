@@ -4,15 +4,41 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{firstName}} {{lastName}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     /* Base styles - Matching React component */
     @page {
       size: A4;
-      margin: 0;
+      margin: 15mm 0 15mm 0;
+    }
+    @page :first {
+      margin-top: 0;
+    }
+
+    /* Pagination — fill page 1 first, then continue naturally on page 2 */
+    /* Only keep small inline atoms intact (pills/badges) */
+    .skill-tag, .skill-pill, .skill-item,
+    .item-date-badge, .job-date, .grade-badge, .cert-date-badge, .cert-date {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    /* Allow column cells to break across pages so content flows naturally */
+    .left-column, .right-column,
+    .main-column, .side-column,
+    .main-left, .main-right,
+    .sidebar, .main-content {
+      page-break-inside: auto;
+      break-inside: auto;
+    }
+    p, li {
+      orphans: 3;
+      widows: 3;
     }
     
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       line-height: 1.5;
       color: #333;
       margin: 0;
@@ -25,14 +51,15 @@
       margin: 0;
       padding: 0;
       background-color: white;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      /* shadow-xl in Tailwind */
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
       border-radius: 6px;
-      overflow: hidden;
+      /* overflow:hidden REMOVED — was preventing pagination */
     }
-    
-    /* Header Section - Centered like React */
+
+    /* Header Section — frontend: p-5 pt-6 (24px top, 20px sides/bottom) */
     .header {
-      padding: 20px 20px 0 20px;
+      padding: 24px 20px 20px 20px;
       text-align: center;
     }
     
@@ -98,21 +125,40 @@
       margin-right: 4px;
     }
     
-    /* Two Column Layout - Exact React proportions */
+    /* TWO-COLUMN layout matching frontend exactly:
+       - Flex row with two proper sibling columns (65% / 35%)
+       - Each column properly contains its own text, no overlap
+       - Container has gray bg so it shows through when side column ends before main */
     .two-column {
       display: flex;
       flex-direction: row;
+      align-items: stretch;
+      width: 100%;
+      background-color: #f9f9f9;       /* gray sidebar color for the right 35% */
     }
-    
+
     .main-column {
+      flex: 0 0 65%;
       width: 65%;
+      max-width: 65%;
+      min-width: 0;                    /* CRITICAL: allows text to wrap inside flex child */
       padding: 0 20px 20px 20px;
+      background-color: white;
+      box-sizing: border-box;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      overflow: hidden;                /* clip any visual overflow as last resort */
     }
-    
+
     .side-column {
+      flex: 0 0 35%;
       width: 35%;
+      max-width: 35%;
+      min-width: 0;                    /* same fix for consistency */
       padding: 0 20px 20px 10px;
-      background-color: #f9f9f9;
+      box-sizing: border-box;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
     }
     
     /* Section styles - Matching React styling */
@@ -369,13 +415,18 @@
     
     /* Responsive adjustments for smaller screens */
     @media (max-width: 768px) {
-      .two-column {
-        flex-direction: column;
-      }
-      
-      .main-column, .side-column {
+      /* Mobile: stack vertically, no fixed sidebar bg */
+      .two-column::before { display: none; }
+      .main-column {
+        margin-right: 0;
         width: 100%;
         padding: 0 15px 15px 15px;
+      }
+      .side-column {
+        position: static;
+        width: 100%;
+        padding: 0 15px 15px 15px;
+        background-color: #f9f9f9;
       }
     }
     
@@ -396,15 +447,30 @@
       .two-column {
         display: flex !important;
         flex-direction: row !important;
-      }
-      
-      .main-column {
-        width: 65% !important;
-      }
-      
-      .side-column {
-        width: 35% !important;
+        align-items: stretch !important;
+        width: 100% !important;
         background-color: #f9f9f9 !important;
+      }
+      .main-column {
+        flex: 0 0 65% !important;
+        width: 65% !important;
+        max-width: 65% !important;
+        min-width: 0 !important;            /* allows text to wrap inside flex child */
+        padding: 0 20px 20px 20px !important;
+        background-color: white !important;
+        box-sizing: border-box !important;
+        overflow-wrap: break-word !important;
+        word-wrap: break-word !important;
+      }
+      .side-column {
+        flex: 0 0 35% !important;
+        width: 35% !important;
+        max-width: 35% !important;
+        min-width: 0 !important;
+        padding: 0 20px 20px 10px !important;
+        box-sizing: border-box !important;
+        overflow-wrap: break-word !important;
+        word-wrap: break-word !important;
       }
     }
   </style>
