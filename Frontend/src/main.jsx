@@ -22,6 +22,8 @@ import AdminAccountsPage from "./pages/admin/AdminAccountsPage.jsx";
 import AdminInviteUsersPage from "./pages/admin/AdminInviteUsersPage.jsx";
 import AuthPage from "./pages/auth/customAuth/AuthPage.jsx";
 import GoogleCallbackPage from "./pages/auth/customAuth/GoogleCallbackPage.jsx";
+import ResumePreparation from "./pages/public/ResumePreparation.jsx";
+import CoverLetterPreparation from "./pages/public/CoverLetterPreparation.jsx";
 import { resumeStore, persistor } from "./store/store";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
@@ -128,6 +130,14 @@ const router = createBrowserRouter([
   {
     path: "/cover-letters",
     element: <PublicCoverLettersPage />,
+  },
+  {
+    path: "/resume-preparation",
+    element: <ResumePreparation />,
+  },
+  {
+    path: "/cover-letter-preparation",
+    element: <CoverLetterPreparation />,
   },
   {
     path: "/auth/sign-in",

@@ -55,6 +55,12 @@ const RESUME_ITEMS = [
     to: "/dashboard",
     authTo: "/auth/sign-in",
   },
+  {
+    icon: BookOpen,
+    title: "How to Write a Resume",
+    desc: "Sections, fields, and tips — end to end.",
+    to: "/resume-preparation",
+  },
 ];
 
 const COVER_ITEMS = [
@@ -73,9 +79,9 @@ const COVER_ITEMS = [
   },
   {
     icon: BookOpen,
-    title: "How to Write",
-    desc: "Step-by-step cover letter guide.",
-    to: "/documentation",
+    title: "How to Write a Cover Letter",
+    desc: "Structure, fields, tone, and sample phrases.",
+    to: "/cover-letter-preparation",
   },
 ];
 
@@ -104,6 +110,24 @@ function Header({ user }) {
 
   const profileRef = useRef(null);
   const navRef = useRef(null);
+  const closeTimerRef = useRef(null);
+
+  const cancelClose = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimerRef.current = setTimeout(() => setOpenMenu(null), 150);
+  };
+
+  const openOnHover = (id) => {
+    cancelClose();
+    setOpenMenu(id);
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -183,11 +207,16 @@ function Header({ user }) {
           </Link>
 
           {/* Desktop nav */}
-          <nav ref={navRef} className="hidden items-center gap-0.5 md:flex">
+          <nav
+            ref={navRef}
+            onMouseLeave={scheduleClose}
+            className="hidden items-center gap-0.5 md:flex"
+          >
             <MegaTrigger
               label="Resumes"
               active={activePath("/resumes")}
               open={openMenu === "resumes"}
+              onMouseEnter={() => openOnHover("resumes")}
               onClick={() =>
                 setOpenMenu((m) => (m === "resumes" ? null : "resumes"))
               }
@@ -196,6 +225,7 @@ function Header({ user }) {
               label="Cover Letters"
               active={activePath("/cover-letters")}
               open={openMenu === "covers"}
+              onMouseEnter={() => openOnHover("covers")}
               onClick={() =>
                 setOpenMenu((m) => (m === "covers" ? null : "covers"))
               }
@@ -204,6 +234,7 @@ function Header({ user }) {
               <Link
                 key={link.href}
                 to={link.href}
+                onMouseEnter={() => setOpenMenu(null)}
                 className={`rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors ${
                   activePath(link.href)
                     ? "text-slate-900"
@@ -303,13 +334,14 @@ function Header({ user }) {
         <AnimatePresence>
           {openMenu && (
             <motion.div
-              ref={navRef}
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.15 }}
               className="absolute inset-x-0 top-full hidden md:block"
               onMouseDown={(e) => e.stopPropagation()}
+              onMouseEnter={cancelClose}
+              onMouseLeave={scheduleClose}
             >
               <div className="mx-auto max-w-6xl px-5 pt-2 lg:px-8">
                 <div
@@ -419,10 +451,11 @@ function Header({ user }) {
   );
 }
 
-function MegaTrigger({ label, open, active, onClick }) {
+function MegaTrigger({ label, open, active, onClick, onMouseEnter }) {
   return (
     <button
       onClick={onClick}
+      onMouseEnter={onMouseEnter}
       className={`inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors ${
         open || active ? "text-slate-900" : "text-slate-600 hover:text-slate-900"
       }`}
