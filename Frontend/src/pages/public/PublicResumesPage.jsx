@@ -62,11 +62,37 @@ export default function PublicResumesPage() {
   return (
     <>
       <Helmet>
-        <title>Resume Templates — NxtResume</title>
+        <title>Free Resume Templates — 16 ATS-Friendly Designs · NxtResume</title>
         <meta
           name="description"
-          content="16 professionally designed, ATS-safe resume templates. Pick one, fill in your details, and download as PDF. Free forever."
+          content="Browse 16 free, ATS-friendly resume templates. Professional, executive, modern, creative, minimalist designs — all downloadable as pixel-perfect PDF. No sign-up to preview. Free forever."
         />
+        <meta name="keywords" content="free resume templates, ATS friendly resume templates, professional resume templates, modern resume templates, resume templates PDF, best resume templates 2026, simple resume template, creative resume template, executive resume template, one page resume template" />
+        <link rel="canonical" href="https://ai-resume-builder-ochre-five.vercel.app/resumes" />
+        <meta property="og:title" content="Free Resume Templates — 16 ATS-Friendly Designs · NxtResume" />
+        <meta property="og:description" content="Browse 16 free ATS-friendly resume templates. Professional, modern, creative, minimalist — all free, no credit card." />
+        <meta property="og:url" content="https://ai-resume-builder-ochre-five.vercel.app/resumes" />
+        <meta name="twitter:title" content="16 Free ATS-Friendly Resume Templates" />
+        <meta name="twitter:description" content="Professional, modern, creative, minimalist resume templates — free, downloadable as PDF." />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Free Resume Templates — 16 ATS-Friendly Designs",
+          "description": "A gallery of 16 free, ATS-friendly resume templates covering professional, executive, modern, creative, and minimalist styles.",
+          "url": "https://ai-resume-builder-ochre-five.vercel.app/resumes",
+          "isPartOf": {
+            "@type": "WebSite",
+            "name": "NxtResume",
+            "url": "https://ai-resume-builder-ochre-five.vercel.app"
+          },
+          "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://ai-resume-builder-ochre-five.vercel.app/" },
+              { "@type": "ListItem", "position": 2, "name": "Resume Templates", "item": "https://ai-resume-builder-ochre-five.vercel.app/resumes" }
+            ]
+          }
+        })}</script>
       </Helmet>
 
       <div className="min-h-screen bg-white text-slate-900 antialiased">

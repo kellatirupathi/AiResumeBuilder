@@ -1,21 +1,85 @@
+# ═══════════════════════════════════════════════════════════════
+# NxtResume — AI Resume Builder, ATS Checker, Cover Letter Generator
+# https://ai-resume-builder-ochre-five.vercel.app
+# ═══════════════════════════════════════════════════════════════
+
+# Sitemap (declare first for better discovery)
+Sitemap: https://ai-resume-builder-ochre-five.vercel.app/sitemap.xml
+
+# ─── Default: allow all search engines ──────────────────────────
 User-agent: *
 Allow: /
 
-# Disallow admin and private routes
-Disallow: /admin/
-Disallow: /dashboard/
-Disallow: /profile
-Disallow: /change-password
-Disallow: /complete-profile
-Disallow: /reset-password
-
-# Allow public pages
-Allow: /
+# Public marketing pages (explicit allow for clarity)
+Allow: /resumes
+Allow: /cover-letters
+Allow: /ats-checker
+Allow: /documentation
+Allow: /resume-preparation
+Allow: /cover-letter-preparation
 Allow: /auth/sign-in
 Allow: /forgot-password
 Allow: /public/resume/
-Allow: /ats-checker
-Allow: /resumes
-Allow: /documentation
+Allow: /public/cover-letter/
 
-Sitemap: https://ai-resume-builder-ochre-five.vercel.app/sitemap.xml
+# Private / gated — block from crawlers
+Disallow: /admin/
+Disallow: /admin
+Disallow: /dashboard/
+Disallow: /dashboard
+Disallow: /app/
+Disallow: /profile
+Disallow: /complete-profile
+Disallow: /change-password
+Disallow: /reset-password
+Disallow: /notifications
+Disallow: /auth/google/callback
+
+# Block query-parameter duplicates (tracking, utm, etc.)
+Disallow: /*?utm_*
+Disallow: /*?ref=*
+Disallow: /*?fbclid=*
+Disallow: /*?gclid=*
+
+# ─── Googlebot (primary web search) ─────────────────────────────
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /app/
+Disallow: /profile
+Disallow: /complete-profile
+Disallow: /auth/google/callback
+
+# ─── Googlebot-Image (image search indexing) ────────────────────
+User-agent: Googlebot-Image
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+
+# ─── Bingbot ────────────────────────────────────────────────────
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /app/
+Disallow: /profile
+
+# ─── DuckDuckGo ─────────────────────────────────────────────────
+User-agent: DuckDuckBot
+Allow: /
+
+# ─── Allowed AI crawlers (content discovery / snippets) ─────────
+# Google-Extended powers Gemini / Bard overviews
+User-agent: Google-Extended
+Allow: /
+
+# Common Crawl — feeds many downstream search/LLM corpora
+User-agent: CCBot
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+
+# ─── Crawl politeness ───────────────────────────────────────────
+User-agent: *
+Crawl-delay: 1

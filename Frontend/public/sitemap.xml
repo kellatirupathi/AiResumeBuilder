@@ -1,35 +1,97 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
+  <!-- ═══ Homepage ═══ -->
   <url>
     <loc>https://ai-resume-builder-ochre-five.vercel.app/</loc>
-    <lastmod>2026-04-06</lastmod>
+    <lastmod>2026-04-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://ai-resume-builder-ochre-five.vercel.app/og-image.png</image:loc>
+      <image:title>NxtResume — AI Resume Builder</image:title>
+      <image:caption>Build an ATS-friendly resume in minutes with AI</image:caption>
+    </image:image>
   </url>
 
+  <!-- ═══ Resume Templates Gallery ═══ -->
   <url>
     <loc>https://ai-resume-builder-ochre-five.vercel.app/resumes</loc>
-    <lastmod>2026-04-06</lastmod>
+    <lastmod>2026-04-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://ai-resume-builder-ochre-five.vercel.app/og-image.png</image:loc>
+      <image:title>16 Free Resume Templates — ATS-Friendly</image:title>
+    </image:image>
   </url>
 
+  <!-- ═══ Cover Letter Templates ═══ -->
+  <url>
+    <loc>https://ai-resume-builder-ochre-five.vercel.app/cover-letters</loc>
+    <lastmod>2026-04-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://ai-resume-builder-ochre-five.vercel.app/og-image.png</image:loc>
+      <image:title>10 Free Cover Letter Templates with AI Generator</image:title>
+    </image:image>
+  </url>
+
+  <!-- ═══ ATS Checker ═══ -->
   <url>
     <loc>https://ai-resume-builder-ochre-five.vercel.app/ats-checker</loc>
-    <lastmod>2026-04-06</lastmod>
+    <lastmod>2026-04-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://ai-resume-builder-ochre-five.vercel.app/og-image.png</image:loc>
+      <image:title>Free ATS Resume Checker — Score Your Resume Against Any JD</image:title>
+    </image:image>
   </url>
 
+  <!-- ═══ Resume Preparation Guide ═══ -->
+  <url>
+    <loc>https://ai-resume-builder-ochre-five.vercel.app/resume-preparation</loc>
+    <lastmod>2026-04-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- ═══ Cover Letter Preparation Guide ═══ -->
+  <url>
+    <loc>https://ai-resume-builder-ochre-five.vercel.app/cover-letter-preparation</loc>
+    <lastmod>2026-04-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- ═══ Product Documentation ═══ -->
   <url>
     <loc>https://ai-resume-builder-ochre-five.vercel.app/documentation</loc>
-    <lastmod>2026-04-06</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <lastmod>2026-04-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <!-- ═══ Sign in / Free account ═══ -->
+  <url>
+    <loc>https://ai-resume-builder-ochre-five.vercel.app/auth/sign-in</loc>
+    <lastmod>2026-04-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- ═══ Password recovery ═══ -->
+  <url>
+    <loc>https://ai-resume-builder-ochre-five.vercel.app/forgot-password</loc>
+    <lastmod>2026-04-20</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
   </url>
 
 </urlset>
