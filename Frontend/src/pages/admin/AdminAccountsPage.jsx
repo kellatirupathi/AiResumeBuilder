@@ -19,7 +19,7 @@ function RoleBadge({ role }) {
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
-        isOwner ? "bg-amber-100 text-amber-800" : "bg-indigo-100 text-indigo-700"
+        isOwner ? "bg-amber-100 text-amber-800" : "border border-slate-200 bg-white text-slate-700"
       }`}
     >
       <Icon className="h-3.5 w-3.5" />
@@ -121,13 +121,13 @@ export default function AdminAccountsPage() {
         <div className="flex items-center gap-3">
           {selected.length > 0 ? (
             <>
-              <span className="rounded-full bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-700">
+              <span className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-900">
                 {selected.length} selected
               </span>
               {selected.length === 1 && (
                 <Button
                   variant="outline"
-                  className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                  className="rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900"
                   onClick={() =>
                     setAccountDialog({ open: true, mode: "edit", record: selectedAccounts[0] })
                   }
@@ -136,7 +136,7 @@ export default function AdminAccountsPage() {
                 </Button>
               )}
               <Button
-                className="bg-rose-600 text-white hover:bg-rose-700"
+                className="rounded-full bg-red-600 text-white hover:bg-red-700"
                 onClick={() => setDeleteDialog({ open: true, records: selectedAccounts })}
               >
                 <Trash2 className="mr-2 h-4 w-4" /> Delete
@@ -146,7 +146,7 @@ export default function AdminAccountsPage() {
             <>
               <Button
                 onClick={() => setAccountDialog({ open: true, mode: "create", record: null })}
-                className="bg-indigo-600 text-white hover:bg-indigo-700"
+                className="rounded-full bg-slate-900 text-white hover:bg-[#FF4800] transition-colors"
               >
                 <Plus className="mr-2 h-4 w-4" /> Create Account
               </Button>
@@ -154,7 +154,7 @@ export default function AdminAccountsPage() {
                 variant="outline"
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                className="rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900"
               >
                 <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
                 Refresh
@@ -167,32 +167,32 @@ export default function AdminAccountsPage() {
       <main className="flex flex-1 min-h-0 flex-col overflow-hidden bg-white">
         {loading ? (
           <div className="flex flex-1 items-center justify-center">
-            <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-500" />
+            <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-slate-900" />
           </div>
         ) : (
           <div className="flex-1 overflow-auto">
             <table className="min-w-full bg-white">
-              <thead className="sticky top-0 z-10 bg-gradient-to-r from-indigo-50 to-blue-50">
+              <thead className="sticky top-0 z-10 bg-slate-50/70 text-slate-500">
                 <tr>
                   <th className="w-12 px-3 py-3 text-center">
                     <input
                       type="checkbox"
                       checked={allSelected}
                       onChange={(event) => toggleAll(event.target.checked)}
-                      className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      className="h-4 w-4 rounded border-slate-300 accent-slate-900 focus:ring-slate-900/10"
                     />
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Role</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Created At</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Role</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Created At</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {accounts.map((account, index) => (
                   <tr
                     key={account._id}
-                    className={`transition-colors hover:bg-indigo-50/30 ${
+                    className={`transition-colors hover:bg-slate-50/60 ${
                       index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
                     }`}
                   >
@@ -201,13 +201,13 @@ export default function AdminAccountsPage() {
                         type="checkbox"
                         checked={selected.includes(account._id)}
                         onChange={(event) => toggleSelect(account._id, event.target.checked)}
-                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                        className="h-4 w-4 rounded border-slate-300 accent-slate-900 focus:ring-slate-900/10"
                       />
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100">
-                          <span className="text-sm font-medium text-indigo-700">
+                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-slate-100">
+                          <span className="text-sm font-medium text-slate-900">
                             {(account.name || "").charAt(0).toUpperCase()}
                           </span>
                         </div>

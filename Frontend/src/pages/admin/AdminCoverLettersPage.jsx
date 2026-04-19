@@ -154,17 +154,17 @@ export default function AdminCoverLettersPage() {
               placeholder="Search by title, company, job, name, email..."
               value={searchInput}
               onChange={handleSearchChange}
-              className="w-72 pl-10 border-indigo-200"
+              className="w-72 pl-10 rounded-full border-slate-200 focus:border-slate-900"
             />
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-indigo-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           </div>
           {selected.length > 0 ? (
             <>
-              <span className="rounded-full bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-700">
+              <span className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-900">
                 {selected.length} selected
               </span>
               <Button
-                className="bg-rose-600 text-white hover:bg-rose-700"
+                className="rounded-full bg-red-600 text-white hover:bg-red-700"
                 onClick={() => setDeleteDialog({ open: true, records: selectedCoverLetters })}
               >
                 <Trash2 className="mr-2 h-4 w-4" /> Delete
@@ -175,7 +175,7 @@ export default function AdminCoverLettersPage() {
               variant="outline"
               onClick={handleRefresh}
               disabled={refreshing}
-              className="border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+              className="rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900"
             >
               <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
               Refresh
@@ -187,47 +187,47 @@ export default function AdminCoverLettersPage() {
       <main className="flex flex-1 min-h-0 flex-col overflow-hidden bg-white">
         {loading ? (
           <div className="flex flex-1 items-center justify-center">
-            <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-500" />
+            <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-slate-900" />
           </div>
         ) : (
           <>
             <div className="flex-1 overflow-auto">
               <table className="min-w-full bg-white">
-                <thead className="sticky top-0 z-10 bg-gradient-to-r from-indigo-50 to-blue-50">
+                <thead className="sticky top-0 z-10 bg-slate-50/70 text-slate-500">
                   <tr>
                     <th className="w-12 px-3 py-3 text-center">
                       <input
                         type="checkbox"
                         checked={allSelected}
                         onChange={(e) => toggleAll(e.target.checked)}
-                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                        className="h-4 w-4 rounded border-slate-300 accent-slate-900 focus:ring-slate-900/10"
                       />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
                       Title
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
                       User Name
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
                       User Email
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
                       Template
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
                       Job Title
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
                       Company
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
                       Created At
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
                       Views
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
                       Drive
                     </th>
                   </tr>
@@ -236,7 +236,7 @@ export default function AdminCoverLettersPage() {
                   {coverLetters.map((coverLetter, i) => (
                     <tr
                       key={coverLetter._id}
-                      className={`transition-colors hover:bg-indigo-50/30 ${
+                      className={`transition-colors hover:bg-slate-50/60 ${
                         i % 2 === 0 ? "bg-white" : "bg-gray-50/50"
                       }`}
                     >
@@ -245,21 +245,21 @@ export default function AdminCoverLettersPage() {
                           type="checkbox"
                           checked={selected.includes(coverLetter._id)}
                           onChange={(e) => toggleSelect(coverLetter._id, e.target.checked)}
-                          className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                          className="h-4 w-4 rounded border-slate-300 accent-slate-900 focus:ring-slate-900/10"
                         />
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <button
                           onClick={() => handlePreview(coverLetter._id)}
-                          className="text-sm font-medium text-indigo-600 hover:text-indigo-800 hover:underline text-left"
+                          className="text-sm font-medium text-slate-900 hover:text-[#FF4800] hover:underline text-left"
                         >
                           {coverLetter.title}
                         </button>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100">
-                            <span className="text-xs font-medium text-indigo-700">
+                          <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-slate-100">
+                            <span className="text-xs font-medium text-slate-900">
                               {(coverLetter.user?.fullName || "").charAt(0).toUpperCase()}
                             </span>
                           </div>
@@ -272,7 +272,7 @@ export default function AdminCoverLettersPage() {
                         {coverLetter.user?.email || "—"}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <span className="rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium capitalize text-indigo-700">
+                        <span className="rounded-md bg-slate-900 px-2 py-1 text-xs font-medium capitalize text-white">
                           {coverLetter.template || "classic"}
                         </span>
                       </td>
@@ -286,7 +286,7 @@ export default function AdminCoverLettersPage() {
                         {format(new Date(coverLetter.createdAt), "PP")}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <span className="inline-flex min-w-10 items-center justify-center text-sm font-semibold text-indigo-700">
+                        <span className="inline-flex min-w-10 items-center justify-center text-sm font-semibold text-slate-900">
                           {coverLetter.viewCount || 0}
                         </span>
                       </td>
@@ -300,7 +300,7 @@ export default function AdminCoverLettersPage() {
                             href={coverLetter.googleDriveLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                            className="flex items-center gap-1 text-xs text-slate-900 hover:text-[#FF4800] hover:underline"
                           >
                             <Download className="h-3 w-3" /> PDF
                           </a>
@@ -331,7 +331,7 @@ export default function AdminCoverLettersPage() {
                   size="sm"
                   disabled={pagination.page <= 1}
                   onClick={() => handlePageChange(pagination.page - 1)}
-                  className="border-indigo-200"
+                  className="rounded-full border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -340,7 +340,7 @@ export default function AdminCoverLettersPage() {
                   size="sm"
                   disabled={pagination.page >= pagination.totalPages}
                   onClick={() => handlePageChange(pagination.page + 1)}
-                  className="border-indigo-200"
+                  className="rounded-full border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>

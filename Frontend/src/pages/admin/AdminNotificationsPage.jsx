@@ -29,7 +29,7 @@ const TYPE_LABELS = {
 };
 
 const TYPE_COLORS = {
-  reminder: "text-indigo-700",
+  reminder: "text-slate-900",
   "download-link": "text-emerald-700",
 };
 
@@ -44,7 +44,7 @@ const STATUS_COLORS = {
   pending: "text-amber-700",
   sent: "text-green-700",
   failed: "text-red-700",
-  cancelled: "text-gray-500",
+  cancelled: "text-slate-500",
 };
 
 function Badge({ label, colorClass }) {
@@ -84,7 +84,7 @@ function MenuActionButton({
 }) {
   const toneClass =
     tone === "danger"
-      ? "text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+      ? "text-red-600 hover:bg-red-50 hover:text-red-700"
       : "text-slate-700 hover:bg-slate-100 hover:text-slate-900";
 
   return (
@@ -125,10 +125,10 @@ function formatDate(iso) {
 
 function EmptyState({ title, description }) {
   return (
-    <div className="flex h-40 flex-col items-center justify-center gap-2 text-gray-400">
+    <div className="flex h-40 flex-col items-center justify-center gap-2 text-slate-400">
       <Bell className="h-10 w-10 opacity-30" />
       <p className="text-sm font-medium">{title}</p>
-      <p className="text-xs text-gray-400">{description}</p>
+      <p className="text-xs text-slate-400">{description}</p>
     </div>
   );
 }
@@ -260,10 +260,10 @@ export default function AdminNotificationsPage() {
 
   return (
     <div className="flex h-full flex-col overflow-y-auto">
-      <header className="sticky top-0 z-10 flex flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6 py-4 shadow-sm">
+      <header className="sticky top-0 z-10 flex flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 py-4 shadow-sm">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">Notifications</h1>
-          <p className="mt-0.5 text-xs text-gray-500">
+          <h1 className="text-xl font-bold text-slate-900">Notifications</h1>
+          <p className="mt-0.5 text-xs text-slate-500">
             Reminder queue follows cron rules. History below keeps the audit log.
           </p>
         </div>
@@ -271,7 +271,7 @@ export default function AdminNotificationsPage() {
           variant="outline"
           onClick={handleRefresh}
           disabled={refreshing}
-          className="border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+          className="rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900"
         >
           <RefreshCw
             className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
@@ -281,36 +281,36 @@ export default function AdminNotificationsPage() {
       </header>
 
       <main className="flex-1 space-y-5 p-6">
-        <section className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-gray-100 px-5 py-4">
+        <section className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
             <div>
-              <h2 className="text-base font-semibold text-gray-800">
+              <h2 className="text-base font-semibold text-slate-900">
                 Reminder Queue
               </h2>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-slate-500">
                 Users in the current cron window with no resume. Pending and
                 failed rows are what cron can still send.
               </p>
             </div>
             <Badge
               label={`${reminderControls.length} users`}
-              colorClass="bg-indigo-50 text-indigo-700"
+              colorClass="rounded-full bg-slate-100 px-3 py-1 text-slate-900"
             />
           </div>
 
-          <div className="border-b border-gray-100 px-5 py-4">
+          <div className="border-b border-slate-100 px-5 py-4">
             <form onSubmit={handleSearch} className="flex flex-wrap gap-2">
               <input
                 type="text"
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
                 placeholder="Search queue and history by name or email..."
-                className="w-full max-w-sm rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                className="w-full max-w-sm rounded-full border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
               />
               <Button
                 type="submit"
                 size="sm"
-                className="bg-indigo-600 text-white hover:bg-indigo-700"
+                className="rounded-full bg-slate-900 text-white hover:bg-[#FF4800] transition-colors"
               >
                 Search
               </Button>
@@ -320,6 +320,7 @@ export default function AdminNotificationsPage() {
                   variant="outline"
                   size="sm"
                   onClick={clearSearch}
+                  className="rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900"
                 >
                   Clear
                 </Button>
@@ -329,7 +330,7 @@ export default function AdminNotificationsPage() {
 
           {loading ? (
             <div className="flex h-48 items-center justify-center">
-              <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-indigo-500" />
+              <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-slate-900" style={{ borderBottomColor: "#FF4800" }} />
             </div>
           ) : reminderControls.length === 0 ? (
             <EmptyState
@@ -338,9 +339,9 @@ export default function AdminNotificationsPage() {
             />
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-100">
+              <table className="min-w-full divide-y divide-slate-100">
                 <thead>
-                  <tr className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <tr className="bg-slate-50/70 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     <th className="px-5 py-3 text-left">User</th>
                     <th className="px-5 py-3 text-left">Signed Up</th>
                     <th className="px-5 py-3 text-left">Status</th>
@@ -348,21 +349,21 @@ export default function AdminNotificationsPage() {
                     <th className="px-5 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-slate-50">
                   {reminderControls.map((reminder) => (
                     <tr
                       key={reminder.userId}
-                      className="transition-colors hover:bg-gray-50"
+                      className="transition-colors hover:bg-slate-50/60"
                     >
                       <td className="px-5 py-3.5">
-                        <p className="text-sm font-medium text-gray-800">
+                        <p className="text-sm font-medium text-slate-900">
                           {reminder.userName || "-"}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-slate-400">
                           {reminder.userEmail}
                         </p>
                       </td>
-                      <td className="px-5 py-3.5 text-xs text-gray-500 whitespace-nowrap">
+                      <td className="px-5 py-3.5 text-xs text-slate-500 whitespace-nowrap">
                         {formatDate(reminder.createdAt)}
                       </td>
                       <td className="px-5 py-3.5">
@@ -374,7 +375,7 @@ export default function AdminNotificationsPage() {
                             }
                             colorClass={
                               STATUS_COLORS[reminder.currentStatus] ??
-                              "bg-gray-100 text-gray-600"
+                              "bg-slate-100 text-slate-600"
                             }
                           />
                           {reminder.currentStatus === "failed" &&
@@ -393,17 +394,17 @@ export default function AdminNotificationsPage() {
                           )}
                         </div>
                       </td>
-                      <td className="px-5 py-3.5 text-xs text-gray-500">
+                      <td className="px-5 py-3.5 text-xs text-slate-500">
                         {reminder.sentAt ? (
                           <div>
-                            <p className="font-medium text-gray-600">
+                            <p className="font-medium text-slate-600">
                               Last sent
                             </p>
                             <p>{formatDate(reminder.sentAt)}</p>
                           </div>
                         ) : reminder.latestNotificationAt ? (
                           <div>
-                            <p className="font-medium text-gray-600">
+                            <p className="font-medium text-slate-600">
                               Last attempt
                             </p>
                             <p>{formatDate(reminder.latestNotificationAt)}</p>
@@ -426,7 +427,7 @@ export default function AdminNotificationsPage() {
                                 disabled={
                                   actionId === `reminder-send-${reminder.userId}`
                                 }
-                                className="flex items-center gap-1 rounded-lg border border-indigo-200 px-2.5 py-1.5 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-50 disabled:opacity-50"
+                                className="flex items-center gap-1 rounded-full border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-900 disabled:opacity-50"
                               >
                                 <Send className="h-3 w-3" />
                                 {reminder.currentStatus === "sent"
@@ -441,7 +442,7 @@ export default function AdminNotificationsPage() {
                                   actionId ===
                                   `reminder-cancel-${reminder.userId}`
                                 }
-                                className="flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 disabled:opacity-50"
+                                className="flex items-center gap-1 rounded-full border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
                               >
                                 <XCircle className="h-3 w-3" />
                                 Cancel
@@ -449,7 +450,7 @@ export default function AdminNotificationsPage() {
                             </>
                           )}
                           {reminder.currentStatus === "cancelled" && (
-                            <span className="text-xs italic text-gray-400">
+                            <span className="text-xs italic text-slate-400">
                               Cancelled for cron
                             </span>
                           )}
@@ -463,13 +464,13 @@ export default function AdminNotificationsPage() {
           )}
         </section>
 
-        <section className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-gray-100 px-5 py-4">
+        <section className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
             <div>
-              <h2 className="text-base font-semibold text-gray-800">
+              <h2 className="text-base font-semibold text-slate-900">
                 Notification History
               </h2>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-slate-500">
                 Tracking summary with {total} rows across reminder and download-link notifications.
               </p>
             </div>
@@ -480,7 +481,7 @@ export default function AdminNotificationsPage() {
                 onChange={(event) =>
                   handleFilterChange("type", event.target.value)
                 }
-                className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                className="rounded-full border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
               >
                 <option value="">All Types</option>
                 <option value="reminder">Signup Reminder</option>
@@ -492,7 +493,7 @@ export default function AdminNotificationsPage() {
                 onChange={(event) =>
                   handleFilterChange("status", event.target.value)
                 }
-                className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                className="rounded-full border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
               >
                 <option value="">All Statuses</option>
                 <option value="sent">Sent</option>
@@ -504,7 +505,7 @@ export default function AdminNotificationsPage() {
 
           {loading ? (
             <div className="flex h-48 items-center justify-center">
-              <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-indigo-500" />
+              <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-slate-900" style={{ borderBottomColor: "#FF4800" }} />
             </div>
           ) : notifications.length === 0 ? (
             <EmptyState
@@ -513,9 +514,9 @@ export default function AdminNotificationsPage() {
             />
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-100">
+              <table className="min-w-full divide-y divide-slate-100">
                 <thead>
-                  <tr className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <tr className="bg-slate-50/70 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     <th className="px-5 py-3 text-left">User Name</th>
                     <th className="px-5 py-3 text-left">User Email</th>
                     <th className="px-5 py-3 text-left">Type</th>
@@ -532,18 +533,18 @@ export default function AdminNotificationsPage() {
                     <th className="px-5 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-slate-50">
                   {notifications.map((notification) => (
                     <tr
                       key={notification.id}
-                      className="transition-colors hover:bg-gray-50"
+                      className="transition-colors hover:bg-slate-50/60"
                     >
                       <td className="px-5 py-3.5 whitespace-nowrap">
-                        <p className="text-sm font-medium text-gray-800">
+                        <p className="text-sm font-medium text-slate-900">
                           {notification.userName || "-"}
                         </p>
                       </td>
-                      <td className="px-5 py-3.5 whitespace-nowrap text-xs text-gray-500">
+                      <td className="px-5 py-3.5 whitespace-nowrap text-xs text-slate-500">
                         {notification.userEmail}
                       </td>
                       <td className="whitespace-nowrap px-5 py-3.5">
@@ -553,12 +554,12 @@ export default function AdminNotificationsPage() {
                           }
                           colorClass={
                             TYPE_COLORS[notification.type] ??
-                            "text-gray-600"
+                            "text-slate-600"
                           }
                         />
                       </td>
                       <td className="px-5 py-3.5">
-                        <p className="max-w-[160px] truncate text-xs text-gray-600">
+                        <p className="max-w-[160px] truncate text-xs text-slate-600">
                           {notification.resumeTitle || "-"}
                         </p>
                       </td>
@@ -571,7 +572,7 @@ export default function AdminNotificationsPage() {
                             }
                             colorClass={
                               STATUS_COLORS[notification.currentStatus] ??
-                              "text-gray-600"
+                              "text-slate-600"
                             }
                           />
                         </div>
@@ -579,19 +580,19 @@ export default function AdminNotificationsPage() {
                       <td className="px-5 py-3.5">
                         <StageCell stage={notification.stages?.[1]} />
                       </td>
-                      <td className="px-5 py-3.5 whitespace-nowrap text-xs text-gray-500">
+                      <td className="px-5 py-3.5 whitespace-nowrap text-xs text-slate-500">
                         {formatDate(notification.stages?.[1]?.sentAt)}
                       </td>
                       <td className="px-5 py-3.5">
                         <StageCell stage={notification.stages?.[2]} />
                       </td>
-                      <td className="px-5 py-3.5 whitespace-nowrap text-xs text-gray-500">
+                      <td className="px-5 py-3.5 whitespace-nowrap text-xs text-slate-500">
                         {formatDate(notification.stages?.[2]?.sentAt)}
                       </td>
                       <td className="px-5 py-3.5">
                         <StageCell stage={notification.stages?.[3]} />
                       </td>
-                      <td className="px-5 py-3.5 whitespace-nowrap text-xs text-gray-500">
+                      <td className="px-5 py-3.5 whitespace-nowrap text-xs text-slate-500">
                         {formatDate(notification.stages?.[3]?.sentAt)}
                       </td>
                       <td className="px-5 py-3.5">
@@ -602,7 +603,7 @@ export default function AdminNotificationsPage() {
                           {notification.lastError || "-"}
                         </p>
                       </td>
-                      <td className="px-5 py-3.5 whitespace-nowrap text-xs text-gray-500">
+                      <td className="px-5 py-3.5 whitespace-nowrap text-xs text-slate-500">
                         {formatDate(notification.signupAt)}
                       </td>
                       <td className="px-5 py-3.5 text-right">
@@ -651,7 +652,7 @@ export default function AdminNotificationsPage() {
         </section>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between text-sm text-gray-500">
+          <div className="flex items-center justify-between text-sm text-slate-500">
             <span>
               Page {page} of {totalPages} - {total} records
             </span>
@@ -661,6 +662,7 @@ export default function AdminNotificationsPage() {
                 size="sm"
                 onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
                 disabled={page === 1}
+                className="rounded-full border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -673,6 +675,7 @@ export default function AdminNotificationsPage() {
                   )
                 }
                 disabled={page === totalPages}
+                className="rounded-full border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
