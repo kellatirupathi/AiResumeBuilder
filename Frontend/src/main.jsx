@@ -21,6 +21,7 @@ import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage.jsx";
 import AdminAccountsPage from "./pages/admin/AdminAccountsPage.jsx";
 import AdminInviteUsersPage from "./pages/admin/AdminInviteUsersPage.jsx";
 import AuthPage from "./pages/auth/customAuth/AuthPage.jsx";
+import GoogleCallbackPage from "./pages/auth/customAuth/GoogleCallbackPage.jsx";
 import { resumeStore, persistor } from "./store/store";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
@@ -131,6 +132,10 @@ const router = createBrowserRouter([
   {
     path: "/auth/sign-in",
     element: <AuthPage />,
+  },
+  {
+    path: "/auth/google/callback",
+    element: <GoogleCallbackPage />,
   },
   {
     path: "/reset-password",
