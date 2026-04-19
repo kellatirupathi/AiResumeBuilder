@@ -62,9 +62,6 @@ const DigitalCardTemplate = ({ resumeInfo }) => {
             </div>
           </div>
           
-          {/* Horizontal divider with accent color */}
-          <div className="h-px w-16 mx-auto my-3" style={{ backgroundColor: themeColor }}></div>
-          
           {/* Social links centered */}
           <div className="flex justify-center gap-6 mb-3">
             {resumeInfo?.linkedinUrl && (
@@ -109,7 +106,7 @@ const DigitalCardTemplate = ({ resumeInfo }) => {
           
           {/* Summary */}
           {resumeInfo?.summary && (
-            <div className="mb-2">
+            <div>
               <p className="text-sm leading-relaxed text-gray-600 text-center max-w-3xl mx-auto">
                 {resumeInfo.summary}
               </p>
@@ -119,7 +116,7 @@ const DigitalCardTemplate = ({ resumeInfo }) => {
       </div>
       
       {/* Main content */}
-      <div className="p-6">
+      <div className="px-6 pb-6 pt-2">
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Left column - Skills & Education */}
@@ -128,7 +125,7 @@ const DigitalCardTemplate = ({ resumeInfo }) => {
               {resumeInfo?.skills && resumeInfo.skills.length > 0 && (
                 <section>
                   <h3 
-                    className="text-sm uppercase tracking-widest font-medium mb-4 pb-1 border-b"
+                    className="text-sm uppercase tracking-widest font-medium mb-1 pb-1 border-b"
                     style={{ color: themeColor, borderColor: `${themeColor}20` }}
                   >
                     Skills
@@ -155,7 +152,7 @@ const DigitalCardTemplate = ({ resumeInfo }) => {
               {resumeInfo?.education && resumeInfo.education.length > 0 && (
                 <section>
                   <h3 
-                    className="text-sm uppercase tracking-widest font-medium mb-4 pb-1 border-b"
+                    className="text-sm uppercase tracking-widest font-medium mb-1 pb-1 border-b"
                     style={{ color: themeColor, borderColor: `${themeColor}20` }}
                   >
                     Education
@@ -196,7 +193,7 @@ const DigitalCardTemplate = ({ resumeInfo }) => {
               {resumeInfo?.certifications && resumeInfo.certifications.length > 0 && (
                 <section>
                   <h3 
-                    className="text-sm uppercase tracking-widest font-medium mb-4 pb-1 border-b"
+                    className="text-sm uppercase tracking-widest font-medium mb-1 pb-1 border-b"
                     style={{ color: themeColor, borderColor: `${themeColor}20` }}
                   >
                     Certifications
@@ -244,7 +241,7 @@ const DigitalCardTemplate = ({ resumeInfo }) => {
                   {resumeInfo.additionalSections.map((section, index) => (
                     <section key={index}>
                       <h3 
-                        className="text-sm uppercase tracking-widest font-medium mb-4 pb-1 border-b"
+                        className="text-sm uppercase tracking-widest font-medium mb-1 pb-1 border-b"
                         style={{ color: themeColor, borderColor: `${themeColor}20` }}
                       >
                         {section.title}
@@ -271,7 +268,7 @@ const DigitalCardTemplate = ({ resumeInfo }) => {
               {resumeInfo?.experience && resumeInfo.experience.length > 0 && (
                 <section>
                   <h3 
-                    className="text-sm uppercase tracking-widest font-medium mb-4 pb-1 border-b"
+                    className="text-sm uppercase tracking-widest font-medium mb-1 pb-1 border-b"
                     style={{ color: themeColor, borderColor: `${themeColor}20` }}
                   >
                     Experience
@@ -299,9 +296,9 @@ const DigitalCardTemplate = ({ resumeInfo }) => {
                         </h5>
                         
                         {exp.workSummary ? (
-                          <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700">
+                          <ul className="list-disc ml-4 pl-1 text-gray-700 text-[13px] leading-[1.4]">
                             {normalizeBullets(exp.workSummary).map((item, itemIndex) => (
-                              <li key={itemIndex}>{item}</li>
+                              <li key={itemIndex} className="mb-1">{item}</li>
                             ))}
                           </ul>
                         ) : null}
@@ -315,7 +312,7 @@ const DigitalCardTemplate = ({ resumeInfo }) => {
               {resumeInfo?.projects && resumeInfo.projects.length > 0 && (
                 <section>
                   <h3 
-                    className="text-sm uppercase tracking-widest font-medium mb-4 pb-1 border-b"
+                    className="text-sm uppercase tracking-widest font-medium mb-1 pb-1 border-b"
                     style={{ color: themeColor, borderColor: `${themeColor}20` }}
                   >
                     Projects
@@ -363,9 +360,9 @@ const DigitalCardTemplate = ({ resumeInfo }) => {
                         )}
                         
                         {project.projectSummary ? (
-                          <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700">
+                          <ul className="list-disc ml-4 pl-1 text-gray-700 text-[13px] leading-[1.4]">
                             {normalizeBullets(project.projectSummary).map((item, itemIndex) => (
-                              <li key={itemIndex}>{item}</li>
+                              <li key={itemIndex} className="mb-1">{item}</li>
                             ))}
                           </ul>
                         ) : null}

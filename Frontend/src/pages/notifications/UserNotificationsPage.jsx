@@ -6,12 +6,14 @@ import {
   LoaderCircle,
   ArrowLeft,
   ShieldCheck,
-  CheckCircle2,
-  XCircle,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import { updateNotificationPreferences } from "@/Services/login";
 import { useNotificationPreferencesQuery } from "@/hooks/useAppQueryData";
+
+const DISPLAY = { fontFamily: "Fraunces, Georgia, serif" };
+const ACCENT = "#FF4800";
 
 const NOTIFICATION_TYPES = [
   {
@@ -20,7 +22,6 @@ const NOTIFICATION_TYPES = [
     label: "Resume Reminder",
     description:
       "Receive occasional nudges to create your first resume if you haven't done so yet. We send at most 3 reminders over 6 months.",
-    color: "indigo",
   },
   {
     key: "downloadLink",
@@ -28,26 +29,10 @@ const NOTIFICATION_TYPES = [
     label: "Drive Link on Download",
     description:
       "Get an email with your Google Drive link each time you download a resume PDF, so you can access it from any device.",
-    color: "emerald",
   },
 ];
 
-const COLOR_MAP = {
-  indigo: {
-    badge: "bg-indigo-50 text-indigo-700 border-indigo-100",
-    icon: "bg-indigo-100 text-indigo-600",
-    ring: "ring-indigo-200",
-    on: "bg-indigo-600",
-  },
-  emerald: {
-    badge: "bg-emerald-50 text-emerald-700 border-emerald-100",
-    icon: "bg-emerald-100 text-emerald-600",
-    ring: "ring-emerald-200",
-    on: "bg-emerald-600",
-  },
-};
-
-function ToggleSwitch({ checked, onChange, disabled, onColor }) {
+function ToggleSwitch({ checked, onChange, disabled }) {
   return (
     <button
       type="button"
@@ -55,14 +40,13 @@ function ToggleSwitch({ checked, onChange, disabled, onColor }) {
       aria-checked={checked}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-7 w-13 min-w-[52px] flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-        checked ? onColor : "bg-gray-200 focus:ring-gray-300"
+      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer items-center rounded-full border border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-slate-900/20 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+        checked ? "bg-slate-900" : "bg-slate-200"
       }`}
-      style={{ width: "52px" }}
     >
       <span
-        className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-          checked ? "translate-x-6" : "translate-x-0"
+        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+          checked ? "translate-x-5" : "translate-x-0.5"
         }`}
       />
     </button>
@@ -109,105 +93,153 @@ export default function UserNotificationsPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+  const enabledCount = NOTIFICATION_TYPES.filter(
+    ({ key }) => prefs?.[key] !== false
+  ).length;
 
-      {/* ── Top bar ── */}
-      <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-gray-100 bg-white/80 backdrop-blur-sm px-5 py-3.5">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center justify-center h-8 w-8 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <div className="flex items-center gap-2">
-          <Bell className="h-4 w-4 text-indigo-500" />
-          <span className="text-sm font-semibold text-gray-800">Email Notifications</span>
+  return (
+    <div className="min-h-screen bg-white text-slate-900 antialiased">
+      {/* Top bar */}
+      <div className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-3xl items-center gap-3 px-5 lg:px-8">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div className="flex items-center gap-2">
+            <Mail className="h-4 w-4 text-slate-500" />
+            <span className="text-[13px] font-semibold text-slate-900">
+              Email Notifications
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* ── Content ── */}
-      <div className="max-w-lg mx-auto px-4 py-10">
-
-        {/* Intro */}
-        <div className="mb-8 text-center">
-          <h1 className="text-xl font-bold text-gray-900 mb-1">Notification Preferences</h1>
-          <p className="text-sm text-gray-500 max-w-sm mx-auto">
-            Choose which emails you'd like to receive. Changes take effect immediately.
+      <div className="mx-auto max-w-3xl px-5 py-12 lg:px-8 lg:py-16">
+        {/* Hero */}
+        <section className="border-b border-slate-200 pb-10">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-[0.2em] text-slate-600">
+            <span
+              className="h-1.5 w-1.5 rounded-full"
+              style={{ backgroundColor: ACCENT }}
+            />
+            Preferences
+          </span>
+          <h1
+            style={DISPLAY}
+            className="mt-4 text-[36px] font-semibold leading-[1.05] tracking-tight text-slate-900 sm:text-[44px]"
+          >
+            Notifications
+          </h1>
+          <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-slate-600">
+            Choose which emails you'd like to receive. Changes take effect
+            immediately.
           </p>
-        </div>
+          {!loading && (
+            <p className="mt-4 text-[12px] font-medium uppercase tracking-[0.18em] text-slate-500">
+              {enabledCount} of {NOTIFICATION_TYPES.length} enabled
+            </p>
+          )}
+        </section>
 
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-gray-400 gap-3">
-            <LoaderCircle className="h-8 w-8 animate-spin text-indigo-400" />
-            <span className="text-sm">Loading your preferences…</span>
-          </div>
-        ) : (
-          <div className="space-y-3">
+        {/* Preferences list */}
+        <section className="pt-10">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-20 text-slate-500">
+              <LoaderCircle
+                className="h-7 w-7 animate-spin"
+                style={{ color: ACCENT }}
+              />
+              <span className="text-[13px]">Loading your preferences…</span>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+              {NOTIFICATION_TYPES.map(
+                ({ key, icon: Icon, label, description }) => {
+                  const isOn = prefs?.[key] !== false;
+                  const isSaving = !!updating[key];
 
-            {NOTIFICATION_TYPES.map(({ key, icon: Icon, label, description, color }) => {
-              const isOn = prefs?.[key] !== false;
-              const isSaving = !!updating[key];
-              const colors = COLOR_MAP[color];
-
-              return (
-                <div
-                  key={key}
-                  className={`rounded-2xl border bg-white p-5 shadow-sm transition-all duration-200 ${
-                    isOn ? "border-gray-200" : "border-gray-100 opacity-70"
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    {/* Left: icon + text */}
-                    <div className="flex items-start gap-4 min-w-0">
-                      <div className={`mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${colors.icon}`}>
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-semibold text-gray-800">{label}</span>
-                          {isOn ? (
-                            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${colors.badge}`}>
-                              <CheckCircle2 className="h-2.5 w-2.5" /> ON
+                  return (
+                    <div
+                      key={key}
+                      className="flex items-start justify-between gap-4 p-6 transition-colors hover:bg-slate-50/60"
+                    >
+                      <div className="flex items-start gap-4 min-w-0">
+                        <span className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700">
+                          <Icon className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-[14.5px] font-semibold text-slate-900">
+                              {label}
                             </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-400">
-                              <XCircle className="h-2.5 w-2.5" /> OFF
-                            </span>
-                          )}
+                            <StatusPill on={isOn} />
+                          </div>
+                          <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">
+                            {description}
+                          </p>
                         </div>
-                        <p className="text-xs text-gray-500 leading-relaxed">{description}</p>
+                      </div>
+
+                      <div className="flex flex-shrink-0 items-center gap-2 pt-0.5">
+                        {isSaving && (
+                          <LoaderCircle className="h-3.5 w-3.5 animate-spin text-slate-400" />
+                        )}
+                        <ToggleSwitch
+                          checked={isOn}
+                          onChange={(val) => handleToggle(key, val)}
+                          disabled={isSaving}
+                        />
                       </div>
                     </div>
+                  );
+                }
+              )}
+            </div>
+          )}
 
-                    {/* Right: toggle */}
-                    <div className="flex-shrink-0 flex items-center gap-2 pt-0.5">
-                      {isSaving && (
-                        <LoaderCircle className="h-3.5 w-3.5 animate-spin text-gray-400" />
-                      )}
-                      <ToggleSwitch
-                        checked={isOn}
-                        onChange={(val) => handleToggle(key, val)}
-                        disabled={isSaving}
-                        onColor={colors.on}
-                      />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* System emails notice */}
-            <div className="flex items-start gap-3 rounded-xl bg-gray-50 border border-gray-100 px-4 py-3.5 mt-2">
-              <ShieldCheck className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-gray-400 leading-relaxed">
-                <span className="font-medium text-gray-500">Security emails</span> such as password
-                resets and account alerts are always sent and cannot be turned off.
+          {/* Security emails notice */}
+          {!loading && (
+            <div className="mt-5 flex items-start gap-3 rounded-2xl border border-slate-200 bg-[#FBFAF7] px-5 py-4">
+              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white">
+                <ShieldCheck
+                  className="h-3.5 w-3.5"
+                  style={{ color: ACCENT }}
+                />
+              </div>
+              <p className="text-[13px] leading-relaxed text-slate-600">
+                <span className="font-semibold text-slate-900">
+                  Security emails
+                </span>{" "}
+                such as password resets and account alerts are always sent and
+                cannot be turned off.
               </p>
             </div>
-          </div>
-        )}
+          )}
+        </section>
       </div>
     </div>
+  );
+}
+
+function StatusPill({ on }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+        on
+          ? "border-slate-900/10 bg-slate-900 text-white"
+          : "border-slate-200 bg-white text-slate-400"
+      }`}
+    >
+      <span
+        className={`h-1.5 w-1.5 rounded-full ${
+          on ? "bg-[#FF4800]" : "bg-slate-300"
+        }`}
+      />
+      {on ? "On" : "Off"}
+    </span>
   );
 }

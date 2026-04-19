@@ -1,200 +1,619 @@
-// C:\Users\NxtWave\Downloads\code\Frontend\src\components\custom\Header.jsx
-import React, { useEffect, useState, useRef } from "react";
-import { Button } from "../ui/button";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch } from "react-redux";
 import { logoutUser } from "@/Services/login";
 import { addUserData } from "@/features/user/userFeatures";
-import { motion } from "framer-motion";
-import { FaUser, FaSignOutAlt, FaTachometerAlt, FaKey, FaEdit, FaBell } from "react-icons/fa";
-import { Moon, Sun } from "lucide-react";
+import { Button } from "../ui/button";
+import NxtResumeWordmark from "@/components/brand/NxtResumeWordmark";
 import ChangePasswordModal from "./ChangePasswordModal";
-import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
+import {
+  Menu,
+  X,
+  LayoutDashboard,
+  LogOut,
+  Key,
+  Bell,
+  ChevronDown,
+  ArrowUpRight,
+  FileText,
+  Sparkles,
+  Gauge,
+  Layout as LayoutIcon,
+  Mail,
+  PenLine,
+  BookOpen,
+} from "lucide-react";
 
-function Header({ user, darkMode, toggleDarkMode }) {
-  const dispatch = useDispatch();
+const ACCENT = "#FF4800";
+const DISPLAY = { fontFamily: "Fraunces, Georgia, serif" };
+
+const RESUME_ITEMS = [
+  {
+    icon: FileText,
+    title: "Resume Templates",
+    desc: "16 ATS-friendly professional designs.",
+    to: "/resumes",
+  },
+  {
+    icon: Sparkles,
+    title: "AI Resume Builder",
+    desc: "Build a tailored resume with AI assistance.",
+    to: "/dashboard",
+    authTo: "/auth/sign-in",
+  },
+  {
+    icon: Gauge,
+    title: "ATS Checker",
+    desc: "Score and optimize your resume.",
+    to: "/ats-checker",
+  },
+  {
+    icon: LayoutIcon,
+    title: "Portfolio Pages",
+    desc: "Publish a portfolio from your resume.",
+    to: "/dashboard",
+    authTo: "/auth/sign-in",
+  },
+  {
+    icon: BookOpen,
+    title: "How to Write a Resume",
+    desc: "Sections, fields, and tips — end to end.",
+    to: "/resume-preparation",
+  },
+];
+
+const COVER_ITEMS = [
+  {
+    icon: Mail,
+    title: "Cover Letter Templates",
+    desc: "10 professional designs to choose from.",
+    to: "/cover-letters",
+  },
+  {
+    icon: PenLine,
+    title: "AI Cover Letter Generator",
+    desc: "Tailored letters in seconds.",
+    to: "/dashboard?tab=cover-letters",
+    authTo: "/auth/sign-in",
+  },
+  {
+    icon: BookOpen,
+    title: "How to Write a Cover Letter",
+    desc: "Structure, fields, tone, and sample phrases.",
+    to: "/cover-letter-preparation",
+  },
+];
+
+const FLAT_LINKS = [
+  { label: "ATS Checker", href: "/ats-checker" },
+  { label: "Docs", href: "/documentation" },
+];
+
+const MOBILE_LINKS = [
+  { label: "Resumes", href: "/resumes" },
+  { label: "Cover Letters", href: "/cover-letters" },
+  { label: "ATS Checker", href: "/ats-checker" },
+  { label: "Docs", href: "/documentation" },
+];
+
+function Header({ user }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+
   const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [isChangePasswordOpen, setChangePasswordOpen] = useState(false);
-  const userDropdownRef = useRef(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState(null); // 'resumes' | 'covers' | null
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
-  const isDashboardPage = location.pathname === '/dashboard';
-  const isHomePage = location.pathname === '/';
+  const profileRef = useRef(null);
+  const navRef = useRef(null);
+  const closeTimerRef = useRef(null);
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    const handleClickOutside = (event) => {
-      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
-        setUserDropdownOpen(false);
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      const response = await logoutUser();
-      if (response.statusCode === 200) {
-        dispatch(addUserData(""));
-        navigate("/");
-      }
-    } catch (error) {
-      console.log(error.message);
+  const cancelClose = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
     }
   };
 
-  const toggleMenu = () => setMenuOpen(!menuOpen);
-  const toggleUserDropdown = () => setUserDropdownOpen(!userDropdownOpen);
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimerRef.current = setTimeout(() => setOpenMenu(null), 150);
+  };
+
+  const openOnHover = (id) => {
+    cancelClose();
+    setOpenMenu(id);
+  };
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const onClickOutside = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+      if (navRef.current && !navRef.current.contains(e.target)) {
+        setOpenMenu(null);
+      }
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        setOpenMenu(null);
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  useEffect(() => {
+    setMobileOpen(false);
+    setProfileOpen(false);
+    setOpenMenu(null);
+  }, [location.pathname]);
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      dispatch(addUserData(""));
+      navigate("/");
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const resolveLink = (item) => (user ? item.to : item.authTo || item.to);
+
+  const activePath = (path) =>
+    location.pathname === path ||
+    (path !== "/" && location.pathname.startsWith(path));
+
+  const initials = user?.fullName
+    ? user.fullName
+        .split(" ")
+        .map((w) => w[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
+    : "U";
 
   return (
     <>
-      <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.5 }}
-        id="printHeader"
-        className={`fixed top-0 left-0 right-0 z-50 px-6 md:px-10 py-4 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-sm shadow-md dark:bg-gray-900/80" : "bg-white/80 backdrop-blur-sm dark:bg-gray-900/60"}`}
+      <header
+        className={`fixed inset-x-0 top-0 z-50 transition-all duration-200 ${
+          scrolled
+            ? "border-b border-slate-200/70 bg-white/85 backdrop-blur-xl"
+            : "border-b border-transparent bg-white"
+        }`}
       >
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link to="/" className="flex items-center gap-3 group">
-            <NxtResumeLogoMark className="h-11 w-11 transition-transform duration-300 group-hover:scale-105" />
-            <span className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-indigo-600 bg-clip-text text-transparent">
-              NxtResume
-            </span>
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 lg:px-8">
+          {/* Brand */}
+          <Link to="/" className="flex items-center group">
+            <NxtResumeWordmark size="22px" color="#0F172A" />
           </Link>
-          <div className="hidden md:flex items-center gap-4">
+
+          {/* Desktop nav */}
+          <nav
+            ref={navRef}
+            onMouseLeave={scheduleClose}
+            className="hidden items-center gap-0.5 md:flex"
+          >
+            <MegaTrigger
+              label="Resumes"
+              active={activePath("/resumes")}
+              open={openMenu === "resumes"}
+              onMouseEnter={() => openOnHover("resumes")}
+              onClick={() =>
+                setOpenMenu((m) => (m === "resumes" ? null : "resumes"))
+              }
+            />
+            <MegaTrigger
+              label="Cover Letters"
+              active={activePath("/cover-letters")}
+              open={openMenu === "covers"}
+              onMouseEnter={() => openOnHover("covers")}
+              onClick={() =>
+                setOpenMenu((m) => (m === "covers" ? null : "covers"))
+              }
+            />
+            {FLAT_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                onMouseEnter={() => setOpenMenu(null)}
+                className={`rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                  activePath(link.href)
+                    ? "text-slate-900"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Auth area (desktop) */}
+          <div className="hidden items-center gap-2 md:flex">
             {user ? (
-              <div className="flex items-center gap-3">
-                {!isDashboardPage && (
-                    <Button variant="outline" className="border-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 dark:text-indigo-300 dark:border-indigo-700 dark:hover:bg-indigo-900/50 flex items-center gap-2" onClick={() => navigate("/dashboard")}>
-                        <FaTachometerAlt className="w-4 h-4" />Dashboard
-                    </Button>
-                )}
-                <div ref={userDropdownRef} className="relative">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-emerald-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm ml-2 cursor-pointer hover:shadow-lg transition-shadow" onClick={toggleUserDropdown}>
-                    {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
-                  </div>
-                  {userDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 py-2 text-left">
-                      <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700"><div className="text-gray-900 dark:text-gray-100 font-medium">User Profile</div></div>
-                      <div className="px-4 py-3">
-                        <div className="mb-2"><div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Full Name</div><div className="text-sm font-medium text-gray-800 dark:text-gray-200">{user.fullName || "Not Available"}</div></div>
-                        <div className="mb-2"><div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Student ID</div><div className="text-sm font-medium text-gray-800 dark:text-gray-200 font-mono">{user.niatId || "Not Available"}</div></div>
-                        <div className="mb-2"><div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Email</div><div className="text-sm font-medium text-gray-800 dark:text-gray-200 break-all">{user.email || "Not Available"}</div></div>
-                        
-                        {/* --- NEW EDIT PROFILE BUTTON --- */}
-                        <button onClick={() => { navigate('/profile'); setUserDropdownOpen(false); }} className="w-full text-left text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center gap-2 mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                          <FaEdit className="w-3 h-3" /> Edit Profile
-                        </button>
+              <div className="relative" ref={profileRef}>
+                <button
+                  onClick={() => setProfileOpen((v) => !v)}
+                  className="flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 text-[13px] font-medium text-slate-800 transition-colors hover:border-slate-300 hover:bg-slate-50"
+                >
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white">
+                    {initials}
+                  </span>
+                  <span className="max-w-[100px] truncate">
+                    {user.fullName?.split(" ")[0] || "Account"}
+                  </span>
+                  <ChevronDown className="h-3.5 w-3.5 text-slate-500" />
+                </button>
 
-                        <button onClick={() => { navigate('/notifications'); setUserDropdownOpen(false); }} className="w-full text-left text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center gap-2 mt-2">
-                          <FaBell className="w-3 h-3" /> Notifications
-                        </button>
-
-                        <button onClick={() => { setChangePasswordOpen(true); setUserDropdownOpen(false); }} className="w-full text-left text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center gap-2 mt-2">
-                          <FaKey className="w-3 h-3" /> Change Password
-                        </button>
-                      </div>
-                      <div className="border-t border-gray-100 dark:border-gray-700 px-4 py-2">
-                        <button onClick={handleLogout} className="w-full text-left text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 flex items-center gap-2">
-                          <FaSignOutAlt className="w-3 h-3" />Sign out
-                        </button>
-                      </div>
+                {profileOpen && (
+                  <div className="absolute right-0 top-[calc(100%+8px)] w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+                    <div className="border-b border-slate-100 px-4 py-3">
+                      <p className="truncate text-sm font-semibold text-slate-900">
+                        {user.fullName || "User"}
+                      </p>
+                      <p className="truncate text-xs text-slate-500">
+                        {user.email || ""}
+                      </p>
                     </div>
-                  )}
-                </div>
+                    <div className="py-1">
+                      <MenuItem
+                        icon={<LayoutDashboard className="h-3.5 w-3.5" />}
+                        label="Dashboard"
+                        onClick={() => navigate("/dashboard")}
+                      />
+                      <MenuItem
+                        icon={<Bell className="h-3.5 w-3.5" />}
+                        label="Notifications"
+                        onClick={() => navigate("/notifications")}
+                      />
+                      <MenuItem
+                        icon={<Key className="h-3.5 w-3.5" />}
+                        label="Change password"
+                        onClick={() => setShowChangePassword(true)}
+                      />
+                    </div>
+                    <div className="border-t border-slate-100 py-1">
+                      <MenuItem
+                        icon={<LogOut className="h-3.5 w-3.5" />}
+                        label="Sign out"
+                        onClick={handleLogout}
+                        danger
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
-              <div className="flex items-center gap-3">
-                <nav className="mr-2 flex items-center gap-5 text-sm font-medium text-slate-600 dark:text-slate-300">
-                  <Link to="/resumes" className="transition-colors hover:text-indigo-600 dark:hover:text-indigo-400">
-                    Resumes
-                  </Link>
-                  <Link to="/ats-checker" className="transition-colors hover:text-indigo-600 dark:hover:text-indigo-400">
-                    ATS Checker
-                  </Link>
-                  <Link to="/documentation" className="transition-colors hover:text-indigo-600 dark:hover:text-indigo-400">
-                    Documentation
-                  </Link>
-                </nav>
-                <Link to="/auth/sign-in">
-                  <Button className="bg-gradient-to-r from-emerald-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
-                    <FaUser className="w-3 h-3" />Get Started
-                  </Button>
+              <>
+                <Link
+                  to="/auth/sign-in"
+                  className="inline-flex h-9 items-center rounded-full border border-slate-900 px-4 text-[13px] font-semibold text-slate-900 transition-colors hover:bg-slate-900 hover:text-white"
+                >
+                  Login
                 </Link>
-                {!isHomePage && (
-                  <button
-                    onClick={toggleDarkMode}
-                    className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-sm transition-colors"
-                    aria-label="Toggle dark mode"
-                  >
-                    {darkMode ? <Sun className="h-5 w-5 text-amber-300" /> : <Moon className="h-5 w-5 text-indigo-600" />}
-                  </button>
-                )}
-              </div>
+                <Link
+                  to="/auth/sign-in"
+                  className="inline-flex h-9 items-center gap-1 rounded-full bg-slate-900 px-4 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-[#FF4800]"
+                >
+                  Free Account
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </Link>
+              </>
             )}
           </div>
-          <button className="md:hidden p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" onClick={toggleMenu}>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              {menuOpen ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /> : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />}
-            </svg>
+
+          {/* Mobile trigger */}
+          <button
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md text-slate-700 md:hidden"
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-label="Menu"
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
-        {menuOpen && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} className="md:hidden bg-white dark:bg-gray-800 shadow-lg rounded-b-lg mt-4 overflow-hidden">
-            <div className="border-t border-gray-100 dark:border-gray-700 px-6 py-4">
-              {user ? (
-                <div className="flex flex-col gap-3">
-                  {user && (
-                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mb-3">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-emerald-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
-                          {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-800 dark:text-gray-200">{user.fullName || "User"}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">{user.niatId}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">{user.email}</div>
-                        </div>
-                      </div>
-                       <button onClick={() => { setChangePasswordOpen(true); setMenuOpen(false); }} className="w-full text-left text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 flex items-center gap-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                          <FaKey className="w-3 h-3" /> Change Password
-                        </button>
-                    </div>
+
+        {/* Mega-menu panel (desktop only) */}
+        <AnimatePresence>
+          {openMenu && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.15 }}
+              className="absolute inset-x-0 top-full hidden md:block"
+              onMouseDown={(e) => e.stopPropagation()}
+              onMouseEnter={cancelClose}
+              onMouseLeave={scheduleClose}
+            >
+              <div className="mx-auto max-w-6xl px-5 pt-2 lg:px-8">
+                <div
+                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_20px_50px_rgba(15,23,42,0.08)]"
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  {openMenu === "resumes" && (
+                    <MegaPanel
+                      items={RESUME_ITEMS}
+                      resolveLink={resolveLink}
+                      title="Craft a resume that gets interviews."
+                      desc="Start with a template, tailor with AI, and share a clean PDF or portfolio."
+                      ctaLabel="Build your resume"
+                      ctaTo={user ? "/dashboard" : "/auth/sign-in"}
+                      navigate={navigate}
+                      onClose={() => setOpenMenu(null)}
+                      variant="resume"
+                    />
                   )}
-                  {!isDashboardPage && (<Button variant="outline" className="w-full justify-center border-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50 flex items-center gap-2 dark:text-indigo-300 dark:border-indigo-700 dark:hover:bg-indigo-900/50" onClick={() => { navigate("/dashboard"); setMenuOpen(false); }}><FaTachometerAlt className="w-4 w-4" />Dashboard</Button>)}
-                  <Button className="w-full justify-center bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 flex items-center gap-2" onClick={() => { handleLogout(); setMenuOpen(false); }}><FaSignOutAlt className="w-4 h-4" />Logout</Button>
+                  {openMenu === "covers" && (
+                    <MegaPanel
+                      items={COVER_ITEMS}
+                      resolveLink={resolveLink}
+                      title="Write a cover letter in minutes."
+                      desc="Pick a template, describe the role, and let AI draft the rest."
+                      ctaLabel="Create cover letter"
+                      ctaTo={
+                        user ? "/dashboard?tab=cover-letters" : "/auth/sign-in"
+                      }
+                      navigate={navigate}
+                      onClose={() => setOpenMenu(null)}
+                      variant="cover"
+                    />
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Mobile panel */}
+        {mobileOpen && (
+          <div className="border-t border-slate-200 bg-white md:hidden">
+            <nav className="flex flex-col px-5 py-3">
+              {MOBILE_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className="rounded-md px-2 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+            <div className="border-t border-slate-200 px-5 py-3">
+              {user ? (
+                <div className="space-y-1">
+                  <button
+                    onClick={() => navigate("/dashboard")}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    <LayoutDashboard className="h-4 w-4" /> Dashboard
+                  </button>
+                  <button
+                    onClick={() => setShowChangePassword(true)}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    <Key className="h-4 w-4" /> Change password
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut className="h-4 w-4" /> Sign out
+                  </button>
                 </div>
               ) : (
-                <div className="flex flex-col gap-3">
-                  <Link to="/resumes" className="w-full text-sm font-medium text-slate-600 dark:text-slate-300" onClick={() => setMenuOpen(false)}>
-                    Resumes
+                <div className="flex flex-col gap-2">
+                  <Link
+                    to="/auth/sign-in"
+                    className="inline-flex h-10 items-center justify-center rounded-full border border-slate-900 text-sm font-semibold text-slate-900"
+                  >
+                    Login
                   </Link>
-                  <Link to="/ats-checker" className="w-full text-sm font-medium text-slate-600 dark:text-slate-300" onClick={() => setMenuOpen(false)}>
-                    ATS Checker
-                  </Link>
-                  <Link to="/documentation" className="w-full text-sm font-medium text-slate-600 dark:text-slate-300" onClick={() => setMenuOpen(false)}>
-                    Documentation
-                  </Link>
-                  <Link to="/auth/sign-in" className="w-full" onClick={() => setMenuOpen(false)}>
-                    <Button className="w-full justify-center bg-gradient-to-r from-emerald-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 flex items-center gap-2"><FaUser className="w-3 h-3" />Get Started</Button>
+                  <Link
+                    to="/auth/sign-in"
+                    className="inline-flex h-10 items-center justify-center gap-1 rounded-full bg-slate-900 text-sm font-semibold text-white"
+                  >
+                    Free Account
+                    <ArrowUpRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>
               )}
             </div>
-          </motion.div>
+          </div>
         )}
-      </motion.header>
-      <ChangePasswordModal isOpen={isChangePasswordOpen} onClose={() => setChangePasswordOpen(false)} />
+      </header>
+
+      {/* Spacer to prevent content jumping under the fixed header */}
+      <div className="h-16" />
+
+      <ChangePasswordModal
+        isOpen={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+      />
     </>
+  );
+}
+
+function MegaTrigger({ label, open, active, onClick, onMouseEnter }) {
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      className={`inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors ${
+        open || active ? "text-slate-900" : "text-slate-600 hover:text-slate-900"
+      }`}
+    >
+      {label}
+      <ChevronDown
+        className={`h-3.5 w-3.5 transition-transform duration-150 ${
+          open ? "rotate-180 text-slate-900" : "text-slate-500"
+        }`}
+      />
+    </button>
+  );
+}
+
+function MegaPanel({
+  items,
+  resolveLink,
+  title,
+  desc,
+  ctaLabel,
+  ctaTo,
+  navigate,
+  onClose,
+  variant,
+}) {
+  return (
+    <div className="grid grid-cols-[1fr_340px]">
+      <div className="grid auto-rows-max grid-cols-2 content-start gap-1 p-4">
+        {items.map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.title}
+              onClick={() => {
+                navigate(resolveLink(item));
+                onClose();
+              }}
+              className="group flex h-auto items-start gap-3 self-start rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-slate-50"
+            >
+              <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition-all group-hover:border-[#FF4800] group-hover:text-[#FF4800]">
+                <Icon className="h-4 w-4" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-1.5">
+                  <span className="text-[13px] font-semibold text-slate-900">
+                    {item.title}
+                  </span>
+                  <ArrowUpRight className="h-3 w-3 text-slate-300 transition-colors group-hover:text-[#FF4800]" />
+                </span>
+                <span className="mt-0.5 block text-[11.5px] leading-[1.35] text-slate-500">
+                  {item.desc}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="relative overflow-hidden border-l border-slate-100 bg-[#FBFAF7] p-5">
+        {variant === "resume" ? <MockResumeCard /> : <MockCoverCard />}
+        <h3
+          className="mt-4 text-[16px] font-semibold leading-tight text-slate-900"
+          style={DISPLAY}
+        >
+          {title}
+        </h3>
+        <p className="mt-1.5 text-[12px] leading-[1.5] text-slate-600">
+          {desc}
+        </p>
+        <button
+          onClick={() => {
+            navigate(ctaTo);
+            onClose();
+          }}
+          className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-full bg-slate-900 px-4 text-[12.5px] font-semibold text-white transition-colors hover:bg-[#FF4800]"
+        >
+          {ctaLabel}
+          <ArrowUpRight className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function MockResumeCard() {
+  return (
+    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="flex items-start justify-between border-b border-slate-100 pb-2">
+        <div className="space-y-1">
+          <div className="h-2 w-20 rounded-full bg-slate-900" />
+          <div className="h-1 w-12 rounded-full bg-slate-300" />
+        </div>
+        <div
+          className="h-4 w-4 rounded-full"
+          style={{ backgroundColor: ACCENT }}
+        />
+      </div>
+      <div className="mt-2.5 space-y-1">
+        <div className="h-1 w-full rounded-full bg-slate-200" />
+        <div className="h-1 w-5/6 rounded-full bg-slate-200" />
+      </div>
+      <div className="mt-3 h-1.5 w-14 rounded-full bg-slate-800" />
+      <div className="mt-1 space-y-1">
+        <div className="h-1 w-full rounded-full bg-slate-200" />
+        <div className="h-1 w-4/5 rounded-full bg-slate-200" />
+        <div className="h-1 w-2/3 rounded-full bg-slate-200" />
+      </div>
+      <div className="mt-3 h-1.5 w-10 rounded-full bg-slate-800" />
+      <div className="mt-1 flex gap-1">
+        <div className="h-3 w-9 rounded bg-slate-100" />
+        <div className="h-3 w-7 rounded bg-slate-100" />
+        <div className="h-3 w-10 rounded bg-slate-100" />
+      </div>
+    </div>
+  );
+}
+
+function MockCoverCard() {
+  return (
+    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+        <div
+          className="h-5 w-5 rounded-md"
+          style={{ backgroundColor: ACCENT }}
+        />
+        <div className="space-y-1">
+          <div className="h-1.5 w-16 rounded-full bg-slate-900" />
+          <div className="h-1 w-10 rounded-full bg-slate-300" />
+        </div>
+      </div>
+      <div className="mt-2.5 h-1 w-1/3 rounded-full bg-slate-300" />
+      <div className="mt-2 space-y-1">
+        <div className="h-1 w-full rounded-full bg-slate-200" />
+        <div className="h-1 w-full rounded-full bg-slate-200" />
+        <div className="h-1 w-5/6 rounded-full bg-slate-200" />
+        <div className="h-1 w-4/6 rounded-full bg-slate-200" />
+      </div>
+      <div className="mt-2.5 space-y-1">
+        <div className="h-1 w-full rounded-full bg-slate-200" />
+        <div className="h-1 w-3/4 rounded-full bg-slate-200" />
+      </div>
+      <div className="mt-3 h-1.5 w-14 rounded-full bg-slate-800" />
+    </div>
+  );
+}
+
+function MenuItem({ icon, label, onClick, danger = false }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex w-full items-center gap-2.5 px-4 py-2 text-left text-[13px] transition-colors ${
+        danger
+          ? "text-red-600 hover:bg-red-50"
+          : "text-slate-700 hover:bg-slate-50"
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
 

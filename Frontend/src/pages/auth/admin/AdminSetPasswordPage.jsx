@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { FaEye, FaEyeSlash, FaLock } from "react-icons/fa";
 import { Loader2, Mail } from "lucide-react";
-import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
+import NxtResumeWordmark from "@/components/brand/NxtResumeWordmark";
 import { getAdminInviteDetails, setAdminPassword } from "@/Services/adminApi";
 
 function AdminSetPasswordPage() {
@@ -75,9 +75,8 @@ function AdminSetPasswordPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="p-4">
-        <Link to="/" className="flex items-center gap-3">
-          <NxtResumeLogoMark className="h-11 w-11" />
-          <span className="text-2xl font-bold">NxtResume</span>
+        <Link to="/" className="flex items-center">
+          <NxtResumeWordmark size="24px" color="#0F172A" />
         </Link>
       </header>
       <main className="flex-grow flex items-center justify-center p-4">

@@ -29,6 +29,12 @@ import {
   deleteResume,
   processPendingResumeLinks,
   updateExternalInvite,
+  getAllCoverLetters,
+  getCoverLettersPaginated,
+  getCoverLettersByUser,
+  getCoverLetterById,
+  deleteCoverLetter,
+  processPendingCoverLetterLinks,
 } from "../controller/admin.controller.js";
 import {
   getNotifications,
@@ -75,6 +81,17 @@ router.post("/resumes", createResume);
 router.put("/resumes/:id", updateResume);
 router.delete("/resumes/:id", deleteResume);
 router.post("/resumes/process-pending-links", processPendingResumeLinks);
+
+// Cover Letters
+router.get("/cover-letters", getAllCoverLetters);
+router.get("/cover-letters/paginated", getCoverLettersPaginated);
+router.get("/cover-letters/by-user/:userId", getCoverLettersByUser);
+router.get("/cover-letters/:id", getCoverLetterById);
+router.delete("/cover-letters/:id", deleteCoverLetter);
+router.post(
+  "/cover-letters/process-pending-links",
+  processPendingCoverLetterLinks
+);
 
 // Notification routes
 router.get("/notifications", getNotifications);

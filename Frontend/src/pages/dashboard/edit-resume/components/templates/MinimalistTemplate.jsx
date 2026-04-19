@@ -155,9 +155,9 @@ const MinimalistTemplate = ({ resumeInfo }) => {
                 </div>
                 
                 {exp.workSummary ? (
-                  <ul className="mt-1 pl-5 list-disc space-y-1 text-sm text-gray-700">
+                  <ul className="mt-1 ml-4 pl-1 list-disc text-gray-700 text-[13px] leading-[1.4]">
                     {normalizeBullets(exp.workSummary).map((item, itemIndex) => (
-                      <li key={itemIndex}>{item}</li>
+                      <li key={itemIndex} className="mb-1">{item}</li>
                     ))}
                   </ul>
                 ) : null}
@@ -210,9 +210,9 @@ const MinimalistTemplate = ({ resumeInfo }) => {
                 )}
                 
                 {project.projectSummary ? (
-                  <ul className="mt-1 pl-5 list-disc space-y-1 text-sm text-gray-700">
+                  <ul className="mt-1 ml-4 pl-1 list-disc text-gray-700 text-[13px] leading-[1.4]">
                     {normalizeBullets(project.projectSummary).map((item, itemIndex) => (
-                      <li key={itemIndex}>{item}</li>
+                      <li key={itemIndex} className="mb-1">{item}</li>
                     ))}
                   </ul>
                 ) : null}

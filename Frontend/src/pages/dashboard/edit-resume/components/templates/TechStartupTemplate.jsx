@@ -42,7 +42,7 @@ const TechStartupTemplate = ({ resumeInfo }) => {
             
             {/* Simple summary box */}
             {resumeInfo?.summary && (
-              <div className="max-w-xl mt-1 text-sm text-gray-700">
+              <div className="max-w-xl mt-1 text-gray-700" style={{ fontSize: "13px" }}>
                 {resumeInfo.summary}
               </div>
             )}
@@ -194,9 +194,9 @@ const TechStartupTemplate = ({ resumeInfo }) => {
                   </h5>
                   
                   {exp.workSummary ? (
-                    <ul className="pl-5 list-disc space-y-1 text-sm text-gray-600">
+                    <ul className="ml-4 pl-1 list-disc text-gray-600 text-[13px] leading-[1.4]">
                       {normalizeBullets(exp.workSummary).map((item, itemIndex) => (
-                        <li key={itemIndex}>{item}</li>
+                        <li key={itemIndex} className="mb-1">{item}</li>
                       ))}
                     </ul>
                   ) : null}
@@ -264,9 +264,9 @@ const TechStartupTemplate = ({ resumeInfo }) => {
                   )}
                   
                   {project.projectSummary ? (
-                    <ul className="pl-5 list-disc space-y-1 text-sm text-gray-600">
+                    <ul className="ml-4 pl-1 list-disc text-gray-600 text-[13px] leading-[1.4]">
                       {normalizeBullets(project.projectSummary).map((item, itemIndex) => (
-                        <li key={itemIndex}>{item}</li>
+                        <li key={itemIndex} className="mb-1">{item}</li>
                       ))}
                     </ul>
                   ) : null}

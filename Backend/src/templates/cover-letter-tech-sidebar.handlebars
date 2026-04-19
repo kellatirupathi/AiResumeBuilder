@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{title}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    @page { margin: 0; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #ffffff; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #1f2937;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .resume {
+      background-color: {{themeColor}};
+      min-height: 100vh;
+    }
+    .sidebar {
+      float: left;
+      width: 32%;
+      background-color: {{themeColor}};
+      color: #ffffff;
+      padding: 36px 22px;
+      box-sizing: border-box;
+    }
+    .main {
+      margin-left: 32%;
+      background-color: #ffffff;
+      padding: 36px 32px 36px 36px;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    .sidebar h1.name {
+      font-size: 20px;
+      font-weight: 800;
+      margin: 0;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+      color: #ffffff;
+    }
+    .sidebar p.job-title {
+      font-size: 11px;
+      margin: 6px 0 0 0;
+      opacity: 0.85;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #ffffff;
+    }
+    .sidebar .divider {
+      height: 2px;
+      background-color: rgba(255, 255, 255, 0.35);
+      margin: 18px 0;
+    }
+    .sidebar .section-label {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      opacity: 0.85;
+      margin: 0 0 12px 0;
+      font-weight: 600;
+      color: #ffffff;
+    }
+    .sidebar .item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .sidebar .item .icon {
+      flex-shrink: 0;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .sidebar .item .text {
+      font-size: 10.5px;
+      line-height: 1.4;
+      word-break: break-word;
+      color: #ffffff;
+    }
+    .main .date-right {
+      text-align: right;
+      font-size: 10.5px;
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+    .main .recipient {
+      margin-bottom: 18px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .main .recipient p { margin: 0; }
+    .main .recipient p.hm { font-weight: 700; color: {{themeColor}}; }
+    .main .recipient p.company { color: #374151; }
+    .main .recipient p.re { color: #6b7280; }
+    .main .greeting { font-size: 11px; margin-bottom: 12px; font-weight: 500; }
+    .main p.para {
+      margin: 0 0 12px 0;
+      text-align: justify;
+      font-size: 11px;
+      line-height: 1.55;
+      color: #1f2937;
+      page-break-inside: avoid;
+    }
+    .main .signature { margin-top: 26px; }
+    .main .signature p.signoff { font-size: 11px; margin: 0 0 22px 0; }
+    .main .signature p.sign-name { font-size: 12px; font-weight: 700; margin: 0; color: {{themeColor}}; }
+    .clearfix::after { content: ""; display: table; clear: both; }
+  </style>
+</head>
+<body>
+  <div class="resume clearfix">
+    <div class="sidebar">
+      {{#if senderName}}<h1 class="name">{{senderName}}</h1>{{/if}}
+      {{#if jobTitle}}<p class="job-title">{{jobTitle}}</p>{{/if}}
+
+      <div class="divider"></div>
+
+      <p class="section-label">Contact</p>
+
+      {{#if senderEmail}}<div class="item"><span class="icon">&#9993;</span><span class="text">{{senderEmail}}</span></div>{{/if}}
+      {{#if senderPhone}}<div class="item"><span class="icon">&#9742;</span><span class="text">{{senderPhone}}</span></div>{{/if}}
+      {{#if senderAddress}}<div class="item"><span class="icon">&#8962;</span><span class="text">{{senderAddress}}</span></div>{{/if}}
+      {{#if senderLinkedin}}<div class="item"><span class="icon">in</span><span class="text">{{senderLinkedin}}</span></div>{{/if}}
+      {{#if senderPortfolio}}<div class="item"><span class="icon">&#127760;</span><span class="text">{{senderPortfolio}}</span></div>{{/if}}
+    </div>
+
+    <div class="main">
+      <div class="date-right">{{formattedDate}}</div>
+
+      <div class="recipient">
+        <p class="hm">{{#if hiringManagerName}}{{hiringManagerName}}{{else}}Hiring Manager{{/if}}</p>
+        {{#if companyName}}<p class="company">{{companyName}}</p>{{/if}}
+        {{#if jobTitle}}<p class="re">Re: {{jobTitle}}</p>{{/if}}
+      </div>
+
+      {{#if generatedContent.greeting}}<p class="greeting">{{generatedContent.greeting}}</p>{{/if}}
+
+      {{#if generatedContent.openingParagraph}}<p class="para">{{generatedContent.openingParagraph}}</p>{{/if}}
+      {{#each generatedContent.bodyParagraphs}}<p class="para">{{this}}</p>{{/each}}
+      {{#if generatedContent.closingParagraph}}<p class="para">{{generatedContent.closingParagraph}}</p>{{/if}}
+
+      <div class="signature">
+        {{#if generatedContent.signature}}<p class="signoff">{{generatedContent.signature}}</p>{{/if}}
+        {{#if senderName}}<p class="sign-name">{{senderName}}</p>{{/if}}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

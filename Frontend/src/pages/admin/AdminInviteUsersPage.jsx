@@ -73,9 +73,9 @@ const toDateTimeLocal = (value) => {
 
 const statusClassName = {
   active: "bg-emerald-50 text-emerald-700",
-  revoked: "bg-rose-50 text-rose-700",
+  revoked: "bg-red-50 text-red-700",
   expired: "bg-amber-50 text-amber-700",
-  used: "bg-indigo-50 text-indigo-700",
+  used: "bg-slate-100 text-slate-700",
 };
 
 export default function AdminInviteUsersPage() {
@@ -220,17 +220,17 @@ export default function AdminInviteUsersPage() {
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center bg-slate-50">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-500" />
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-slate-900" style={{ borderBottomColor: "#FF4800" }} />
       </div>
     );
   }
 
   return (
     <>
-      <header className="sticky top-0 z-10 flex flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6 py-4 shadow-sm">
+      <header className="sticky top-0 z-10 flex flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 py-4 shadow-sm">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">Invite Users</h1>
-          <p className="mt-0.5 text-xs text-gray-500">
+          <h1 className="text-xl font-bold text-slate-900">Invite Users</h1>
+          <p className="mt-0.5 text-xs text-slate-500">
             Admin-controlled external access that bypasses Student ID only for invited users.
           </p>
         </div>
@@ -241,7 +241,7 @@ export default function AdminInviteUsersPage() {
               value={inviteTitle}
               onChange={(event) => setInviteTitle(event.target.value)}
               placeholder="External hiring drive"
-              className="w-80 border-indigo-200 xl:w-96"
+              className="w-80 rounded-full border-slate-200 focus:border-slate-900 focus:ring-slate-900/10 xl:w-96"
             />
           </div>
           <div className="space-y-1">
@@ -250,10 +250,10 @@ export default function AdminInviteUsersPage() {
               type="datetime-local"
               value={expiresAt}
               onChange={(event) => setExpiresAt(event.target.value)}
-              className="w-64 border-indigo-200"
+              className="w-64 rounded-full border-slate-200 focus:border-slate-900 focus:ring-slate-900/10"
             />
           </div>
-          <Button onClick={handleCreateInvite} disabled={creating} className="bg-indigo-600 text-white hover:bg-indigo-700">
+          <Button onClick={handleCreateInvite} disabled={creating} className="rounded-full bg-slate-900 text-white hover:bg-[#FF4800] transition-colors">
             {creating ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
             Create Invite
           </Button>
@@ -263,9 +263,9 @@ export default function AdminInviteUsersPage() {
       <main className="flex-1 overflow-y-auto bg-slate-50 p-6">
         <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
           {[
-            { label: "Invite Links", value: totals.invites, helper: "Admin-created external access links", accent: "text-indigo-500 border-indigo-100" },
+            { label: "Invite Links", value: totals.invites, helper: "Admin-created external access links", accent: "text-slate-500 border-slate-100" },
             { label: "Link Opens", value: totals.opens, helper: "Total invite page opens", accent: "text-emerald-500 border-emerald-100" },
-            { label: "Signed Up", value: totals.signups, helper: "External users created from invites", accent: "text-blue-500 border-blue-100" },
+            { label: "Signed Up", value: totals.signups, helper: "External users created from invites", accent: "text-slate-500 border-slate-100" },
           ].map((item) => (
             <div key={item.label} className={`rounded-2xl border bg-white p-5 shadow-sm ${item.accent.split(" ")[1]}`}>
               <p className={`text-xs font-semibold uppercase tracking-[0.25em] ${item.accent.split(" ")[0]}`}>{item.label}</p>
@@ -310,7 +310,7 @@ export default function AdminInviteUsersPage() {
                         }
                       }}
                       className={`rounded-xl border px-3 py-3 transition-all ${
-                        isActive ? "border-indigo-500 bg-indigo-50" : "border-slate-200 bg-white hover:border-indigo-200"
+                        isActive ? "border-slate-900 bg-slate-50" : "border-slate-200 bg-white hover:border-slate-300"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -356,7 +356,7 @@ export default function AdminInviteUsersPage() {
             <div className="rounded-2xl border border-slate-200 bg-white shadow-sm lg:max-h-[680px] lg:flex lg:flex-col lg:overflow-hidden">
               <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-500">Invite Details</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Invite Details</p>
                   <h2 className="mt-2 text-2xl font-bold text-slate-900">
                     {selectedInvite ? selectedInvite.title || "Selected Invite" : "No Invite Selected"}
                   </h2>
@@ -365,7 +365,7 @@ export default function AdminInviteUsersPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <Button
                       variant="outline"
-                      className="w-[110px] border-slate-200 text-slate-700 hover:bg-slate-50"
+                      className="w-[110px] rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900"
                       onClick={() => copyInviteLink(selectedInvite.inviteLink)}
                     >
                       {copiedInviteLink === selectedInvite.inviteLink ? (
@@ -379,7 +379,7 @@ export default function AdminInviteUsersPage() {
                     </Button>
                     <Button
                       variant="outline"
-                      className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                      className="rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900"
                       onClick={() => handleUpdateInvite({ title: editTitle, expiresAt: editExpiresAt })}
                       disabled={saving || !editExpiresAt || !editTitle.trim()}
                     >
@@ -388,7 +388,7 @@ export default function AdminInviteUsersPage() {
                     </Button>
                     <Button
                       variant="outline"
-                      className="border-amber-200 text-amber-700 hover:bg-amber-50"
+                      className="rounded-full border-amber-200 text-amber-700 hover:bg-amber-50"
                       onClick={() =>
                         handleUpdateInvite({
                           status: selectedInvite.status === "revoked" ? "active" : "revoked",
@@ -401,7 +401,7 @@ export default function AdminInviteUsersPage() {
                     </Button>
                     <Button
                       variant="outline"
-                      className="border-rose-200 text-rose-700 hover:bg-rose-50"
+                      className="rounded-full border-red-200 text-red-600 hover:bg-red-50"
                       onClick={() => setDeleteDialogOpen(true)}
                       disabled={deleting}
                     >
@@ -415,7 +415,7 @@ export default function AdminInviteUsersPage() {
               <div className="p-5 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
                 {detailLoading ? (
                   <div className="flex h-52 items-center justify-center">
-                    <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-indigo-500" />
+                    <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-slate-900" style={{ borderBottomColor: "#FF4800" }} />
                   </div>
                 ) : !selectedInvite ? (
                   <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-12 text-center text-sm text-slate-500">
@@ -472,7 +472,7 @@ export default function AdminInviteUsersPage() {
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent className="max-w-md">
             <AlertDialogHeader>
-              <AlertDialogTitle className="text-rose-600">Delete this invite link?</AlertDialogTitle>
+              <AlertDialogTitle className="text-red-600">Delete this invite link?</AlertDialogTitle>
               <AlertDialogDescription>
                 This only works if no users have signed up with this invite. This action will permanently remove the link from admin invite management.
               </AlertDialogDescription>
@@ -482,7 +482,7 @@ export default function AdminInviteUsersPage() {
               <AlertDialogAction
                 onClick={handleDeleteInvite}
                 disabled={deleting}
-                className="bg-rose-600 text-white hover:bg-rose-700"
+                className="rounded-full bg-red-600 text-white hover:bg-red-700"
               >
                 {deleting ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
                 Delete Invite

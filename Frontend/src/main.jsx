@@ -21,10 +21,17 @@ import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage.jsx";
 import AdminAccountsPage from "./pages/admin/AdminAccountsPage.jsx";
 import AdminInviteUsersPage from "./pages/admin/AdminInviteUsersPage.jsx";
 import AuthPage from "./pages/auth/customAuth/AuthPage.jsx";
+import GoogleCallbackPage from "./pages/auth/customAuth/GoogleCallbackPage.jsx";
+import ResumePreparation from "./pages/public/ResumePreparation.jsx";
+import CoverLetterPreparation from "./pages/public/CoverLetterPreparation.jsx";
 import { resumeStore, persistor } from "./store/store";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
-import PublicResumeView from "./pages/public/PublicResumeView.jsx"; 
+import PublicResumeView from "./pages/public/PublicResumeView.jsx";
+import PublicCoverLetterPage from "./pages/public/PublicCoverLetterPage.jsx";
+import EditCoverLetter from "./pages/dashboard/cover-letter/[id]/EditCoverLetter.jsx";
+import CreateCoverLetterPage from "./pages/dashboard/cover-letter/creation/CreateCoverLetterPage.jsx";
+import AdminCoverLettersPage from "./pages/admin/AdminCoverLettersPage.jsx";
 import ProfilePage from "./pages/profile/ProfilePage.jsx";
 import NiatManagementPage from "./pages/admin/NiatManagementPage.jsx";
 import ResetPasswordPage from "./pages/auth/customAuth/ResetPasswordPage.jsx";
@@ -33,11 +40,13 @@ import CompleteProfilePage from "./pages/onboarding/CompleteProfilePage.jsx"; //
 import Documentation from "./pages/documentation/Documentation.jsx";
 import ATSCheckerPage from "./pages/ats/ATSCheckerPage.jsx";
 import ResumesPage from "./pages/resumes/ResumesPage.jsx";
+import CoverLettersPage from "./pages/cover-letters/CoverLettersPage.jsx";
 import ChangePasswordPage from "./pages/change-password/ChangePasswordPage.jsx";
 import UserNotificationsPage from "./pages/notifications/UserNotificationsPage.jsx";
 import PublicDocumentationPage from "./pages/public/PublicDocumentationPage.jsx";
 import PublicATSCheckerPage from "./pages/public/PublicATSCheckerPage.jsx";
 import PublicResumesPage from "./pages/public/PublicResumesPage.jsx";
+import PublicCoverLettersPage from "./pages/public/PublicCoverLettersPage.jsx";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { VITE_GOOGLE_CLIENT_ID } from './config/config.js';
 import { HelmetProvider } from 'react-helmet-async';
@@ -61,6 +70,14 @@ const router = createBrowserRouter([
         element: <ViewResume />,
       },
       {
+        path: "/dashboard/cover-letter/:id",
+        element: <EditCoverLetter />,
+      },
+      {
+        path: "/cover-letter/creation-part",
+        element: <CreateCoverLetterPage />,
+      },
+      {
         path: "/profile",
         element: <ProfilePage />
       },
@@ -75,6 +92,10 @@ const router = createBrowserRouter([
       {
         path: "/app/resumes",
         element: <ResumesPage />
+      },
+      {
+        path: "/app/cover-letters",
+        element: <CoverLettersPage />
       },
       {
         path: "/change-password",
@@ -107,8 +128,24 @@ const router = createBrowserRouter([
     element: <PublicResumesPage />,
   },
   {
+    path: "/cover-letters",
+    element: <PublicCoverLettersPage />,
+  },
+  {
+    path: "/resume-preparation",
+    element: <ResumePreparation />,
+  },
+  {
+    path: "/cover-letter-preparation",
+    element: <CoverLetterPreparation />,
+  },
+  {
     path: "/auth/sign-in",
     element: <AuthPage />,
+  },
+  {
+    path: "/auth/google/callback",
+    element: <GoogleCallbackPage />,
   },
   {
     path: "/reset-password",
@@ -121,6 +158,10 @@ const router = createBrowserRouter([
   {
     path: "/public/resume/:resume_id",
     element: <PublicResumeView />,
+  },
+  {
+    path: "/public/cover-letter/:slugOrId",
+    element: <PublicCoverLetterPage />,
   },
   {
     path: "/admin/login",
@@ -138,6 +179,7 @@ const router = createBrowserRouter([
       { path: "users", element: <AdminUsersPage /> },
       { path: "users/:userId", element: <AdminUserDetailPage /> },
       { path: "resumes", element: <AdminResumesPage /> },
+      { path: "cover-letters", element: <AdminCoverLettersPage /> },
       { path: "resumes/:userId", element: <AdminUserResumesPage /> },
       { path: "student-ids", element: <AdminStudentIdsPage /> },
       { path: "notifications", element: <AdminNotificationsPage /> },

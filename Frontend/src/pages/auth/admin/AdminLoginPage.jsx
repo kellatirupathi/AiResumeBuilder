@@ -16,7 +16,7 @@ import {
   BellRing,
   Users,
 } from "lucide-react";
-import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
+import NxtResumeWordmark from "@/components/brand/NxtResumeWordmark";
 
 const FEATURES = [
   {
@@ -72,12 +72,9 @@ function AdminLoginPage() {
       <div className="relative grid h-full lg:grid-cols-[1.1fr_0.9fr]">
         <section className="hidden lg:flex lg:flex-col lg:justify-between overflow-hidden border-r border-black/5 bg-[#111827] px-10 py-8 text-white">
           <div>
-            <div className="flex items-center gap-3">
-              <NxtResumeLogoMark className="h-11 w-11" />
-              <div>
-                <p className="text-xl font-semibold tracking-tight">NxtResume</p>
-                <p className="text-xs uppercase tracking-[0.28em] text-orange-300">Admin Console</p>
-              </div>
+            <div className="flex flex-col gap-1.5">
+              <NxtResumeWordmark size="24px" color="#FFFFFF" />
+              <p className="text-xs uppercase tracking-[0.28em] text-orange-300">Admin Console</p>
             </div>
 
             <div className="mt-12 max-w-xl">
@@ -126,14 +123,11 @@ function AdminLoginPage() {
 
         <section className="flex h-full items-center justify-center overflow-hidden px-5 py-6 sm:px-8 lg:px-10">
           <div className="w-full max-w-md">
-            <div className="mb-6 flex items-center gap-3 lg:hidden">
-              <NxtResumeLogoMark className="h-10 w-10" />
-              <div>
-                <p className="text-lg font-semibold text-slate-900">NxtResume</p>
-                <p className="text-[11px] uppercase tracking-[0.22em] text-orange-600">
-                  Admin Console
-                </p>
-              </div>
+            <div className="mb-6 flex flex-col gap-1 lg:hidden">
+              <NxtResumeWordmark size="22px" color="#0F172A" />
+              <p className="text-[11px] uppercase tracking-[0.22em] text-orange-600">
+                Admin Console
+              </p>
             </div>
 
             <div className="rounded-[28px] border border-black/5 bg-white/90 p-6 shadow-[0_20px_80px_rgba(15,23,42,0.12)] backdrop-blur sm:p-7">

@@ -13,23 +13,27 @@ import {
   LoaderCircle,
   SlidersHorizontal,
   X,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import AddResume from "@/pages/dashboard/components/AddResume";
 import ResumeCard from "@/pages/dashboard/components/ResumeCard";
 import { useResumeListQuery } from "@/hooks/useAppQueryData";
 
+const DISPLAY = { fontFamily: "Fraunces, Georgia, serif" };
+const ACCENT = "#FF4800";
+
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.07 } },
+  visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
 };
 
 const itemVariants = {
-  hidden: { y: 16, opacity: 0 },
+  hidden: { y: 12, opacity: 0 },
   visible: {
     y: 0,
     opacity: 1,
-    transition: { type: "spring", stiffness: 120, damping: 14 },
+    transition: { type: "spring", stiffness: 140, damping: 16 },
   },
 };
 
@@ -97,33 +101,39 @@ export default function ResumesPage() {
     SORT_OPTIONS.find((option) => option.value === sortOption)?.label || "";
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900">
-      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl" />
-
-        <div className="relative z-10 px-8 pt-5">
+    <div className="flex min-h-screen flex-col bg-white text-slate-900 antialiased">
+      {/* Header band */}
+      <section className="border-b border-slate-200 bg-white">
+        <div className="mx-auto max-w-7xl px-6 pt-6 lg:px-10">
           <button
             onClick={() => navigate("/dashboard")}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-300 transition-colors hover:text-white"
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-slate-500 transition-colors hover:text-slate-900"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             Back to Dashboard
           </button>
         </div>
 
-        <div className="relative z-10 flex items-end justify-between gap-6 px-8 pb-8 pt-5">
+        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-6 px-6 pb-10 pt-5 lg:flex-row lg:items-end lg:px-10">
           <div>
-            <div className="mb-2 flex items-center gap-3">
-              <div>
-                <h1 className="text-2xl font-extrabold leading-tight text-white">My Resumes</h1>
-                <p className="mt-0.5 text-xs text-indigo-300">
-                  {isLoading
-                    ? "Loading..."
-                    : `${resumeList.length} resume${resumeList.length !== 1 ? "s" : ""} in your workspace`}
-                </p>
-              </div>
-            </div>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-[0.2em] text-slate-600">
+              <span
+                className="h-1.5 w-1.5 rounded-full"
+                style={{ backgroundColor: ACCENT }}
+              />
+              Workspace
+            </span>
+            <h1
+              style={DISPLAY}
+              className="mt-4 text-[40px] font-semibold leading-[1.05] tracking-tight text-slate-900 sm:text-[48px]"
+            >
+              My Resumes
+            </h1>
+            <p className="mt-2 text-[14px] text-slate-500">
+              {isLoading
+                ? "Loading…"
+                : `${resumeList.length} resume${resumeList.length !== 1 ? "s" : ""} in your workspace`}
+            </p>
           </div>
 
           <div className="flex-shrink-0">
@@ -133,31 +143,36 @@ export default function ResumesPage() {
               </div>
             </div>
             <button
-              onClick={() => addBtnRef.current?.querySelector(".add-resume-trigger")?.click()}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white shadow-lg backdrop-blur-sm transition-all duration-200 hover:bg-white/20"
+              onClick={() =>
+                addBtnRef.current
+                  ?.querySelector(".add-resume-trigger")
+                  ?.click()
+              }
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-slate-900 px-5 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-[#FF4800]"
             >
               <Plus className="h-4 w-4" />
               New Resume
             </button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="flex-shrink-0 items-center gap-3 border-b border-gray-200 bg-white px-8 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-        <div className="flex items-center gap-3">
-          <div className="relative max-w-xs flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+      {/* Filter bar */}
+      <div className="sticky top-16 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-6 py-3 lg:px-10">
+          <div className="relative w-full max-w-sm flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search resumes..."
+              placeholder="Search resumes…"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              className="h-9 w-full rounded-lg border border-gray-200 bg-gray-50 pl-9 pr-8 text-sm text-gray-800 transition-colors placeholder-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+              className="h-10 w-full rounded-full border border-slate-200 bg-white pl-9 pr-9 text-[13px] text-slate-900 placeholder:text-slate-400 transition-colors focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-700"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -165,7 +180,7 @@ export default function ResumesPage() {
           </div>
 
           {!isLoading && (
-            <span className="hidden text-xs text-gray-400 dark:text-gray-500 sm:block">
+            <span className="hidden text-[12px] text-slate-500 sm:block">
               {searchQuery
                 ? `${filteredList.length} of ${resumeList.length}`
                 : resumeList.length}{" "}
@@ -177,18 +192,18 @@ export default function ResumesPage() {
             <div ref={sortRef} className="relative">
               <button
                 onClick={() => setShowSort(!showSort)}
-                className="flex h-9 items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 transition-colors hover:border-indigo-400 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+                className="flex h-10 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 text-[12.5px] font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-900"
               >
-                <SlidersHorizontal className="h-3.5 w-3.5 text-gray-400" />
+                <SlidersHorizontal className="h-3.5 w-3.5 text-slate-400" />
                 {sortLabel}
                 <ChevronDown
-                  className={`h-3.5 w-3.5 text-gray-400 transition-transform ${
+                  className={`h-3.5 w-3.5 text-slate-400 transition-transform ${
                     showSort ? "rotate-180" : ""
                   }`}
                 />
               </button>
               {showSort && (
-                <div className="absolute right-0 z-50 mt-1 w-44 overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-xl dark:border-gray-600 dark:bg-gray-800">
+                <div className="absolute right-0 z-50 mt-2 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
                   {SORT_OPTIONS.map(({ value, label }) => (
                     <button
                       key={value}
@@ -196,26 +211,17 @@ export default function ResumesPage() {
                         setSortOption(value);
                         setShowSort(false);
                       }}
-                      className={`flex w-full items-center gap-2 px-3.5 py-2 text-left text-sm transition-colors ${
+                      className={`flex w-full items-center gap-2 px-3.5 py-2 text-left text-[13px] transition-colors ${
                         sortOption === value
-                          ? "bg-indigo-50 font-medium text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
-                          : "text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                          ? "font-semibold text-slate-900"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                       }`}
                     >
                       {sortOption === value ? (
-                        <svg
+                        <Check
                           className="h-3.5 w-3.5 flex-shrink-0"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
+                          style={{ color: ACCENT }}
+                        />
                       ) : (
                         <span className="w-3.5" />
                       )}
@@ -226,7 +232,7 @@ export default function ResumesPage() {
               )}
             </div>
 
-            <div className="flex items-center rounded-lg bg-gray-100 p-1 dark:bg-gray-700">
+            <div className="flex items-center rounded-full border border-slate-200 bg-white p-1">
               {[
                 { mode: "grid", Icon: Grid },
                 { mode: "list", Icon: List },
@@ -234,10 +240,10 @@ export default function ResumesPage() {
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode)}
-                  className={`rounded-md p-1.5 transition-colors ${
+                  className={`rounded-full p-1.5 transition-colors ${
                     viewMode === mode
-                      ? "bg-white text-indigo-500 shadow-sm dark:bg-gray-600"
-                      : "text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600"
+                      ? "bg-slate-900 text-white"
+                      : "text-slate-500 hover:text-slate-900"
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -248,94 +254,120 @@ export default function ResumesPage() {
         </div>
       </div>
 
-      <div className="custom-scrollbar flex-1 overflow-y-auto px-8 py-6">
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-32">
-            <LoaderCircle className="mb-3 h-10 w-10 animate-spin text-indigo-500" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">Loading your resumes...</p>
-          </div>
-        ) : (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={viewMode}
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              className={
-                viewMode === "grid"
-                  ? "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                  : "flex flex-col gap-3"
-              }
-            >
-              {!searchQuery && (
-                <motion.div
-                  variants={itemVariants}
-                  className={viewMode === "list" ? "w-full" : ""}
-                >
-                  <AddResume viewMode={viewMode} />
-                </motion.div>
-              )}
-
-              {filteredList.map((resume) => (
-                <motion.div
-                  key={resume._id}
-                  variants={itemVariants}
-                  className={viewMode === "list" ? "w-full" : ""}
-                >
-                  <ResumeCard resume={resume} refreshData={fetchResumes} viewMode={viewMode} />
-                </motion.div>
-              ))}
-
-              {filteredList.length === 0 && searchQuery && (
-                <motion.div
-                  variants={itemVariants}
-                  className="col-span-full flex flex-col items-center justify-center py-24 text-center"
-                >
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 shadow-inner dark:bg-gray-800">
-                    <Search className="h-7 w-7 text-gray-300 dark:text-gray-600" />
-                  </div>
-                  <h3 className="mb-1 text-base font-bold text-gray-700 dark:text-gray-300">
-                    No results for "{searchQuery}"
-                  </h3>
-                  <p className="text-sm text-gray-400 dark:text-gray-500">
-                    Try a different keyword
-                  </p>
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="mt-4 text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+      {/* Content */}
+      <div className="flex-1 bg-[#FAFAF9]">
+        <div className="mx-auto max-w-7xl px-6 py-8 lg:px-10">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-32">
+              <LoaderCircle
+                className="mb-3 h-8 w-8 animate-spin"
+                style={{ color: ACCENT }}
+              />
+              <p className="text-[13px] text-slate-500">
+                Loading your resumes…
+              </p>
+            </div>
+          ) : (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={viewMode}
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="hidden"
+                className={
+                  viewMode === "grid"
+                    ? "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                    : "flex flex-col gap-3"
+                }
+              >
+                {!searchQuery && (
+                  <motion.div
+                    variants={itemVariants}
+                    className={viewMode === "list" ? "w-full" : ""}
                   >
-                    Clear search
-                  </button>
-                </motion.div>
-              )}
+                    <AddResume viewMode={viewMode} />
+                  </motion.div>
+                )}
 
-              {resumeList.length === 0 && !searchQuery && (
-                <motion.div
-                  variants={itemVariants}
-                  className="col-span-full flex flex-col items-center justify-center py-24 text-center"
-                >
-                  <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-500/10 to-emerald-500/10 shadow-inner dark:from-indigo-500/20 dark:to-emerald-500/20">
-                    <FileText className="h-9 w-9 text-indigo-400" />
-                  </div>
-                  <h3 className="mb-2 text-lg font-bold text-gray-800 dark:text-white">
-                    No resumes yet
-                  </h3>
-                  <p className="max-w-[260px] text-sm leading-relaxed text-gray-500 dark:text-gray-400">
-                    Create your first resume and start building your career story.
-                  </p>
-                  <button
-                    onClick={() => addBtnRef.current?.querySelector(".add-resume-trigger")?.click()}
-                    className="mt-6 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-900/20 transition-colors hover:bg-indigo-700"
+                {filteredList.map((resume) => (
+                  <motion.div
+                    key={resume._id}
+                    variants={itemVariants}
+                    className={viewMode === "list" ? "w-full" : ""}
                   >
-                    <Plus className="h-4 w-4" />
-                    Create Your First Resume
-                  </button>
-                </motion.div>
-              )}
-            </motion.div>
-          </AnimatePresence>
-        )}
+                    <ResumeCard
+                      resume={resume}
+                      refreshData={fetchResumes}
+                      viewMode={viewMode}
+                    />
+                  </motion.div>
+                ))}
+
+                {filteredList.length === 0 && searchQuery && (
+                  <motion.div
+                    variants={itemVariants}
+                    className="col-span-full flex flex-col items-center justify-center py-24 text-center"
+                  >
+                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-slate-200 bg-white">
+                      <Search className="h-5 w-5 text-slate-400" />
+                    </div>
+                    <h3
+                      style={DISPLAY}
+                      className="text-[22px] font-semibold tracking-tight text-slate-900"
+                    >
+                      No results for "{searchQuery}"
+                    </h3>
+                    <p className="mt-1 text-[13px] text-slate-500">
+                      Try a different keyword
+                    </p>
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="mt-5 inline-flex h-9 items-center gap-1.5 rounded-full border border-slate-900 px-4 text-[12.5px] font-semibold text-slate-900 transition-colors hover:bg-slate-900 hover:text-white"
+                    >
+                      Clear search
+                    </button>
+                  </motion.div>
+                )}
+
+                {resumeList.length === 0 && !searchQuery && (
+                  <motion.div
+                    variants={itemVariants}
+                    className="col-span-full flex flex-col items-center justify-center py-24 text-center"
+                  >
+                    <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-200 bg-white">
+                      <FileText
+                        className="h-6 w-6"
+                        style={{ color: ACCENT }}
+                      />
+                    </div>
+                    <h3
+                      style={DISPLAY}
+                      className="text-[26px] font-semibold tracking-tight text-slate-900"
+                    >
+                      No resumes yet
+                    </h3>
+                    <p className="mt-2 max-w-sm text-[13.5px] leading-relaxed text-slate-500">
+                      Create your first resume and start building your career
+                      story.
+                    </p>
+                    <button
+                      onClick={() =>
+                        addBtnRef.current
+                          ?.querySelector(".add-resume-trigger")
+                          ?.click()
+                      }
+                      className="mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-slate-900 px-5 text-[13px] font-semibold text-white transition-colors hover:bg-[#FF4800]"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Create your first resume
+                    </button>
+                  </motion.div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -41,11 +41,14 @@ function Skills({ resumeInfo }) {
   const { resume_id } = useParams();
   const hasSkills = skillLines.some((line) => line && line.trim() !== "");
 
-  // Helper: convert skillLines array to skills objects and dispatch to Redux
+  // Helper: convert skillLines array to skills objects and dispatch to Redux.
+  // Preserve empty slots so that deleting a middle row doesn't shift lower rows up.
   const dispatchSkillsToRedux = (lines) => {
-    const skillsArray = lines
-      .map((line) => ({ name: line }))
-      .filter(skill => skill.name && skill.name.trim() !== "");
+    const padded = Array(MAX_SKILL_LINES).fill("");
+    lines.forEach((line, index) => {
+      if (index < MAX_SKILL_LINES) padded[index] = line || "";
+    });
+    const skillsArray = padded.map((line) => ({ name: line }));
     dispatch(addResumeData({ ...resumeInfo, skills: skillsArray }));
   };
 
@@ -83,10 +86,15 @@ function Skills({ resumeInfo }) {
 
   const onSave = () => {
     setLoading(true);
-    const skillsArray = skillLines
-      .map((line) => ({ name: line }))
-      .filter(skill => skill.name && skill.name.trim() !== "");
-      
+    // Persist all 4 slots, including blanks, so the category/position of a
+    // cleared row is preserved when the resume is reloaded. The right-side
+    // preview templates already skip empty-name entries.
+    const padded = Array(MAX_SKILL_LINES).fill("");
+    skillLines.forEach((line, index) => {
+      if (index < MAX_SKILL_LINES) padded[index] = line || "";
+    });
+    const skillsArray = padded.map((line) => ({ name: line }));
+
     const data = {
       data: { skills: skillsArray },
     };

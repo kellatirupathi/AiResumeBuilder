@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{title}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    @page { margin: 15mm; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #ffffff; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #1f2937;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .page { padding: 48px; }
+    h1.name {
+      font-size: 40px;
+      font-weight: 900;
+      margin: 0;
+      color: {{themeColor}};
+      letter-spacing: -0.025em;
+      line-height: 1;
+    }
+    p.job-title {
+      font-size: 11px;
+      margin: 8px 0 0 0;
+      color: #4b5563;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .stat-row {
+      display: table;
+      width: 100%;
+      margin-top: 20px;
+      padding-top: 12px;
+      padding-bottom: 12px;
+      border-top: 1px solid {{themeColor}};
+      border-bottom: 1px solid {{themeColor}};
+    }
+    .stat-cell {
+      display: table-cell;
+      padding: 0 12px;
+      text-align: center;
+      vertical-align: top;
+      width: 33.33%;
+    }
+    .stat-cell .label {
+      font-size: 9px;
+      margin: 0;
+      color: {{themeColor}};
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .stat-cell .value {
+      font-size: 10.5px;
+      margin: 3px 0 0 0;
+      color: #374151;
+      word-break: break-word;
+    }
+    .stat-divider {
+      display: table-cell;
+      width: 1px;
+      background-color: {{themeColor}};
+    }
+    .bold-rule { height: 4px; background-color: {{themeColor}}; margin-top: 10px; margin-bottom: 20px; }
+    .date-right {
+      text-align: right;
+      font-size: 10px;
+      color: {{themeColor}};
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .recipient {
+      margin-bottom: 16px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .recipient p { margin: 0; }
+    .recipient p.name { font-weight: 700; }
+    .recipient p.company { color: #4b5563; }
+    .greeting { font-size: 12px; font-weight: 600; margin-bottom: 14px; }
+    p.para {
+      margin: 0 0 12px 0;
+      text-align: justify;
+      font-size: 11px;
+      line-height: 1.6;
+      color: #1f2937;
+      page-break-inside: avoid;
+    }
+    p.bullet-divider {
+      text-align: center;
+      color: {{themeColor}};
+      font-size: 16px;
+      margin: 0 0 8px 0;
+      line-height: 1;
+      font-weight: 700;
+    }
+    .signature { margin-top: 24px; }
+    .signature p.signoff { font-size: 11px; margin: 0 0 18px 0; }
+    .signature p.sign-name {
+      font-size: 14px;
+      font-weight: 800;
+      margin: 0;
+      color: {{themeColor}};
+      letter-spacing: -0.01em;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    {{#if senderName}}<h1 class="name">{{senderName}}</h1>{{/if}}
+    {{#if jobTitle}}<p class="job-title">{{jobTitle}}</p>{{/if}}
+
+    {{#if senderEmail}}{{#if senderPhone}}{{#if senderAddress}}
+    <div class="stat-row">
+      <div class="stat-cell">
+        <p class="label">Email</p>
+        <p class="value">{{senderEmail}}</p>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-cell">
+        <p class="label">Phone</p>
+        <p class="value">{{senderPhone}}</p>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-cell">
+        <p class="label">Location</p>
+        <p class="value">{{senderAddress}}</p>
+      </div>
+    </div>
+    {{else}}
+    <div class="stat-row">
+      <div class="stat-cell">
+        <p class="label">Email</p>
+        <p class="value">{{senderEmail}}</p>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-cell">
+        <p class="label">Phone</p>
+        <p class="value">{{senderPhone}}</p>
+      </div>
+    </div>
+    {{/if}}{{else}}
+    <div class="stat-row">
+      <div class="stat-cell">
+        <p class="label">Email</p>
+        <p class="value">{{senderEmail}}</p>
+      </div>
+    </div>
+    {{/if}}{{/if}}
+
+    <div class="bold-rule"></div>
+
+    <p class="date-right">{{formattedDate}}</p>
+
+    <div class="recipient">
+      <p class="name">{{#if hiringManagerName}}{{hiringManagerName}}{{else}}Hiring Manager{{/if}}</p>
+      {{#if companyName}}<p class="company">{{companyName}}</p>{{/if}}
+    </div>
+
+    {{#if generatedContent.greeting}}<p class="greeting">{{generatedContent.greeting}}</p>{{/if}}
+
+    {{#if generatedContent.openingParagraph}}<p class="para">{{generatedContent.openingParagraph}}</p>{{/if}}
+
+    {{#each generatedContent.bodyParagraphs}}
+      {{#unless @first}}<p class="bullet-divider">&bull;</p>{{/unless}}
+      <p class="para">{{this}}</p>
+    {{/each}}
+
+    {{#if generatedContent.closingParagraph}}<p class="para">{{generatedContent.closingParagraph}}</p>{{/if}}
+
+    <div class="signature">
+      {{#if generatedContent.signature}}<p class="signoff">{{generatedContent.signature}}</p>{{/if}}
+      {{#if senderName}}<p class="sign-name">{{senderName}}</p>{{/if}}
+    </div>
+  </div>
+</body>
+</html>

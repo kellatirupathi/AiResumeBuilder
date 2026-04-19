@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
+import NxtResumeWordmark from "@/components/brand/NxtResumeWordmark";
 
 function PublicFeaturePage({
   eyebrow,
@@ -22,12 +22,10 @@ function PublicFeaturePage({
         <div className="absolute -right-16 top-0 h-64 w-64 rounded-full bg-indigo-200/30 blur-3xl" />
 
         <div className="relative mx-auto max-w-6xl px-6 py-20">
-          <div className="mb-6 flex items-center gap-3">
-            <NxtResumeLogoMark className="h-12 w-12" />
-            <div>
-              <div className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-600">{eyebrow}</div>
-              <div className="text-xs text-slate-500">Public feature page</div>
-            </div>
+          <div className="mb-6 flex flex-col gap-1.5">
+            <NxtResumeWordmark size="24px" color="#0F172A" />
+            <div className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-600">{eyebrow}</div>
+            <div className="text-xs text-slate-500">Public feature page</div>
           </div>
 
           <div className="max-w-4xl">

@@ -4,10 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{firstName}} {{lastName}} | Resume</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     @page {
       size: A4;
-      margin: 0;
+      margin: 15mm 0 15mm 0;
+    }
+    @page :first {
+      margin-top: 0;
+    }
+
+    /* Pagination — fill page 1 first, then continue naturally on page 2 */
+    /* Only keep small inline atoms intact (pills/badges) */
+    .skill-tag, .skill-pill, .skill-item,
+    .item-date-badge, .job-date, .grade-badge, .cert-date-badge, .cert-date {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    /* Allow column cells to break across pages so content flows naturally */
+    .left-column, .right-column,
+    .main-column, .side-column,
+    .main-left, .main-right,
+    .sidebar, .main-content {
+      page-break-inside: auto;
+      break-inside: auto;
+    }
+    p, li {
+      orphans: 3;
+      widows: 3;
     }
 
     * {
@@ -15,7 +41,7 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       line-height: 1.5;
       color: #333;
       margin: 0;
@@ -29,12 +55,13 @@
       background-color: #ffffff;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
       border-radius: 0.375rem;
-      overflow: hidden;
+      /* overflow:hidden REMOVED — was creating a block formatting context that prevented pagination
+         (entire resume was treated as one atomic block, forcing all body content to jump to page 2) */
     }
 
     .header {
       padding: 1rem;
-      background-color: {{themeColorLight}};
+      background-color: {{themeColor}}1A;     /* lighterColor — themeColor at ~10% alpha */
     }
 
     .header-layout {
@@ -153,29 +180,31 @@
       stroke-linejoin: round;
     }
 
+    /* TWO-COLUMN LAYOUT that paginates correctly:
+       - .main-left is a normal block element that flows across pages naturally
+       - .main-right is position:absolute → renders ONLY on page 1, doesn't block left column's pagination
+       - Container .main-content is position:relative so .main-right anchors to its top-right
+       - Result: Page 1 shows both columns side-by-side; page 2+ continues main-left's overflow content */
     .main-content {
       padding: 1rem;
       width: 100%;
-      display: table;
-      table-layout: fixed;
-      border-collapse: separate;
-      border-spacing: 0;
-    }
-
-    .main-left,
-    .main-right {
-      display: table-cell;
-      vertical-align: top;
+      display: block;
+      position: relative;
     }
 
     .main-left {
+      display: block;
       width: 66.6667%;
       padding-right: 1rem;
+      box-sizing: border-box;
     }
 
     .main-right {
-      width: 33.3333%;
-      padding-left: 0;
+      position: absolute;
+      top: 1rem;        /* matches .main-content padding-top */
+      right: 1rem;      /* matches .main-content padding-right */
+      width: calc(33.3333% - 1rem);
+      box-sizing: border-box;
     }
 
     .section,
@@ -190,27 +219,26 @@
       font-weight: 700;
       margin: 0 0 0.5rem;
       padding-bottom: 0.25rem;
-      border-bottom: 1px solid {{themeColorMedium}};
+      border-bottom: 1px solid {{themeColor}}50;
       color: {{themeColor}};
     }
 
+    /* display: block (NOT flex) — flex creates a block formatting context that prevents pagination */
     .section-content {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
+      display: block;
     }
 
+    /* Items are display: block so they can split naturally across pages */
     .experience-item,
     .certification-item {
       position: relative;
-      display: flex;
+      display: block;
       margin-bottom: 0;
-      page-break-inside: avoid;
     }
 
     .experience-content,
     .certification-content {
-      flex-grow: 1;
+      display: block;
     }
 
     .experience-header {
@@ -245,17 +273,45 @@
       margin: 0 0 0.25rem;
     }
 
-    .experience-description,
-    .project-description,
+    /* Additional sections kept at text-sm; experience & project descriptions use text-xs */
     .additional-section-content {
-      font-size: 0.875rem;
-      color: #4b5563;
+      font-size: 0.875rem;                   /* text-sm */
+      color: #374151;                        /* text-gray-700 */
+    }
+    .experience-description,
+    .project-description {
+      font-size: 13px;
+      line-height: 1.4;
+      color: #374151;                        /* text-gray-700 */
     }
 
+    /* Bullet list styling for experience/projects (from bulletList helper) */
+    .experience-description .bullet-list,
+    .project-description .bullet-list {
+      margin: 5px 0 5px 16px;
+      padding-left: 4px;
+      list-style: disc;
+      color: #374151;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .experience-description .bullet-list li,
+    .project-description .bullet-list li {
+      margin-bottom: 4px;
+    }
+    .experience-description .bullet-list li:last-child,
+    .project-description .bullet-list li:last-child {
+      margin-bottom: 0;
+    }
+    .experience-description .bullet-list li::marker,
+    .project-description .bullet-list li::marker {
+      color: #555;
+    }
+
+    /* .project-item / .education-item may break across pages — content fills page 1 first */
     .project-item,
     .education-item {
       margin-bottom: 0;
-      page-break-inside: avoid;
     }
 
     .project-header {
@@ -405,19 +461,39 @@
         max-width: none;
       }
 
-      .header-layout,
-      .main-content {
+      .header-layout {
         display: table !important;
         width: 100% !important;
         table-layout: fixed !important;
       }
 
       .header-left,
-      .header-right,
-      .main-left,
-      .main-right {
+      .header-right {
         display: table-cell !important;
         vertical-align: top !important;
+      }
+
+      /* Two-column with absolute right column for print — left column paginates naturally */
+      .main-content {
+        display: block !important;
+        width: 100% !important;
+        position: relative !important;
+      }
+
+      .main-left {
+        display: block !important;
+        width: 66.6667% !important;
+        padding-right: 1rem !important;
+        box-sizing: border-box !important;
+      }
+
+      .main-right {
+        position: absolute !important;
+        top: 1rem !important;
+        right: 1rem !important;
+        width: calc(33.3333% - 1rem) !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
       }
     }
   </style>
@@ -520,7 +596,7 @@
                       <h5 class="experience-company">
                         {{this.companyName}}{{#if this.city}}{{#if this.companyName}}, {{/if}}{{this.city}}{{/if}}{{#if this.state}}{{#if this.city}}, {{/if}}{{this.state}}{{/if}}
                       </h5>
-                      <div class="experience-description">{{{this.workSummary}}}</div>
+                      <div class="experience-description">{{{bulletList this.workSummary}}}</div>
                     </div>
                   </div>
                 {{/each}}
@@ -562,7 +638,7 @@
                         <span class="project-tech-label">Tech Stack:</span> {{this.techStack}}
                       </div>
                     {{/if}}
-                    <div class="project-description">{{{this.projectSummary}}}</div>
+                    <div class="project-description">{{{bulletList this.projectSummary}}}</div>
                   </div>
                 {{/each}}
               </div>
@@ -570,39 +646,6 @@
           {{/if}}
         {{/if}}
 
-        {{#if certifications}}
-          {{#if certifications.length}}
-            <div class="section">
-              <h3 class="section-title">Certifications</h3>
-              <div class="section-content">
-                {{#each certifications}}
-                  <div class="certification-item">
-                    <div class="certification-content">
-                      <div class="certification-header">
-                        <h4 class="certification-title">{{this.name}}</h4>
-                        {{#if this.date}}
-                          <span class="certification-date">{{this.date}}</span>
-                        {{/if}}
-                      </div>
-                      <div class="certification-issuer-row">
-                        <h5 class="certification-issuer">{{this.issuer}}</h5>
-                        {{#if this.credentialLink}}
-                          <a href="{{formatUrl this.credentialLink}}" target="_blank" rel="noopener noreferrer" class="certification-link">
-                            <svg class="certification-link-icon" viewBox="0 0 24 24">
-                              <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
-                              <path d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 10-5.656-5.656l-1.102 1.101" />
-                            </svg>
-                            View
-                          </a>
-                        {{/if}}
-                      </div>
-                    </div>
-                  </div>
-                {{/each}}
-              </div>
-            </div>
-          {{/if}}
-        {{/if}}
       </div>
 
       <div class="main-right">
@@ -642,6 +685,40 @@
               <div class="skills-container">
                 {{#each skills}}
                   <div class="skill-tag">{{this.name}}</div>
+                {{/each}}
+              </div>
+            </div>
+          {{/if}}
+        {{/if}}
+
+        {{#if certifications}}
+          {{#if certifications.length}}
+            <div class="section">
+              <h3 class="section-title">Certifications</h3>
+              <div class="section-content">
+                {{#each certifications}}
+                  <div class="certification-item">
+                    <div class="certification-content">
+                      <div class="certification-header">
+                        <h4 class="certification-title">{{this.name}}</h4>
+                        {{#if this.date}}
+                          <span class="certification-date">{{this.date}}</span>
+                        {{/if}}
+                      </div>
+                      <div class="certification-issuer-row">
+                        <h5 class="certification-issuer">{{this.issuer}}</h5>
+                        {{#if this.credentialLink}}
+                          <a href="{{formatUrl this.credentialLink}}" target="_blank" rel="noopener noreferrer" class="certification-link">
+                            <svg class="certification-link-icon" viewBox="0 0 24 24">
+                              <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
+                              <path d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 10-5.656-5.656l-1.102 1.101" />
+                            </svg>
+                            View
+                          </a>
+                        {{/if}}
+                      </div>
+                    </div>
+                  </div>
                 {{/each}}
               </div>
             </div>

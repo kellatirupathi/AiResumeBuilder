@@ -164,37 +164,37 @@ export default function AdminStudentIdsPage() {
         <div className="flex items-center gap-3">
           {/* Stats */}
           <div className="flex items-center gap-2">
-            <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-center">
-              <div className="text-[10px] text-indigo-500 uppercase font-semibold">Total</div>
-              <div className="text-lg font-bold text-indigo-700 leading-tight">{allIds.length}</div>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-center">
+              <div className="text-[10px] text-slate-500 uppercase font-semibold">Total</div>
+              <div className="text-lg font-bold text-slate-900 leading-tight">{allIds.length}</div>
             </div>
-            <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-center">
-              <div className="text-[10px] text-indigo-500 uppercase font-semibold">Today</div>
-              <div className="text-lg font-bold text-indigo-700 leading-tight">{addedToday}</div>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-center">
+              <div className="text-[10px] text-slate-500 uppercase font-semibold">Today</div>
+              <div className="text-lg font-bold text-slate-900 leading-tight">{addedToday}</div>
             </div>
           </div>
           <div className="relative">
-            <Input placeholder="Search Student ID..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-56 pl-9 border-indigo-200" />
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-indigo-400" />
+            <Input placeholder="Search Student ID..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="w-56 pl-9 rounded-full border-slate-200 focus:border-slate-900" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           </div>
           {selected.length > 0 ? (
             <>
-              <span className="rounded-full bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-700">{selected.length} selected</span>
+              <span className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-900">{selected.length} selected</span>
               {selected.length === 1 && (
-                <Button variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={() => startEdit(selectedRecords[0])}>
+                <Button variant="outline" className="rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900" onClick={() => startEdit(selectedRecords[0])}>
                   <Pencil className="mr-2 h-4 w-4" /> Edit
                 </Button>
               )}
-              <Button className="bg-rose-600 text-white hover:bg-rose-700" onClick={() => setDeleteDialog({ open: true, records: selectedRecords })}>
+              <Button className="rounded-full bg-red-600 text-white hover:bg-red-700" onClick={() => setDeleteDialog({ open: true, records: selectedRecords })}>
                 <Trash2 className="mr-2 h-4 w-4" /> Delete
               </Button>
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={exportCSV} className="border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+              <Button variant="outline" onClick={exportCSV} className="rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900">
                 <Download className="mr-2 h-4 w-4" /> Export CSV
               </Button>
-              <Button variant="outline" onClick={handleRefresh} disabled={refreshing} className="border-indigo-200 text-indigo-600 hover:bg-indigo-50">
+              <Button variant="outline" onClick={handleRefresh} disabled={refreshing} className="rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900">
                 <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} /> Refresh
               </Button>
             </>
@@ -207,7 +207,7 @@ export default function AdminStudentIdsPage() {
         <div className="flex-shrink-0 border-b border-gray-100 bg-white px-6 py-4">
           <div className="flex border-b border-gray-200 mb-4">
             {["single", "bulk", "file"].map((tab) => (
-              <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 text-sm font-medium capitalize ${activeTab === tab ? "border-b-2 border-indigo-600 text-indigo-600" : "text-gray-500 hover:text-gray-700"}`}>
+              <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 text-sm font-medium capitalize ${activeTab === tab ? "border-b-2 border-slate-900 text-slate-900" : "text-gray-500 hover:text-gray-700"}`}>
                 {tab === "single" ? "Add Single ID" : tab === "bulk" ? "Add Multiple IDs" : "Upload CSV"}
               </button>
             ))}
@@ -218,7 +218,7 @@ export default function AdminStudentIdsPage() {
                 <label className="block text-xs font-medium text-gray-700 mb-1">Student ID</label>
                 <Input value={singleInput} onChange={(e) => setSingleInput(e.target.value.toUpperCase())} onKeyDown={(e) => e.key === "Enter" && handleAddSingle()} placeholder="e.g. NW0001234" className="border-gray-300" />
               </div>
-              <Button onClick={handleAddSingle} disabled={!singleInput.trim() || submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+              <Button onClick={handleAddSingle} disabled={!singleInput.trim() || submitting} className="rounded-full bg-slate-900 text-white hover:bg-[#FF4800] transition-colors">
                 <Plus className="mr-2 h-4 w-4" /> Add ID
               </Button>
             </div>
@@ -226,12 +226,12 @@ export default function AdminStudentIdsPage() {
           {activeTab === "bulk" && (
             <div className="max-w-sm space-y-3">
               <Textarea value={bulkInput} onChange={(e) => setBulkInput(e.target.value.toUpperCase())} placeholder="One ID per line" className="min-h-[80px] border-gray-300" />
-              <Button onClick={handleAddBulk} disabled={!bulkInput.trim() || submitting} className="bg-indigo-600 hover:bg-indigo-700 text-white w-full">Add From Text</Button>
+              <Button onClick={handleAddBulk} disabled={!bulkInput.trim() || submitting} className="rounded-full bg-slate-900 text-white hover:bg-[#FF4800] transition-colors w-full">Add From Text</Button>
             </div>
           )}
           {activeTab === "file" && (
             <div className="max-w-sm space-y-2">
-              <Input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileUpload} disabled={submitting} className="text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+              <Input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileUpload} disabled={submitting} className="text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-slate-900 file:text-white hover:file:bg-[#FF4800]" />
               <p className="text-xs text-gray-400">One ID per row. CSV format.</p>
             </div>
           )}
@@ -240,30 +240,30 @@ export default function AdminStudentIdsPage() {
         {/* Table */}
         {loading ? (
           <div className="flex flex-1 items-center justify-center">
-            <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-500" />
+            <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-slate-900" />
           </div>
         ) : (
           <>
             <div className="flex-1 overflow-auto bg-white">
               <table className="min-w-full">
-                <thead className="sticky top-0 z-10 bg-gradient-to-r from-indigo-50 to-blue-50">
+                <thead className="sticky top-0 z-10 bg-slate-50/70 text-slate-500">
                   <tr>
                     <th className="w-12 px-3 py-3 text-center">
-                      <input type="checkbox" checked={pageSelected && paginatedIds.length > 0} onChange={(e) => toggleAll(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                      <input type="checkbox" checked={pageSelected && paginatedIds.length > 0} onChange={(e) => toggleAll(e.target.checked)} className="h-4 w-4 rounded border-slate-300 accent-slate-900 focus:ring-slate-900/10" />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Student ID</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Date Added</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Student ID</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Date Added</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {paginatedIds.map((record, i) => (
-                    <tr key={record._id} className={`transition-colors hover:bg-indigo-50/30 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
+                    <tr key={record._id} className={`transition-colors hover:bg-slate-50/60 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
                       <td className="w-12 px-3 py-4 text-center">
-                        <input type="checkbox" checked={selected.includes(record._id)} onChange={(e) => toggleSelect(record._id, e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                        <input type="checkbox" checked={selected.includes(record._id)} onChange={(e) => toggleSelect(record._id, e.target.checked)} className="h-4 w-4 rounded border-slate-300 accent-slate-900 focus:ring-slate-900/10" />
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         {editingId === record._id ? (
-                          <Input value={editValue} onChange={(e) => setEditValue(e.target.value.toUpperCase())} onKeyDown={(e) => { if (e.key === "Enter") saveEdit(record); if (e.key === "Escape") cancelEdit(); }} className="h-7 w-40 font-mono text-sm border-indigo-300" autoFocus />
+                          <Input value={editValue} onChange={(e) => setEditValue(e.target.value.toUpperCase())} onKeyDown={(e) => { if (e.key === "Enter") saveEdit(record); if (e.key === "Escape") cancelEdit(); }} className="h-7 w-40 font-mono text-sm border-slate-300 focus:border-slate-900" autoFocus />
                         ) : (
                           <span className="font-mono text-sm text-gray-900">{record.niatId}</span>
                         )}
@@ -287,8 +287,8 @@ export default function AdminStudentIdsPage() {
                   Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
                 </span>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="border-indigo-200">Prev</Button>
-                  <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="border-indigo-200">Next</Button>
+                  <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded-full border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900">Prev</Button>
+                  <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="rounded-full border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900">Next</Button>
                 </div>
               </div>
             )}

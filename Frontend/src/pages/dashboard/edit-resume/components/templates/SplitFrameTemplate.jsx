@@ -119,7 +119,7 @@ const SplitFrameTemplate = ({ resumeInfo }) => {
         {/* Summary */}
         {resumeInfo?.summary && (
           <div className="mt-3">
-            <p className="text-sm text-gray-600 leading-relaxed">
+            <p className="text-sm text-gray-600 leading-snug">
               {resumeInfo.summary}
             </p>
           </div>
@@ -130,7 +130,7 @@ const SplitFrameTemplate = ({ resumeInfo }) => {
       <div className="px-6">
         {/* Technical Skills - Now FIRST with single column layout */}
         {resumeInfo?.skills && resumeInfo.skills.length > 0 && (
-          <section className="py-4 border-b" style={{ borderColor: `${themeColor}20` }}>
+          <section className="py-1 border-b" style={{ borderColor: `${themeColor}20` }}>
             <h3 
               className="text-base font-bold mb-3"
               style={{ color: themeColor }}
@@ -140,7 +140,7 @@ const SplitFrameTemplate = ({ resumeInfo }) => {
             
             <div className="flex flex-col">
               {resumeInfo.skills.map((skill, index) => (
-                <span>
+                <span key={index}>
                   {skill.name}
                 </span>
               ))}
@@ -150,7 +150,7 @@ const SplitFrameTemplate = ({ resumeInfo }) => {
         
         {/* Professional Experience - Now SECOND */}
         {resumeInfo?.experience && resumeInfo.experience.length > 0 && (
-          <section className="py-4 border-b" style={{ borderColor: `${themeColor}20` }}>
+          <section className="py-1 border-b" style={{ borderColor: `${themeColor}20` }}>
             <h3 
               className="text-base font-bold mb-3"
               style={{ color: themeColor }}
@@ -163,7 +163,7 @@ const SplitFrameTemplate = ({ resumeInfo }) => {
                 <div 
                   key={index} 
                   className={`${
-                    index < resumeInfo.experience.length - 1 ? "mb-3 pb-3 border-b" : ""
+                    index < resumeInfo.experience.length - 1 ? "mb-3" : ""
                   }`}
                   style={{ borderColor: `${themeColor}10` }}
                 >
@@ -189,9 +189,9 @@ const SplitFrameTemplate = ({ resumeInfo }) => {
                   </h5>
                   
                   {exp.workSummary ? (
-                    <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600 mt-2">
+                    <ul className="list-disc ml-4 pl-1 text-gray-600 mt-1 text-[13px] leading-[1.4]" style={{ marginTop: 4, marginBottom: 0 }}>
                       {normalizeBullets(exp.workSummary).map((item, itemIndex) => (
-                        <li key={itemIndex}>{item}</li>
+                        <li key={itemIndex} className="mb-1">{item}</li>
                       ))}
                     </ul>
                   ) : null}
@@ -203,7 +203,7 @@ const SplitFrameTemplate = ({ resumeInfo }) => {
         
         {/* Projects - Now THIRD */}
         {resumeInfo?.projects && resumeInfo.projects.length > 0 && (
-          <section className="py-4 border-b" style={{ borderColor: `${themeColor}20` }}>
+          <section className="py-1 border-b" style={{ borderColor: `${themeColor}20` }}>
             <h3 
               className="text-base font-bold mb-3"
               style={{ color: themeColor }}
@@ -216,7 +216,7 @@ const SplitFrameTemplate = ({ resumeInfo }) => {
                 <div 
                   key={index} 
                   className={`${
-                    index < resumeInfo.projects.length - 1 ? "mb-3 pb-3 border-b" : ""
+                    index < resumeInfo.projects.length - 1 ? "mb-3" : ""
                   }`}
                   style={{ borderColor: `${themeColor}10` }}
                 >
@@ -264,9 +264,9 @@ const SplitFrameTemplate = ({ resumeInfo }) => {
                   )}
                   
                   {project.projectSummary ? (
-                    <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600 mt-1">
+                    <ul className="list-disc ml-4 pl-1 text-gray-600 mt-1 text-[13px] leading-[1.4]" style={{ marginTop: 4, marginBottom: 0 }}>
                       {normalizeBullets(project.projectSummary).map((item, itemIndex) => (
-                        <li key={itemIndex}>{item}</li>
+                        <li key={itemIndex} className="mb-1">{item}</li>
                       ))}
                     </ul>
                   ) : null}
@@ -278,7 +278,7 @@ const SplitFrameTemplate = ({ resumeInfo }) => {
         
         {/* Education - Now FOURTH */}
         {resumeInfo?.education && resumeInfo.education.length > 0 && (
-          <section className="py-4 border-b" style={{ borderColor: `${themeColor}20` }}>
+          <section className="py-1 border-b" style={{ borderColor: `${themeColor}20` }}>
             <h3 
               className="text-base font-bold mb-3"
               style={{ color: themeColor }}
@@ -291,7 +291,7 @@ const SplitFrameTemplate = ({ resumeInfo }) => {
                 <div 
                   key={index} 
                   className={`${
-                    index < resumeInfo.education.length - 1 ? "mb-3 pb-3 border-b" : ""
+                    index < resumeInfo.education.length - 1 ? "mb-3" : ""
                   }`}
                   style={{ borderColor: `${themeColor}10` }}
                 >
@@ -335,7 +335,7 @@ const SplitFrameTemplate = ({ resumeInfo }) => {
         
         {/* Certifications - Now FIFTH */}
         {resumeInfo?.certifications && resumeInfo.certifications.length > 0 && (
-          <section className="py-4 border-b" style={{ borderColor: `${themeColor}20` }}>
+          <section className="py-1 border-b" style={{ borderColor: `${themeColor}20` }}>
             <h3 
               className="text-base font-bold mb-3"
               style={{ color: themeColor }}
@@ -348,7 +348,7 @@ const SplitFrameTemplate = ({ resumeInfo }) => {
                 <div 
                   key={index} 
                   className={`${
-                    index < resumeInfo.certifications.length - 1 ? "mb-3 pb-3 border-b" : ""
+                    index < resumeInfo.certifications.length - 1 ? "mb-3" : ""
                   }`}
                   style={{ borderColor: `${themeColor}10` }}
                 >
@@ -399,7 +399,7 @@ const SplitFrameTemplate = ({ resumeInfo }) => {
             {resumeInfo.additionalSections.map((section, index) => (
               <section 
                 key={index} 
-                className={`py-4 ${index < resumeInfo.additionalSections.length - 1 ? "border-b" : ""}`}
+                className={`py-1 ${index < resumeInfo.additionalSections.length - 1 ? "border-b" : ""}`}
                 style={{ borderColor: `${themeColor}20` }}
               >
                 <h3 

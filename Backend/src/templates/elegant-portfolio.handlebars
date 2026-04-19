@@ -4,14 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{firstName}} {{lastName}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     @page {
       size: A4;
-      margin: 0;
+      margin: 15mm 0 15mm 0;
+    }
+    @page :first {
+      margin-top: 0;
+    }
+
+    /* Pagination — fill page 1 first, then continue naturally on page 2 */
+    /* Only keep small inline atoms intact (pills/badges) */
+    .skill-tag, .skill-pill, .skill-item,
+    .item-date-badge, .job-date, .grade-badge, .cert-date-badge, .cert-date {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    /* Allow column cells to break across pages so content flows naturally */
+    .left-column, .right-column,
+    .main-column, .side-column,
+    .main-left, .main-right,
+    .sidebar, .main-content {
+      page-break-inside: auto;
+      break-inside: auto;
+    }
+    p, li {
+      orphans: 3;
+      widows: 3;
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       line-height: 1.45;
       color: #374151;
       margin: 0;
@@ -26,7 +52,7 @@
       background: #ffffff;
       box-sizing: border-box;
       border-radius: 0.375rem;
-      overflow: hidden;
+      /* overflow:hidden REMOVED — was preventing pagination */
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
 
@@ -67,7 +93,7 @@
 
     .name {
       margin: 0 0 0.25rem;
-      font-size: 2rem;
+      font-size: 2.25rem;
       font-weight: 500;
       letter-spacing: 0.025em;
       color: {{themeColor}};
@@ -78,7 +104,7 @@
       font-size: 1.125rem;
       font-weight: 500;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.025em;
       color: #374151;
     }
 
@@ -151,7 +177,7 @@
 
     .summary-text {
       margin: 0;
-      font-size: 0.85rem;
+      font-size: 0.875rem;                 /* text-sm — slightly reduced from 1rem */
       color: #4b5563;
       text-align: center;
       line-height: 1.7;
@@ -180,22 +206,22 @@
     }
 
     .section {
-      margin-bottom: 1.25rem;
+      margin-bottom: 1rem;
     }
 
     .section-title {
-      margin: 0 0 0.8rem;
-      padding-bottom: 0.35rem;
+      margin: 0 0 0.5rem;
+      padding-bottom: 0.25rem;
       font-size: 1.125rem;
       font-weight: 500;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.025em;
       color: {{themeColor}};
       border-bottom: 1px solid #e5e7eb;
     }
 
     .entry {
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
     }
 
     .entry:last-child {
@@ -231,16 +257,13 @@
     }
 
     .entry-subtitle {
-      margin: 0 0 0.35rem;
+      margin: 0 0 0.25rem;
       font-size: 0.875rem;
       font-weight: 500;
       color: #374151;
     }
 
     .entry-text,
-    .project-tech,
-    .education-date,
-    .education-grade,
     .certification-meta-text,
     .additional-content {
       font-size: 0.875rem;
@@ -249,7 +272,24 @@
     }
 
     .project-tech {
-      margin: 0 0 0.35rem;
+      margin: 0 0 0.25rem;
+      font-size: 0.75rem;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+
+    .education-date {
+      margin: 0 0 0.25rem;
+      font-size: 0.875rem;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+
+    .education-grade {
+      margin: 0 0 0.15rem;
+      font-size: 0.75rem;
+      color: #4b5563;
+      line-height: 1.5;
     }
 
     .entry-list {
@@ -263,15 +303,20 @@
     }
 
     .bullet-list {
-      margin: 0;
-      padding-left: 1.2rem;
+      margin: 5px 0 5px 16px;
+      padding-left: 4px;
+      list-style: disc;
       color: #4b5563;
-      font-size: 0.8rem;
-      line-height: 1.6;
+      font-size: 13px;
+      line-height: 1.4;
     }
 
     .bullet-list li {
-      margin-bottom: 0.2rem;
+      margin-bottom: 4px;
+    }
+
+    .bullet-list li::marker {
+      color: #555;
     }
 
     .project-links {
@@ -306,11 +351,6 @@
       color: #374151;
     }
 
-    .education-date,
-    .education-grade {
-      margin: 0 0 0.15rem;
-    }
-
     .skills-list {
       margin: 0;
       padding: 0;
@@ -318,9 +358,9 @@
     }
 
     .skills-list li {
-      margin-bottom: 0.2rem;
+      margin-bottom: 0.125rem;
       font-size: 0.875rem;
-      color: #4b5563;
+      color: #374151;
     }
 
     .skills-list li:last-child {
@@ -354,10 +394,8 @@
         border-radius: 0;
       }
 
-      .entry,
-      .section {
-        page-break-inside: avoid;
-      }
+      /* Removed page-break-inside: avoid on .entry and .section
+         — was forcing whole entries/sections to fit on one page, causing gaps */
     }
   </style>
 </head>
@@ -471,10 +509,10 @@
                       <h4 class="entry-title">{{this.projectName}}</h4>
                       <div class="entry-meta project-links">
                         {{#if this.githubLink}}
-                          <a href="{{formatUrl this.githubLink}}" target="_blank" rel="noopener noreferrer" class="project-link">Code</a>
+                          <a href="{{formatUrl this.githubLink}}" target="_blank" rel="noopener noreferrer" class="project-link">View Code</a>
                         {{/if}}
                         {{#if this.deployedLink}}
-                          <a href="{{formatUrl this.deployedLink}}" target="_blank" rel="noopener noreferrer" class="project-link">Demo</a>
+                          <a href="{{formatUrl this.deployedLink}}" target="_blank" rel="noopener noreferrer" class="project-link">Live Demo</a>
                         {{/if}}
                       </div>
                     </div>
@@ -487,27 +525,6 @@
               </div>
             {{/if}}
 
-            {{#if certifications.length}}
-              <div class="section">
-                <h3 class="section-title">Certifications</h3>
-                {{#each certifications}}
-                  <div class="entry">
-                    <div class="entry-header">
-                      <h4 class="certification-title">{{this.name}}</h4>
-                      <div class="entry-meta">{{this.date}}</div>
-                    </div>
-                    <div class="entry-header">
-                      <p class="certification-issuer">{{this.issuer}}</p>
-                      <div class="entry-meta">
-                        {{#if this.credentialLink}}
-                          <a href="{{formatUrl this.credentialLink}}" target="_blank" rel="noopener noreferrer" class="certification-link">View</a>
-                        {{/if}}
-                      </div>
-                    </div>
-                  </div>
-                {{/each}}
-              </div>
-            {{/if}}
           </div>
 
           <div class="right-column">
@@ -535,6 +552,28 @@
                     <li>{{this.name}}</li>
                   {{/each}}
                 </ul>
+              </div>
+            {{/if}}
+
+            {{#if certifications.length}}
+              <div class="section">
+                <h3 class="section-title">Certifications</h3>
+                {{#each certifications}}
+                  <div class="entry">
+                    <div class="entry-header">
+                      <h4 class="certification-title">{{this.name}}</h4>
+                      <div class="entry-meta">{{this.date}}</div>
+                    </div>
+                    <div class="entry-header">
+                      <p class="certification-issuer">{{this.issuer}}</p>
+                      <div class="entry-meta">
+                        {{#if this.credentialLink}}
+                          <a href="{{formatUrl this.credentialLink}}" target="_blank" rel="noopener noreferrer" class="certification-link">View</a>
+                        {{/if}}
+                      </div>
+                    </div>
+                  </div>
+                {{/each}}
               </div>
             {{/if}}
 

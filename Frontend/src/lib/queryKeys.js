@@ -15,6 +15,7 @@ export const queryKeys = {
     userDetail: (userId) => ["admin", "user-detail", userId],
     resumes: (params = {}) => ["admin", "resumes", params],
     resumesByUser: (userId) => ["admin", "resumes-by-user", userId],
+    coverLetters: (params = {}) => ["admin", "cover-letters", params],
     invites: ["admin", "external-invites"],
     inviteDetail: (inviteId) => ["admin", "external-invite-detail", inviteId],
     externalUsers: ["admin", "external-users"],

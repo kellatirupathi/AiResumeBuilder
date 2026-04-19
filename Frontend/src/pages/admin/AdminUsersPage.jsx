@@ -78,7 +78,7 @@ function UserFiltersSheet({
                 <DialogTitle className="text-xl text-slate-900">Filter Users</DialogTitle>
               </div>
               {activeCount > 0 ? (
-                <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-900">
                   {activeCount} active
                 </span>
               ) : null}
@@ -121,7 +121,7 @@ function UserFiltersSheet({
                 <p className="text-xs text-slate-500">Filter users by Student ID verification.</p>
               </div>
               <select
-                className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
                 value={draftFilters.niatIdVerified}
                 onChange={(event) => handleFieldChange("niatIdVerified", event.target.value)}
               >
@@ -144,7 +144,7 @@ function UserFiltersSheet({
                     Reminder Emails
                   </label>
                   <select
-                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
                     value={draftFilters.reminderEnabled}
                     onChange={(event) => handleFieldChange("reminderEnabled", event.target.value)}
                   >
@@ -158,7 +158,7 @@ function UserFiltersSheet({
                     Download Link Emails
                   </label>
                   <select
-                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
                     value={draftFilters.downloadLinkEnabled}
                     onChange={(event) => handleFieldChange("downloadLinkEnabled", event.target.value)}
                   >
@@ -204,7 +204,7 @@ function UserFiltersSheet({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="button" onClick={onApply} className="bg-indigo-600 text-white hover:bg-indigo-700">
+              <Button type="button" onClick={onApply} className="rounded-full bg-slate-900 text-white hover:bg-[#FF4800] transition-colors">
                 Apply Filters
               </Button>
             </div>
@@ -338,15 +338,15 @@ export default function AdminUsersPage() {
 
   return (
     <>
-      <header className="sticky top-0 z-10 flex flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6 py-4 shadow-sm">
+      <header className="sticky top-0 z-10 flex flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 py-4 shadow-sm">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">Users</h1>
-          <p className="mt-0.5 text-xs text-gray-500">{pagination.total} total registered users</p>
+          <h1 className="text-xl font-bold text-slate-900">Users</h1>
+          <p className="mt-0.5 text-xs text-slate-500">{pagination.total} total registered users</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Input placeholder="Search by name, email, ID..." value={searchInput} onChange={handleSearchChange} className="w-72 pl-10 border-indigo-200" />
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-indigo-400" />
+            <Input placeholder="Search by name, email, ID..." value={searchInput} onChange={handleSearchChange} className="w-72 pl-10 rounded-full border-slate-200 focus:border-slate-900 focus:ring-slate-900/10" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           </div>
           <Button
             variant="outline"
@@ -354,37 +354,37 @@ export default function AdminUsersPage() {
               setDraftFilters(filters);
               setFiltersOpen(true);
             }}
-            className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+            className="rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900"
           >
             <Filter className="mr-2 h-4 w-4" />
             Filter
             {activeFilterCount > 0 ? (
-              <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700">
+              <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-900">
                 {activeFilterCount}
               </span>
             ) : null}
           </Button>
           {selected.length > 0 ? (
             <>
-              <span className="rounded-full bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-700">{selected.length} selected</span>
+              <span className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-900">{selected.length} selected</span>
               {selected.length === 1 && (
-                <Button variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={() => setUserDialog({ open: true, mode: "edit", record: selectedUsers[0] })}>
+                <Button variant="outline" className="rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900" onClick={() => setUserDialog({ open: true, mode: "edit", record: selectedUsers[0] })}>
                   <Pencil className="mr-2 h-4 w-4" /> Edit
                 </Button>
               )}
-              <Button className="bg-rose-600 text-white hover:bg-rose-700" onClick={() => setDeleteDialog({ open: true, records: selectedUsers })}>
+              <Button className="rounded-full bg-red-600 text-white hover:bg-red-700" onClick={() => setDeleteDialog({ open: true, records: selectedUsers })}>
                 <Trash2 className="mr-2 h-4 w-4" /> Delete
               </Button>
             </>
           ) : (
             <>
-              <Button onClick={() => setUserDialog({ open: true, mode: "create", record: null })} className="bg-indigo-600 text-white hover:bg-indigo-700">
+              <Button onClick={() => setUserDialog({ open: true, mode: "create", record: null })} className="rounded-full bg-slate-900 text-white hover:bg-[#FF4800] transition-colors">
                 <Plus className="mr-2 h-4 w-4" /> Create User
               </Button>
-              <Button variant="outline" onClick={() => exportToCsv(users)} className="border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+              <Button variant="outline" onClick={() => exportToCsv(users)} className="rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900">
                 <Download className="mr-2 h-4 w-4" /> Export CSV
               </Button>
-              <Button variant="outline" onClick={handleRefresh} disabled={refreshing} className="border-indigo-200 text-indigo-600 hover:bg-indigo-50">
+              <Button variant="outline" onClick={handleRefresh} disabled={refreshing} className="rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900">
                 <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} /> Refresh
               </Button>
             </>
@@ -393,8 +393,8 @@ export default function AdminUsersPage() {
       </header>
 
       {activeFilterCount > 0 ? (
-        <div className="flex flex-wrap items-center gap-2 border-b border-indigo-100 bg-indigo-50/50 px-6 py-3">
-          <span className="text-xs font-semibold uppercase tracking-wide text-indigo-700">Active Filters</span>
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 bg-slate-50/70 px-6 py-3">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Active Filters</span>
           {filters.resumeCountMin !== "" || filters.resumeCountMax !== "" ? (
             <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700">
               Resume count: {filters.resumeCountMin || "0"} to {filters.resumeCountMax || "any"}
@@ -423,7 +423,7 @@ export default function AdminUsersPage() {
           <button
             type="button"
             onClick={handleResetFilters}
-            className="inline-flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-900"
+            className="inline-flex items-center gap-1 text-xs font-medium text-slate-700 hover:text-slate-900"
           >
             <X className="h-3.5 w-3.5" />
             Clear all
@@ -434,52 +434,58 @@ export default function AdminUsersPage() {
       <main className="flex flex-1 min-h-0 flex-col overflow-hidden bg-white">
         {loading ? (
           <div className="flex flex-1 items-center justify-center">
-            <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-500" />
+            <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-slate-900" style={{ borderBottomColor: "#FF4800" }} />
           </div>
         ) : (
           <>
             <div className="flex-1 overflow-auto">
               <table className="min-w-full bg-white">
-                <thead className="sticky top-0 z-10 bg-gradient-to-r from-indigo-50 to-blue-50">
+                <thead className="sticky top-0 z-10 bg-slate-50/70">
                   <tr>
                     <th className="w-12 px-3 py-3 text-center">
-                      <input type="checkbox" checked={allSelected} onChange={(e) => toggleAll(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                      <input type="checkbox" checked={allSelected} onChange={(e) => toggleAll(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900" />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Full Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Student ID</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Email</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Resumes Count</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Student ID</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">External</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Created At</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Full Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Student ID</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Resumes Count</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">CVs</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Student ID</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">External</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Created At</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-slate-200">
                   {users.map((user, i) => (
-                    <tr key={user._id} className={`transition-colors hover:bg-indigo-50/30 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
+                    <tr key={user._id} className={`transition-colors hover:bg-slate-50/60 ${i % 2 === 0 ? "bg-white" : "bg-slate-50/50"}`}>
                       <td className="w-12 px-3 py-4 text-center">
-                        <input type="checkbox" checked={selected.includes(user._id)} onChange={(e) => toggleSelect(user._id, e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                        <input type="checkbox" checked={selected.includes(user._id)} onChange={(e) => toggleSelect(user._id, e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900" />
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100">
-                            <span className="text-sm font-medium text-indigo-700">{(user.fullName || "").charAt(0).toUpperCase()}</span>
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-slate-100">
+                            <span className="text-sm font-medium text-slate-900">{(user.fullName || "").charAt(0).toUpperCase()}</span>
                           </div>
                           <button
                             onClick={() => navigate(`/admin/users/${user._id}`)}
-                            className="text-sm font-medium text-indigo-600 hover:text-indigo-800 hover:underline text-left"
+                            className="text-sm font-medium text-slate-900 hover:text-[#FF4800] hover:underline text-left"
                           >
                             {user.fullName}
                           </button>
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <span className="rounded-md bg-blue-50 px-2 py-1 font-mono text-xs font-medium text-blue-700">{user.niatId || "—"}</span>
+                        <span className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs font-medium text-slate-700">{user.niatId || "—"}</span>
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">{user.email}</td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-600">{user.email}</td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <span className="inline-flex min-w-10 items-center justify-center text-sm font-semibold text-indigo-700">
+                        <span className="inline-flex min-w-10 items-center justify-center text-sm font-semibold text-slate-900">
                           {user.resumeCount || 0}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <span className="inline-flex min-w-10 items-center justify-center text-sm font-semibold text-slate-900">
+                          {user.coverLetterCount || 0}
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
@@ -503,28 +509,28 @@ export default function AdminUsersPage() {
                           {user.userType === "external" ? "External" : "Internal"}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-600">
                         {format(new Date(user.createdAt), "PPp")}
                       </td>
                     </tr>
                   ))}
                   {users.length === 0 && (
-                    <tr><td colSpan="8" className="px-6 py-12 text-center text-gray-400">No users found</td></tr>
+                    <tr><td colSpan="9" className="px-6 py-12 text-center text-slate-400">No users found</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
 
             {/* Pagination */}
-            <div className="flex flex-shrink-0 items-center justify-between border-t border-gray-200 bg-white px-6 py-3">
-              <span className="text-sm text-gray-500">
+            <div className="flex flex-shrink-0 items-center justify-between border-t border-slate-200 bg-white px-6 py-3">
+              <span className="text-sm text-slate-500">
                 Page {pagination.page} of {pagination.totalPages} — {pagination.total} users
               </span>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled={pagination.page <= 1} onClick={() => handlePageChange(pagination.page - 1)} className="border-indigo-200">
+                <Button variant="outline" size="sm" disabled={pagination.page <= 1} onClick={() => handlePageChange(pagination.page - 1)} className="rounded-full border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900">
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="sm" disabled={pagination.page >= pagination.totalPages} onClick={() => handlePageChange(pagination.page + 1)} className="border-indigo-200">
+                <Button variant="outline" size="sm" disabled={pagination.page >= pagination.totalPages} onClick={() => handlePageChange(pagination.page + 1)} className="rounded-full border-slate-200 text-slate-700 hover:border-slate-300 hover:text-slate-900">
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>

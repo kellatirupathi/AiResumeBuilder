@@ -5,6 +5,7 @@ import { Eye, LoaderCircle, User, HomeIcon } from "lucide-react";
 import { toast } from "sonner";
 import ResumeForm from "../components/ResumeForm";
 import PreviewPage from "../components/PreviewPage";
+import PaginatedA4Preview from "../components/PaginatedA4Preview";
 import AIReviewPanel from "../components/AIReviewModal";
 import ResumePublicLinkButton from "../components/ResumePublicLinkButton";
 import { updateThisResume } from "@/Services/resumeAPI";
@@ -284,7 +285,9 @@ export function EditResume() {
           ) : (
             <div className="h-full overflow-y-auto">
               <div className="md:w-full lg:w-full xl:w-full">
-                <PreviewPage />
+                <PaginatedA4Preview>
+                  <PreviewPage />
+                </PaginatedA4Preview>
               </div>
             </div>
           )}

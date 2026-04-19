@@ -112,7 +112,7 @@ const ElegantPortfolioTemplate = ({ resumeInfo }) => {
         {/* Summary section */}
         {resumeInfo?.summary && (
           <div className="mb-4">
-            <p className="text-base text-gray-600 text-center">{resumeInfo.summary}</p>
+            <p className="text-sm text-gray-600 text-center">{resumeInfo.summary}</p>
           </div>
         )}
 
@@ -135,9 +135,9 @@ const ElegantPortfolioTemplate = ({ resumeInfo }) => {
                       </div>
                       <h5 className="text-sm font-medium text-gray-700 mb-1">{exp.companyName}{exp.city && exp.companyName ? ", " : ""}{exp.city}{exp.city && exp.state ? ", " : ""}{exp.state}</h5>
                       {exp.workSummary ? (
-                        <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600 leading-relaxed">
+                        <ul className="list-disc ml-4 pl-1 text-gray-600 text-[13px] leading-[1.4]" style={{ marginTop: 0, marginBottom: 0 }}>
                           {normalizeBullets(exp.workSummary).map((item, bulletIndex) => (
-                            <li key={bulletIndex}>{item}</li>
+                            <li key={bulletIndex} className="mb-1">{item}</li>
                           ))}
                         </ul>
                       ) : null}
@@ -165,9 +165,9 @@ const ElegantPortfolioTemplate = ({ resumeInfo }) => {
                       </div>
                       {project.techStack && <p className="text-xs text-gray-500 mb-1">{project.techStack}</p>}
                       {project.projectSummary ? (
-                        <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600 leading-relaxed">
+                        <ul className="list-disc ml-4 pl-1 text-gray-600 text-[13px] leading-[1.4]" style={{ marginTop: 0, marginBottom: 0 }}>
                           {normalizeBullets(project.projectSummary).map((item, bulletIndex) => (
-                            <li key={bulletIndex}>{item}</li>
+                            <li key={bulletIndex} className="mb-1">{item}</li>
                           ))}
                         </ul>
                       ) : null}
@@ -177,36 +177,6 @@ const ElegantPortfolioTemplate = ({ resumeInfo }) => {
               </div>
             )}
 
-            {/* Certifications Section - MOVED TO LEFT COLUMN */}
-            {resumeInfo?.certifications?.length > 0 && (
-              <div>
-                <h3 className="text-lg uppercase tracking-wide font-medium mb-2 pb-1 border-b" style={{ color: themeColor, borderColor: "#e5e7eb" }}>
-                  Certifications
-                </h3>
-                <div className="space-y-2">
-                  {resumeInfo.certifications.map((cert, index) => (
-                    <div key={index}>
-                      <div className="flex justify-between items-center mb-1">
-                        <h4 className="text-base font-medium" style={{ color: themeColor }}>{cert.name}</h4>
-                        {cert.date && <span className="text-sm text-gray-500">{cert.date}</span>}
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <h5 className="text-sm font-medium text-gray-700">{cert.issuer}</h5>
-                        {cert.credentialLink && (
-                          <a href={formatUrl(cert.credentialLink)} target="_blank" rel="noopener noreferrer" className="text-xs underline inline-flex items-center" style={{ color: themeColor }}>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 10-5.656-5.656l-1.102 1.101" />
-                            </svg>
-                            View
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Sidebar - education and skills */}
@@ -246,6 +216,37 @@ const ElegantPortfolioTemplate = ({ resumeInfo }) => {
               </div>
             )}
             
+            {/* Certifications Section - moved to right sidebar */}
+            {resumeInfo?.certifications?.length > 0 && (
+              <div>
+                <h3 className="text-lg uppercase tracking-wide font-medium mb-2 pb-1 border-b" style={{ color: themeColor, borderColor: "#e5e7eb" }}>
+                  Certifications
+                </h3>
+                <div className="space-y-2">
+                  {resumeInfo.certifications.map((cert, index) => (
+                    <div key={index}>
+                      <div className="flex justify-between items-center mb-1">
+                        <h4 className="text-base font-medium" style={{ color: themeColor }}>{cert.name}</h4>
+                        {cert.date && <span className="text-sm text-gray-500">{cert.date}</span>}
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <h5 className="text-sm font-medium text-gray-700">{cert.issuer}</h5>
+                        {cert.credentialLink && (
+                          <a href={formatUrl(cert.credentialLink)} target="_blank" rel="noopener noreferrer" className="text-xs underline inline-flex items-center" style={{ color: themeColor }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 10-5.656-5.656l-1.102 1.101" />
+                            </svg>
+                            View
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Additional Sections */}
             {resumeInfo?.additionalSections?.length > 0 && resumeInfo.additionalSections.map((section, index) => (
               <div className="section" key={`additional-${index}`}>

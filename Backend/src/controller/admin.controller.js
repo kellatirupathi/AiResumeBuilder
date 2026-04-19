@@ -2,6 +2,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import User from "../models/user.model.js";
 import Resume from "../models/resume.model.js";
+import CoverLetter from "../models/coverLetter.model.js";
 import Admin from "../models/admin.model.js";
 import ExternalInvite from "../models/externalInvite.model.js";
 import jwt from "jsonwebtoken";
@@ -10,6 +11,7 @@ import {
   generateAndUploadResumeDriveLink,
   processPendingResumeDriveLinks,
 } from "../services/resumeDrive.service.js";
+import { processPendingCoverLetterDriveLinks } from "../services/coverLetterDrive.service.js";
 import { sendAdminInviteEmail } from "../services/email.service.js";
 import {
   getAdminTokenExpiry,
@@ -962,8 +964,17 @@ export const getUsersPaginated = async (req, res) => {
         },
       },
       {
+        $lookup: {
+          from: "coverletters",
+          localField: "_id",
+          foreignField: "user",
+          as: "userCoverLetters",
+        },
+      },
+      {
         $addFields: {
           resumeCount: { $size: "$userResumes" },
+          coverLetterCount: { $size: "$userCoverLetters" },
         },
       },
       ...(Object.keys(resumeCountMatch).length ? [{ $match: { resumeCount: resumeCountMatch } }] : []),
@@ -979,6 +990,7 @@ export const getUsersPaginated = async (req, res) => {
                 forgotPasswordToken: 0,
                 forgotPasswordTokenExpiry: 0,
                 userResumes: 0,
+                userCoverLetters: 0,
               },
             },
           ],
@@ -1160,12 +1172,16 @@ export const deleteUser = async (req, res) => {
     }
 
     const deletedResumeResult = await Resume.deleteMany({ user: user._id });
+    const deletedCoverLetterResult = await CoverLetter.deleteMany({ user: user._id });
     await User.findByIdAndDelete(id);
 
     return res.status(200).json(
       new ApiResponse(
         200,
-        { deletedResumes: deletedResumeResult.deletedCount || 0 },
+        {
+          deletedResumes: deletedResumeResult.deletedCount || 0,
+          deletedCoverLetters: deletedCoverLetterResult.deletedCount || 0,
+        },
         "User deleted successfully"
       )
     );
@@ -1310,6 +1326,182 @@ export const processPendingResumeLinks = async (req, res) => {
         new ApiError(
           500,
           "Failed to process pending resume Drive links",
+          [error.message],
+          error.stack
+        )
+      );
+  }
+};
+
+// --- Cover Letters Admin ---
+
+export const getAllCoverLetters = async (req, res) => {
+  try {
+    const items = await CoverLetter.find({}).populate(
+      "user",
+      "fullName email niatId userType externalInvite"
+    );
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, items, "All cover letters fetched successfully")
+      );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to fetch cover letters", [], error.stack));
+  }
+};
+
+export const getCoverLettersPaginated = async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const search = req.query.search || "";
+    const skip = (page - 1) * limit;
+
+    const userFilter = search
+      ? {
+          $or: [
+            { fullName: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } },
+          ],
+        }
+      : null;
+
+    let userIds = null;
+    if (userFilter) {
+      const matchedUsers = await User.find(userFilter).select("_id");
+      userIds = matchedUsers.map((u) => u._id);
+    }
+
+    const filter = search
+      ? {
+          $or: [
+            { title: { $regex: search, $options: "i" } },
+            { companyName: { $regex: search, $options: "i" } },
+            { jobTitle: { $regex: search, $options: "i" } },
+            ...(userIds ? [{ user: { $in: userIds } }] : []),
+          ],
+        }
+      : {};
+
+    const [items, total] = await Promise.all([
+      CoverLetter.find(filter)
+        .populate("user", "fullName email niatId userType externalInvite")
+        .select(
+          "title template themeColor companyName jobTitle createdAt updatedAt viewCount googleDriveLink driveOutOfSync user publicSlug"
+        )
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      CoverLetter.countDocuments(filter),
+    ]);
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          coverLetters: items,
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+          },
+        },
+        "Cover letters fetched successfully"
+      )
+    );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to fetch cover letters", [], error.stack));
+  }
+};
+
+export const getCoverLettersByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId).select("-password");
+    if (!user)
+      return res.status(404).json(new ApiError(404, "User not found."));
+    const coverLetters = await CoverLetter.find({ user: userId }).sort({
+      createdAt: -1,
+    });
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { user, coverLetters },
+          "User cover letters fetched successfully"
+        )
+      );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiError(500, "Failed to fetch user cover letters", [], error.stack)
+      );
+  }
+};
+
+export const getCoverLetterById = async (req, res) => {
+  try {
+    const item = await CoverLetter.findById(req.params.id).populate(
+      "user",
+      "fullName email niatId userType externalInvite"
+    );
+    if (!item)
+      return res
+        .status(404)
+        .json(new ApiError(404, "Cover letter not found."));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, item, "Cover letter fetched successfully"));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to fetch cover letter", [], error.stack));
+  }
+};
+
+export const deleteCoverLetter = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const item = await CoverLetter.findByIdAndDelete(id);
+    if (!item)
+      return res
+        .status(404)
+        .json(new ApiError(404, "Cover letter not found."));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, null, "Cover letter deleted successfully"));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiError(500, "Failed to delete cover letter", [error.message], error.stack)
+      );
+  }
+};
+
+export const processPendingCoverLetterLinks = async (req, res) => {
+  try {
+    const summary = await processPendingCoverLetterDriveLinks();
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, summary, "Pending cover letter Drive links processed")
+      );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiError(
+          500,
+          "Failed to process pending cover letter Drive links",
           [error.message],
           error.stack
         )
