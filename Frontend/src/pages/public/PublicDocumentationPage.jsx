@@ -370,7 +370,7 @@ function StillNeedHelp() {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <a
-            href="mailto:hello@nxtresume.com"
+            href="mailto:psm@nxtwave.in"
             className="group flex items-start gap-5 rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:-translate-y-0.5 hover:shadow-md"
           >
             <span
@@ -391,7 +391,7 @@ function StillNeedHelp() {
                 weekdays.
               </p>
               <span className="mt-4 inline-flex items-center gap-1 text-[13px] font-semibold text-slate-900 underline-offset-4 group-hover:underline">
-                hello@nxtresume.com
+                psm@nxtwave.in
                 <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
               </span>
             </div>
