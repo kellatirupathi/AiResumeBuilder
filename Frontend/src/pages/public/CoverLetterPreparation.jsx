@@ -40,11 +40,32 @@ export default function CoverLetterPreparation() {
   return (
     <>
       <Helmet>
-        <title>How to Write a Cover Letter · NxtResume</title>
+        <title>How to Write a Cover Letter — Examples, Structure, Tone · NxtResume</title>
         <meta
           name="description"
-          content="A structured guide to writing a cover letter that doesn't sound like one — field by field."
+          content="Step-by-step guide to writing a cover letter that actually gets read. Covers header, recipient, opening, body, closing, tone, length, and how to tailor for each role — with real examples."
         />
+        <meta name="keywords" content="how to write a cover letter, cover letter guide, cover letter structure, cover letter tips, cover letter examples, cover letter format, cover letter template, professional cover letter, job application letter, cover letter tone" />
+        <link rel="canonical" href="https://ai-resume-builder-ochre-five.vercel.app/cover-letter-preparation" />
+        <meta property="og:title" content="How to Write a Cover Letter — Examples, Structure, Tone · NxtResume" />
+        <meta property="og:description" content="Step-by-step guide to writing a cover letter that gets read. Field-by-field structure, tone rules, and real examples." />
+        <meta property="og:url" content="https://ai-resume-builder-ochre-five.vercel.app/cover-letter-preparation" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "HowTo",
+          "name": "How to Write a Cover Letter",
+          "description": "A structured guide to writing a cover letter that sounds human — field by field.",
+          "totalTime": "PT8M",
+          "step": [
+            { "@type": "HowToStep", "name": "Header", "text": "Match your resume header exactly: name, phone, email, location, LinkedIn or portfolio." },
+            { "@type": "HowToStep", "name": "Recipient & Greeting", "text": "Address the hiring manager or team by name. Never use 'To whom it may concern'." },
+            { "@type": "HowToStep", "name": "Opening Paragraph", "text": "2–3 sentences: state the role, lead with your strongest qualification, hint at a specific reason you want to join." },
+            { "@type": "HowToStep", "name": "Body Paragraphs", "text": "One or two paragraphs covering proof of fit (story with a quantified result) and a complementary strength." },
+            { "@type": "HowToStep", "name": "Closing & Signature", "text": "Two sentences — a small concrete ask and a warm sign-off." },
+            { "@type": "HowToStep", "name": "Tone & Length", "text": "Keep it 250–400 words. Write like a person. Drop clichés." },
+            { "@type": "HowToStep", "name": "Tailor for the Role", "text": "Change the opening, swap the proof-of-fit story, mirror 1–2 JD keywords naturally." }
+          ]
+        })}</script>
       </Helmet>
 
       <div className="min-h-screen bg-white text-slate-900 antialiased">

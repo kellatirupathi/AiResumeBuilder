@@ -41,11 +41,37 @@ export default function PublicCoverLettersPage() {
   return (
     <>
       <Helmet>
-        <title>Cover Letter Templates — NxtResume</title>
+        <title>Free Cover Letter Templates + AI Cover Letter Generator · NxtResume</title>
         <meta
           name="description"
-          content="10 professionally designed cover letter templates. Generate tailored cover letters with AI in seconds. Free forever."
+          content="10 free cover letter templates and an AI cover letter generator that tailors every letter to the job description. Pick a design, paste the JD, download as PDF. Free forever."
         />
+        <meta name="keywords" content="cover letter generator, AI cover letter, free cover letter templates, cover letter examples, cover letter template PDF, job application cover letter, professional cover letter, cover letter builder, cover letter maker free, AI cover letter generator" />
+        <link rel="canonical" href="https://ai-resume-builder-ochre-five.vercel.app/cover-letters" />
+        <meta property="og:title" content="Free Cover Letter Templates + AI Generator · NxtResume" />
+        <meta property="og:description" content="10 free cover letter templates and an AI generator that tailors each letter to the job description. Download as PDF. Free forever." />
+        <meta property="og:url" content="https://ai-resume-builder-ochre-five.vercel.app/cover-letters" />
+        <meta name="twitter:title" content="10 Free Cover Letter Templates + AI Generator" />
+        <meta name="twitter:description" content="Tailor every cover letter to the job description with AI. Free, downloadable as PDF." />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Free Cover Letter Templates + AI Cover Letter Generator",
+          "description": "10 free cover letter templates paired with an AI generator that tailors every letter to the job description.",
+          "url": "https://ai-resume-builder-ochre-five.vercel.app/cover-letters",
+          "isPartOf": {
+            "@type": "WebSite",
+            "name": "NxtResume",
+            "url": "https://ai-resume-builder-ochre-five.vercel.app"
+          },
+          "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://ai-resume-builder-ochre-five.vercel.app/" },
+              { "@type": "ListItem", "position": 2, "name": "Cover Letter Templates", "item": "https://ai-resume-builder-ochre-five.vercel.app/cover-letters" }
+            ]
+          }
+        })}</script>
       </Helmet>
 
       <div className="min-h-screen bg-white text-slate-900 antialiased">

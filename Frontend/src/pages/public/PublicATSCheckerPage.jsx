@@ -104,11 +104,36 @@ export default function PublicATSCheckerPage() {
   return (
     <>
       <Helmet>
-        <title>ATS Checker — Will your resume reach a human? · NxtResume</title>
+        <title>Free ATS Resume Checker — Score Your Resume vs Any Job Description · NxtResume</title>
         <meta
           name="description"
-          content="Score your resume against any job description. Find missing keywords, get real recommendations, and know before you apply."
+          content="Free ATS resume checker. Paste any job description, upload your resume, and get an instant ATS score with missing keywords, weak matches, and fix-it recommendations. Works with Workday, Greenhouse, Lever, iCIMS."
         />
+        <meta name="keywords" content="ATS checker, ATS resume checker, ATS score checker, free ATS checker, resume ATS score, resume scanner, ATS resume scanner, ATS compliance checker, applicant tracking system checker, resume keyword checker" />
+        <link rel="canonical" href="https://ai-resume-builder-ochre-five.vercel.app/ats-checker" />
+        <meta property="og:title" content="Free ATS Resume Checker — Score Your Resume Against Any JD" />
+        <meta property="og:description" content="Paste a job description, upload your resume, get an instant ATS score with missing keywords and fix-it recommendations. Free." />
+        <meta property="og:url" content="https://ai-resume-builder-ochre-five.vercel.app/ats-checker" />
+        <meta name="twitter:title" content="Free ATS Resume Checker" />
+        <meta name="twitter:description" content="Score your resume against any job description. Find missing keywords before you apply." />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "NxtResume ATS Checker",
+          "url": "https://ai-resume-builder-ochre-five.vercel.app/ats-checker",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web",
+          "description": "Free ATS resume checker that scores any resume against any job description and surfaces missing keywords, weak matches, and structural gaps.",
+          "isAccessibleForFree": true,
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+          "featureList": [
+            "Instant ATS score against a real job description",
+            "Missing keyword detection",
+            "Section-by-section match analysis",
+            "Fix-it recommendations",
+            "Compatible with Workday, Greenhouse, Lever, iCIMS"
+          ]
+        })}</script>
       </Helmet>
 
       <div className="min-h-screen bg-white text-slate-900 antialiased">

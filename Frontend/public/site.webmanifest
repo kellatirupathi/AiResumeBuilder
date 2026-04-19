@@ -1,0 +1,50 @@
+{
+  "name": "NxtResume — AI Resume Builder, ATS Checker & Cover Letter Generator",
+  "short_name": "NxtResume",
+  "description": "Free AI resume builder with 16 ATS-friendly templates, 10 cover letter designs, and a real-time ATS checker.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#0F172A",
+  "lang": "en-US",
+  "dir": "ltr",
+  "categories": ["productivity", "business", "education", "utilities"],
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "label": "NxtResume — AI Resume Builder dashboard"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Browse Resume Templates",
+      "short_name": "Resumes",
+      "url": "/resumes",
+      "description": "Browse 16 free ATS-friendly resume templates"
+    },
+    {
+      "name": "Cover Letter Generator",
+      "short_name": "Cover Letters",
+      "url": "/cover-letters",
+      "description": "Generate tailored cover letters with AI"
+    },
+    {
+      "name": "ATS Checker",
+      "short_name": "ATS",
+      "url": "/ats-checker",
+      "description": "Score your resume against any job description"
+    }
+  ]
+}

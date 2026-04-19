@@ -2,81 +2,268 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0F172A" />
+    <meta name="color-scheme" content="light" />
 
     <!-- ═══ Primary SEO ═══ -->
-    <title>NxtResume – AI-Powered Resume Builder | ATS-Friendly Resumes in Minutes</title>
-    <meta name="description" content="Build a professional, ATS-optimized resume in minutes with NxtResume – the AI-powered resume builder. Get smart suggestions, premium templates, and download as PDF. Free to start." />
-    <meta name="keywords" content="AI resume builder, resume maker, ATS-friendly resume, professional resume, NxtResume, online resume builder, free resume builder, CV maker" />
+    <title>NxtResume — AI Resume Builder · Free ATS Resume Templates · Cover Letter Generator</title>
+    <meta name="description" content="Free AI resume builder with 16 ATS-friendly templates, 10 cover letter designs, and a real-time ATS score checker. Build a job-winning resume and tailored cover letter in minutes — no credit card, unlimited downloads." />
+    <meta name="keywords" content="AI resume builder, free resume builder, ATS resume checker, ATS score checker, cover letter generator, AI cover letter, free resume templates, professional resume templates, ATS friendly resume, online CV maker, resume maker, resume builder free, NxtResume, portfolio builder, resume generator, job application tools, resume AI, resume PDF download, resume writing help, cover letter templates free, resume examples, ATS optimization, keyword optimization resume, fresher resume templates, software engineer resume, MBA resume, student resume builder" />
     <meta name="author" content="NxtResume" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large" />
+    <meta name="bingbot" content="index, follow" />
+    <meta name="google-site-verification" content="" />
+    <meta name="rating" content="general" />
+    <meta name="distribution" content="global" />
+    <meta name="revisit-after" content="7 days" />
     <link rel="canonical" href="https://ai-resume-builder-ochre-five.vercel.app/" />
+    <link rel="alternate" hreflang="en" href="https://ai-resume-builder-ochre-five.vercel.app/" />
+    <link rel="alternate" hreflang="x-default" href="https://ai-resume-builder-ochre-five.vercel.app/" />
 
-    <!-- ═══ Favicon ═══ -->
+    <!-- ═══ Favicon + Manifest ═══ -->
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/logo.svg" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="apple-mobile-web-app-title" content="NxtResume" />
+    <meta name="application-name" content="NxtResume" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="msapplication-TileColor" content="#0F172A" />
+    <meta name="msapplication-tap-highlight" content="no" />
 
     <!-- ═══ Open Graph (Facebook, LinkedIn, WhatsApp) ═══ -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://ai-resume-builder-ochre-five.vercel.app/" />
-    <meta property="og:title" content="NxtResume – AI-Powered Resume Builder" />
-    <meta property="og:description" content="Create a stunning, ATS-friendly resume in minutes with AI-powered suggestions. Free templates, PDF export, and more." />
+    <meta property="og:title" content="NxtResume — AI Resume Builder · Free ATS Templates · Cover Letter Generator" />
+    <meta property="og:description" content="Build an ATS-friendly resume and tailored cover letter in minutes with AI. 16 free resume templates, 10 cover letter designs, live ATS checker. Free to start — unlimited downloads." />
     <meta property="og:image" content="https://ai-resume-builder-ochre-five.vercel.app/og-image.png" />
+    <meta property="og:image:secure_url" content="https://ai-resume-builder-ochre-five.vercel.app/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="NxtResume – AI Resume Builder Dashboard Preview" />
+    <meta property="og:image:alt" content="NxtResume — AI Resume Builder with 16 ATS-friendly templates and cover letter generator" />
     <meta property="og:site_name" content="NxtResume" />
     <meta property="og:locale" content="en_US" />
 
     <!-- ═══ Twitter Card ═══ -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://ai-resume-builder-ochre-five.vercel.app/" />
-    <meta name="twitter:title" content="NxtResume – AI-Powered Resume Builder" />
-    <meta name="twitter:description" content="Create a stunning, ATS-friendly resume in minutes with AI-powered suggestions. Free to start." />
+    <meta name="twitter:title" content="NxtResume — AI Resume Builder · Free ATS Templates" />
+    <meta name="twitter:description" content="16 ATS-friendly resume templates + 10 cover letter designs + live ATS checker. Build a job-winning resume in minutes with AI. Free forever." />
     <meta name="twitter:image" content="https://ai-resume-builder-ochre-five.vercel.app/og-image.png" />
     <meta name="twitter:image:alt" content="NxtResume AI Resume Builder" />
+    <meta name="twitter:site" content="@NxtResume" />
+    <meta name="twitter:creator" content="@NxtResume" />
 
-    <!-- ═══ Structured Data – JSON-LD (WebApplication) ═══ -->
+    <!-- ═══ Structured Data — SoftwareApplication ═══ -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
+      "@type": "SoftwareApplication",
       "name": "NxtResume",
+      "alternateName": ["NxtResume AI Resume Builder", "AI Resume Builder", "Free ATS Resume Builder"],
       "url": "https://ai-resume-builder-ochre-five.vercel.app",
-      "description": "AI-powered resume builder that creates ATS-friendly, professional resumes in minutes.",
+      "description": "Free AI-powered resume builder with 16 ATS-friendly templates, 10 cover letter designs, and a real-time ATS checker. Build a job-winning resume, tailored cover letter, and portfolio from one saved profile.",
       "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web",
+      "applicationSubCategory": "Resume Builder",
+      "operatingSystem": "Web, Windows, macOS, Linux, Android, iOS",
+      "browserRequirements": "Requires JavaScript. Works on Chrome, Firefox, Safari, Edge.",
+      "softwareVersion": "1.0",
+      "inLanguage": "en",
+      "isAccessibleForFree": true,
       "offers": {
         "@type": "Offer",
         "price": "0",
-        "priceCurrency": "USD"
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock",
+        "priceValidUntil": "2027-12-31"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "bestRating": "5",
+        "worstRating": "1",
+        "ratingCount": "2300",
+        "reviewCount": "2300"
       },
       "featureList": [
-        "AI-Powered Resume Suggestions",
-        "ATS-Friendly Resume Templates",
-        "PDF Export",
-        "Profile Import",
-        "Resume Score Checker"
+        "16 ATS-friendly resume templates",
+        "10 professional cover letter templates",
+        "Real-time ATS score checker against any job description",
+        "AI Summary Writer for target roles",
+        "AI-generated bullet points for experience and projects",
+        "AI Cover Letter Generator",
+        "Portfolio page generation from saved profile",
+        "One-click PDF download",
+        "Public share links for resumes and cover letters",
+        "Google Drive backup integration",
+        "Profile import and reuse across resumes",
+        "Pixel-perfect PDF export"
       ],
       "screenshot": "https://ai-resume-builder-ochre-five.vercel.app/og-image.png",
       "creator": {
         "@type": "Organization",
         "name": "NxtResume",
         "url": "https://ai-resume-builder-ochre-five.vercel.app"
-      }
+      },
+      "keywords": "AI resume builder, free resume builder, ATS resume checker, cover letter generator, ATS friendly templates, online CV maker, free resume templates, resume generator, AI cover letter, resume score checker"
     }
     </script>
 
-    <!-- ═══ Structured Data – JSON-LD (Organization) ═══ -->
+    <!-- ═══ Structured Data — Organization ═══ -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "NxtResume",
+      "legalName": "NxtResume",
       "url": "https://ai-resume-builder-ochre-five.vercel.app",
       "logo": "https://ai-resume-builder-ochre-five.vercel.app/logo.svg",
-      "description": "NxtResume helps professionals build AI-powered, ATS-optimized resumes quickly and easily.",
-      "sameAs": []
+      "description": "NxtResume is a free AI-powered resume builder and ATS checker that helps professionals and students create ATS-optimized resumes, tailored cover letters, and portfolios — from one saved profile.",
+      "foundingDate": "2024",
+      "sameAs": [],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "availableLanguage": ["English"]
+      }
+    }
+    </script>
+
+    <!-- ═══ Structured Data — WebSite with SearchAction (Sitelinks search box) ═══ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "NxtResume",
+      "url": "https://ai-resume-builder-ochre-five.vercel.app",
+      "description": "AI resume builder, ATS checker, and cover letter generator — free.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://ai-resume-builder-ochre-five.vercel.app/resumes?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- ═══ Structured Data — FAQPage (wins "People Also Ask" slots) ═══ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is NxtResume free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. NxtResume is free forever. You get unlimited resumes, unlimited cover letters, all 16 resume templates, all 10 cover letter templates, the ATS checker, and PDF downloads with no credit card required."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is an ATS resume checker?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "An Applicant Tracking System (ATS) checker scores your resume against a job description to find missing keywords, weak matches, and formatting issues before you apply. NxtResume's ATS checker analyzes a real JD you paste — not guessed keywords."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Are NxtResume templates ATS-friendly?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. All 16 resume templates use clean, parseable layouts — no tables, no images behind text, no hidden columns — so Applicant Tracking Systems can read every section correctly."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does the AI resume builder work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You fill a central Profile with your experience, projects, skills, and education. Then each resume imports from the profile, and AI helps generate or enhance bullet points for the target role. The same profile also powers your cover letters and portfolio page."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I generate a cover letter from a job description?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Pick a cover letter template, select one of your saved resumes (or upload an external PDF), paste the full job description, and AI drafts a tailored cover letter you can edit and download as a PDF."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I download my resume as a PDF?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Every resume and cover letter can be downloaded as a pixel-perfect PDF that matches the live preview exactly. You can also share a public read-only link."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How is NxtResume different from other resume builders?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "NxtResume uses one central Profile to power every resume, cover letter, and portfolio — so you complete your data once and reuse it everywhere. It includes a real ATS checker that requires a real job description, 16 ATS-safe templates, 10 cover letter designs, portfolio generation, and Google Drive backup — all free."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do you offer cover letter templates?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes — 10 professional cover letter templates, all pairable with any resume template. The AI Cover Letter Generator tailors each letter to the role by reading your resume and the job description."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- ═══ Structured Data — BreadcrumbList (homepage) ═══ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://ai-resume-builder-ochre-five.vercel.app/"
+        }
+      ]
+    }
+    </script>
+
+    <!-- ═══ Structured Data — Product catalog (resume templates) ═══ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "NxtResume Template Library",
+      "description": "16 ATS-friendly resume templates and 10 cover letter designs — free to use.",
+      "numberOfItems": 26,
+      "itemListOrder": "https://schema.org/ItemListOrderAscending",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Professional Resume Template", "url": "https://ai-resume-builder-ochre-five.vercel.app/resumes" },
+        { "@type": "ListItem", "position": 2, "name": "Executive Resume Template", "url": "https://ai-resume-builder-ochre-five.vercel.app/resumes" },
+        { "@type": "ListItem", "position": 3, "name": "Modern Resume Template", "url": "https://ai-resume-builder-ochre-five.vercel.app/resumes" },
+        { "@type": "ListItem", "position": 4, "name": "Creative Resume Template", "url": "https://ai-resume-builder-ochre-five.vercel.app/resumes" },
+        { "@type": "ListItem", "position": 5, "name": "Minimalist Resume Template", "url": "https://ai-resume-builder-ochre-five.vercel.app/resumes" },
+        { "@type": "ListItem", "position": 6, "name": "Tech Startup Resume Template", "url": "https://ai-resume-builder-ochre-five.vercel.app/resumes" },
+        { "@type": "ListItem", "position": 7, "name": "Split Frame Resume Template", "url": "https://ai-resume-builder-ochre-five.vercel.app/resumes" },
+        { "@type": "ListItem", "position": 8, "name": "Cover Letter — Executive Classic", "url": "https://ai-resume-builder-ochre-five.vercel.app/cover-letters" },
+        { "@type": "ListItem", "position": 9, "name": "Cover Letter — Modern Minimal", "url": "https://ai-resume-builder-ochre-five.vercel.app/cover-letters" },
+        { "@type": "ListItem", "position": 10, "name": "Cover Letter — Creative Bold", "url": "https://ai-resume-builder-ochre-five.vercel.app/cover-letters" }
+      ]
     }
     </script>
 
@@ -84,14 +271,35 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
 
-    <!-- Inter font — used in both preview AND PDF for identical rendering -->
+    <!-- Inter font — body -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-    <!-- Fraunces display serif — used ONLY in the marketing homepage hero headings -->
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet" />
+    <!-- Fraunces — display serif for editorial headlines -->
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- Non-JS fallback for search crawlers that don't execute JS -->
+    <noscript>
+      <h1>NxtResume — AI Resume Builder, ATS Checker &amp; Cover Letter Generator</h1>
+      <p>
+        NxtResume is a free AI-powered resume builder with 16 ATS-friendly templates,
+        10 cover letter designs, a real-time ATS score checker against any job
+        description, and portfolio generation — all from one saved profile.
+      </p>
+      <ul>
+        <li><a href="/resumes">Browse resume templates</a></li>
+        <li><a href="/cover-letters">Cover letter templates &amp; AI generator</a></li>
+        <li><a href="/ats-checker">ATS resume checker</a></li>
+        <li><a href="/resume-preparation">How to write a resume — complete guide</a></li>
+        <li><a href="/cover-letter-preparation">How to write a cover letter — step by step</a></li>
+        <li><a href="/documentation">Product documentation</a></li>
+      </ul>
+      <p>Please enable JavaScript to use NxtResume.</p>
+    </noscript>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

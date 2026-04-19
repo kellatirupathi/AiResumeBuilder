@@ -43,11 +43,34 @@ export default function ResumePreparation() {
   return (
     <>
       <Helmet>
-        <title>How to Write a Resume · NxtResume</title>
+        <title>How to Write a Resume — Step-by-Step Guide & Examples · NxtResume</title>
         <meta
           name="description"
-          content="A field-by-field guide to writing a strong, ATS-safe resume — what to add, what to skip, and how to keep it fresh."
+          content="Complete guide to writing a strong, ATS-friendly resume. Field-by-field breakdown of every section: personal details, summary, experience, projects, education, skills, certifications, plus ATS rules and maintenance tips."
         />
+        <meta name="keywords" content="how to write a resume, resume writing guide, resume tips, ATS resume tips, resume sections, professional resume writing, resume format, resume structure, resume writing examples, resume preparation, write my resume, resume best practices" />
+        <link rel="canonical" href="https://ai-resume-builder-ochre-five.vercel.app/resume-preparation" />
+        <meta property="og:title" content="How to Write a Resume — Complete Step-by-Step Guide · NxtResume" />
+        <meta property="og:description" content="Field-by-field guide to writing a strong, ATS-friendly resume. 9 sections covered with examples and tips." />
+        <meta property="og:url" content="https://ai-resume-builder-ochre-five.vercel.app/resume-preparation" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "HowTo",
+          "name": "How to Write a Resume That Gets Callbacks",
+          "description": "A field-by-field guide to writing a strong, ATS-friendly resume — from personal details to maintenance.",
+          "totalTime": "PT10M",
+          "step": [
+            { "@type": "HowToStep", "name": "Personal Details", "text": "Add your name, job title, email, phone, and location. Include active LinkedIn, GitHub, and portfolio links." },
+            { "@type": "HowToStep", "name": "Professional Summary", "text": "Write a 3–5 sentence paragraph covering identity, core skills, impact, and intent." },
+            { "@type": "HowToStep", "name": "Work Experience", "text": "For each role add company, title, dates, location and 3–5 bullets using the Situation + Action + Result formula." },
+            { "@type": "HowToStep", "name": "Projects", "text": "Include 2–4 projects with name, tech stack, and 2–4 result-focused bullets." },
+            { "@type": "HowToStep", "name": "Education", "text": "Institution, degree, dates. Include GPA only if impressive and recent." },
+            { "@type": "HowToStep", "name": "Skills", "text": "Group skills by area: frontend, backend, database, tooling. Use exact role keywords." },
+            { "@type": "HowToStep", "name": "Certifications", "text": "Add recent, relevant certifications from known issuers with issue date and credential URL." },
+            { "@type": "HowToStep", "name": "ATS & Format", "text": "One page under 7 years experience, standard fonts, no tables, export as PDF, match JD keywords." },
+            { "@type": "HowToStep", "name": "Maintain & Update", "text": "Update bullets immediately after shipping; re-run the ATS checker for each new target role." }
+          ]
+        })}</script>
       </Helmet>
 
       <div className="min-h-screen bg-white text-slate-900 antialiased">

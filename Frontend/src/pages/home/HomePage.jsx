@@ -151,11 +151,18 @@ export default function HomePage() {
   return (
     <>
       <Helmet>
-        <title>NxtResume — Resumes that actually get callbacks</title>
+        <title>NxtResume — Free AI Resume Builder · ATS Checker · Cover Letter Generator</title>
         <meta
           name="description"
-          content="Craft a sharp, ATS-friendly resume and cover letter with AI. 16 designer templates. Free forever. Used by students across NxtWave, IIT, NIT, IIIT."
+          content="Free AI resume builder with 16 ATS-friendly templates, 10 cover letter designs, and a real-time ATS checker. Build a job-winning resume and tailored cover letter in minutes — no credit card, unlimited downloads."
         />
+        <meta name="keywords" content="AI resume builder, free resume builder, ATS resume checker, ATS score checker, cover letter generator, free resume templates, ATS friendly resume, online CV maker, resume maker free, resume generator" />
+        <link rel="canonical" href="https://ai-resume-builder-ochre-five.vercel.app/" />
+        <meta property="og:title" content="NxtResume — Free AI Resume Builder · ATS Checker · Cover Letter Generator" />
+        <meta property="og:description" content="Free AI resume builder with 16 ATS-friendly templates, 10 cover letter designs, and a real-time ATS checker. Build a job-winning resume in minutes." />
+        <meta property="og:url" content="https://ai-resume-builder-ochre-five.vercel.app/" />
+        <meta name="twitter:title" content="NxtResume — Free AI Resume Builder" />
+        <meta name="twitter:description" content="16 ATS-friendly resume templates + 10 cover letter designs + live ATS checker. Free forever." />
       </Helmet>
 
       <div className="min-h-screen bg-white text-slate-900 antialiased">
