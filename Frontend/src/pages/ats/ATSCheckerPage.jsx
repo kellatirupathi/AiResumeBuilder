@@ -16,15 +16,20 @@ import {
   Lightbulb,
   Clipboard,
   ClipboardCheck,
-  Zap,
   Target,
   TrendingUp,
+  ArrowUpRight,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AIChatSession } from "@/Services/AiModel";
 import { useResumeListQuery, useResumeQuery } from "@/hooks/useAppQueryData";
 
-// ── ATS PROMPT ─────────────────────────────────────────────────────────────
+// ── Design tokens ─────────────────────────────────────────────────────
+const DISPLAY = { fontFamily: "Fraunces, Georgia, serif" };
+const ACCENT = "#FF4800";
+
+// ── ATS PROMPT ────────────────────────────────────────────────────────
 const ATS_PROMPT = `
 You are an expert ATS (Applicant Tracking System) analyzer. Evaluate the match between a resume and job description precisely.
 
@@ -50,11 +55,12 @@ Calculate a numeric ATS score (0-100) using:
 }
 `;
 
-// ── HELPERS ─────────────────────────────────────────────────────────────────
+// ── HELPERS ───────────────────────────────────────────────────────────
 const generateResumeContent = (resume) => {
   if (!resume) return "";
   let c = "";
-  if (resume.firstName || resume.lastName) c += `Name: ${resume.firstName || ""} ${resume.lastName || ""}\n`;
+  if (resume.firstName || resume.lastName)
+    c += `Name: ${resume.firstName || ""} ${resume.lastName || ""}\n`;
   if (resume.jobTitle) c += `Job Title: ${resume.jobTitle}\n`;
   if (resume.email) c += `Email: ${resume.email}\n`;
   if (resume.phone) c += `Phone: ${resume.phone}\n`;
@@ -62,7 +68,9 @@ const generateResumeContent = (resume) => {
   if (resume.summary) c += `SUMMARY\n${resume.summary}\n\n`;
   if (resume.skills?.length) {
     c += "SKILLS\n";
-    resume.skills.forEach((s) => { if (s.name) c += `${s.name}\n`; });
+    resume.skills.forEach((s) => {
+      if (s.name) c += `${s.name}\n`;
+    });
     c += "\n";
   }
   if (resume.experience?.length) {
@@ -70,7 +78,10 @@ const generateResumeContent = (resume) => {
     resume.experience.forEach((e) => {
       if (e.title) c += `${e.title}`;
       if (e.companyName) c += ` at ${e.companyName}`;
-      if (e.startDate || e.endDate) c += ` | ${e.startDate || ""} - ${e.currentlyWorking ? "Present" : e.endDate || ""}`;
+      if (e.startDate || e.endDate)
+        c += ` | ${e.startDate || ""} - ${
+          e.currentlyWorking ? "Present" : e.endDate || ""
+        }`;
       c += "\n";
       if (e.workSummary) c += `${e.workSummary.replace(/<[^>]*>?/gm, "")}\n`;
       c += "\n";
@@ -81,7 +92,8 @@ const generateResumeContent = (resume) => {
     resume.projects.forEach((p) => {
       if (p.projectName) c += `${p.projectName}\n`;
       if (p.techStack) c += `Technologies: ${p.techStack}\n`;
-      if (p.projectSummary) c += `${p.projectSummary.replace(/<[^>]*>?/gm, "")}\n`;
+      if (p.projectSummary)
+        c += `${p.projectSummary.replace(/<[^>]*>?/gm, "")}\n`;
       c += "\n";
     });
   }
@@ -107,26 +119,26 @@ const generateResumeContent = (resume) => {
 };
 
 let pdfJsLibPromise = null;
-
 const getPdfJsLib = async () => {
   if (!pdfJsLibPromise) {
-    pdfJsLibPromise = import("pdfjs-dist/legacy/build/pdf.mjs").then((pdfjsLib) => {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-        "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
-        import.meta.url
-      ).toString();
-      return pdfjsLib;
-    });
+    pdfJsLibPromise = import("pdfjs-dist/legacy/build/pdf.mjs").then(
+      (pdfjsLib) => {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+          "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
+          import.meta.url
+        ).toString();
+        return pdfjsLib;
+      }
+    );
   }
-
   return pdfJsLibPromise;
 };
 
 const extractTextFromPdf = async (file) => {
   const pdfjsLib = await getPdfJsLib();
-  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() })
+    .promise;
   const pageTexts = [];
-
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
     const page = await pdf.getPage(pageNumber);
     const textContent = await page.getTextContent();
@@ -135,35 +147,31 @@ const extractTextFromPdf = async (file) => {
       .join(" ")
       .replace(/\s+/g, " ")
       .trim();
-
-    if (pageText) {
-      pageTexts.push(pageText);
-    }
+    if (pageText) pageTexts.push(pageText);
   }
-
   const combinedText = pageTexts.join("\n\n").trim();
-
   if (!combinedText) {
-    throw new Error("No readable text was found in the uploaded PDF. Only text-based PDFs are supported.");
+    throw new Error(
+      "No readable text was found in the uploaded PDF. Only text-based PDFs are supported."
+    );
   }
-
   return combinedText;
 };
 
 const analyzeStages = [
-  { label: "Extracting keywords…",   icon: Search   },
-  { label: "Matching skills…",        icon: Cpu      },
-  { label: "Analyzing experience…",   icon: FileText },
-  { label: "Evaluating format…",      icon: Code     },
-  { label: "Calculating score…",      icon: BarChart3 },
+  { label: "Extracting keywords…", icon: Search },
+  { label: "Matching skills…", icon: Cpu },
+  { label: "Analyzing experience…", icon: FileText },
+  { label: "Evaluating format…", icon: Code },
+  { label: "Calculating score…", icon: BarChart3 },
 ];
 
-// ── SCORE COLOUR ─────────────────────────────────────────────────────────────
-const scoreColor = (s) => s >= 75 ? "#10B981" : s >= 50 ? "#F59E0B" : "#EF4444";
-const scoreBg    = (s) => s >= 75 ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
-                        : s >= 50 ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300"
-                        :           "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300";
-const scoreLabel = (s) => s >= 75 ? "Great Match" : s >= 50 ? "Moderate Match" : "Low Match";
+// ── Score palette (monochrome + accent) ───────────────────────────────
+const scoreColor = (s) =>
+  s >= 75 ? "#10B981" : s >= 50 ? "#F59E0B" : "#EF4444";
+const scoreLabel = (s) =>
+  s >= 75 ? "Great match" : s >= 50 ? "Moderate match" : "Low match";
+
 const URL_ONLY_PATTERN = /^(https?:\/\/|www\.)\S+$/i;
 const JOB_DESCRIPTION_HINT_PATTERN =
   /\b(requirements?|responsibilit(?:y|ies)|qualifications?|skills?|experience|role|job|candidate|preferred|must have|nice to have)\b/i;
@@ -175,67 +183,55 @@ const getJobDescriptionValidationError = (value) => {
   const trimmedValue = value.trim();
   const normalizedValue = trimmedValue.replace(/\s+/g, " ").trim();
   const uniqueWords = new Set(
-    normalizedValue
-      .toLowerCase()
-      .match(/[a-z]{3,}/g) || []
+    normalizedValue.toLowerCase().match(/[a-z]{3,}/g) || []
   );
   const lines = trimmedValue
     .split(/\n+/)
     .map((line) => line.trim())
     .filter(Boolean);
-  const repetitiveKeywordOnly = /^[a-z\s,\/-]+$/i.test(trimmedValue) && !/[.?!]/.test(trimmedValue);
+  const repetitiveKeywordOnly =
+    /^[a-z\s,\/-]+$/i.test(trimmedValue) && !/[.?!]/.test(trimmedValue);
 
-  if (trimmedValue.length < 50) {
-    return "Job description is too short";
-  }
-
-  if (URL_ONLY_PATTERN.test(trimmedValue)) {
+  if (trimmedValue.length < 50) return "Job description is too short";
+  if (URL_ONLY_PATTERN.test(trimmedValue))
     return "Invalid JD input. Paste the actual job description text, not only a link.";
-  }
-
-  if (!JOB_DESCRIPTION_HINT_PATTERN.test(trimmedValue)) {
+  if (!JOB_DESCRIPTION_HINT_PATTERN.test(trimmedValue))
     return "Invalid JD input. Paste a real job description with requirements and responsibilities.";
-  }
-
-  if (uniqueWords.size < 15) {
+  if (uniqueWords.size < 15)
     return "Invalid JD input. Add a real job description with enough unique requirement details.";
-  }
-
-  if (repetitiveKeywordOnly) {
+  if (repetitiveKeywordOnly)
     return "Invalid JD input. Keyword-only text is not accepted. Paste full job description sentences.";
-  }
-
-  if (lines.length < 2 && !SENTENCE_LIKE_PATTERN.test(trimmedValue)) {
+  if (lines.length < 2 && !SENTENCE_LIKE_PATTERN.test(trimmedValue))
     return "Invalid JD input. Add multiple lines or clear sentence-based job description text.";
-  }
-
-  if (!RESPONSIBILITY_SENTENCE_PATTERN.test(trimmedValue) && !SENTENCE_LIKE_PATTERN.test(trimmedValue)) {
+  if (
+    !RESPONSIBILITY_SENTENCE_PATTERN.test(trimmedValue) &&
+    !SENTENCE_LIKE_PATTERN.test(trimmedValue)
+  )
     return "Invalid JD input. Include at least one full requirement or responsibility sentence.";
-  }
-
   return "";
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════
 export default function ATSCheckerPage() {
   const navigate = useNavigate();
   const resumeListQuery = useResumeListQuery();
 
   // left panel state
-  const [sourceType, setSourceType]         = useState("saved");
-  const [selectedId, setSelectedId]         = useState("");
+  const [sourceType, setSourceType] = useState("saved");
+  const [selectedId, setSelectedId] = useState("");
   const [uploadedFileName, setUploadedFileName] = useState("");
   const [uploadedResumeText, setUploadedResumeText] = useState("");
   const [loadingUploadedPdf, setLoadingUploadedPdf] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
-  const [dropdownOpen, setDropdownOpen]     = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // right panel state
-  const [isAnalyzing, setIsAnalyzing]       = useState(false);
-  const [stage, setStage]                   = useState(0);
-  const [progress, setProgress]             = useState(0);
-  const [result, setResult]                 = useState(null);
-  const [copied, setCopied]                 = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [stage, setStage] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [result, setResult] = useState(null);
+  const [copied, setCopied] = useState(false);
+
   const resumeList = resumeListQuery.data || [];
   const resumeQuery = useResumeQuery(selectedId, {
     enabled: sourceType === "saved" && Boolean(selectedId),
@@ -248,35 +244,31 @@ export default function ATSCheckerPage() {
     !resumeQuery.data;
 
   useEffect(() => {
-    if (!resumeListQuery.isError) {
-      return;
-    }
-
+    if (!resumeListQuery.isError) return;
     toast.error("Could not load resumes", {
       description: resumeListQuery.error?.message,
     });
   }, [resumeListQuery.error?.message, resumeListQuery.isError]);
 
   useEffect(() => {
-    if (!resumeQuery.isError) {
-      return;
-    }
-
+    if (!resumeQuery.isError) return;
     toast.error("Failed to load resume data", {
       description: resumeQuery.error?.message || "Please try again later",
     });
   }, [resumeQuery.error?.message, resumeQuery.isError]);
 
-  // animation ticker
   useEffect(() => {
     if (!isAnalyzing) return;
-    const stageTime  = 10000 / analyzeStages.length;
-    const tickMs     = 50;
+    const stageTime = 10000 / analyzeStages.length;
+    const tickMs = 50;
     const stepsPerStage = stageTime / tickMs;
     let step = 0;
     const id = setInterval(() => {
       step++;
-      const s = Math.min(Math.floor(step / stepsPerStage), analyzeStages.length - 1);
+      const s = Math.min(
+        Math.floor(step / stepsPerStage),
+        analyzeStages.length - 1
+      );
       setStage(s);
       setProgress(((step % stepsPerStage) / stepsPerStage) * 100);
     }, tickMs);
@@ -285,11 +277,9 @@ export default function ATSCheckerPage() {
 
   const handleSourceChange = (nextSource) => {
     if (nextSource === sourceType) return;
-
     setSourceType(nextSource);
     setResult(null);
     setDropdownOpen(false);
-
     if (nextSource === "saved") {
       setUploadedFileName("");
       setUploadedResumeText("");
@@ -309,15 +299,15 @@ export default function ATSCheckerPage() {
 
   const handlePdfUpload = async (event) => {
     const file = event.target.files?.[0];
-
     if (!file) return;
-
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+    if (
+      file.type !== "application/pdf" &&
+      !file.name.toLowerCase().endsWith(".pdf")
+    ) {
       toast.error("Please upload a PDF file only.");
       event.target.value = "";
       return;
     }
-
     setSourceType("pdf");
     setDropdownOpen(false);
     setSelectedId("");
@@ -325,7 +315,6 @@ export default function ATSCheckerPage() {
     setUploadedFileName(file.name);
     setUploadedResumeText("");
     setLoadingUploadedPdf(true);
-
     try {
       const extractedText = await extractTextFromPdf(file);
       setUploadedResumeText(extractedText);
@@ -334,7 +323,8 @@ export default function ATSCheckerPage() {
       setUploadedFileName("");
       setUploadedResumeText("");
       toast.error("Could not read the uploaded PDF", {
-        description: error.message || "Only text-based PDFs are supported right now.",
+        description:
+          error.message || "Only text-based PDFs are supported right now.",
       });
     } finally {
       setLoadingUploadedPdf(false);
@@ -347,33 +337,31 @@ export default function ATSCheckerPage() {
     if (jobDescriptionError) return toast.error(jobDescriptionError);
 
     let content = "";
-
     if (sourceType === "saved") {
       if (!selectedId) return toast.error("Please select a resume");
-      if (loadingResume || !resumeData) return toast.error("Resume data not loaded yet");
+      if (loadingResume || !resumeData)
+        return toast.error("Resume data not loaded yet");
       content = generateResumeContent(resumeData);
     } else {
-      if (loadingUploadedPdf) return toast.error("PDF is still being processed");
-      if (!uploadedResumeText) return toast.error("Please upload a text-based PDF resume");
+      if (loadingUploadedPdf)
+        return toast.error("PDF is still being processed");
+      if (!uploadedResumeText)
+        return toast.error("Please upload a text-based PDF resume");
       content = uploadedResumeText;
     }
-
     if (!content.trim()) return toast.error("Resume content is empty");
 
     setResult(null);
     setIsAnalyzing(true);
     setStage(0);
     setProgress(0);
-
     try {
-      const prompt  = ATS_PROMPT
-        .replace("{jobDescription}", jobDescription)
-        .replace("{resumeContent}", content);
-
+      const prompt = ATS_PROMPT.replace("{jobDescription}", jobDescription).replace(
+        "{resumeContent}",
+        content
+      );
       const aiResult = await AIChatSession.sendMessage(prompt);
-      const text     = aiResult.response.text().trim();
-
-      // strip possible markdown code fences
+      const text = aiResult.response.text().trim();
       const clean = text.replace(/^```json\s*/i, "").replace(/```$/i, "").trim();
       setResult(JSON.parse(clean));
     } catch (err) {
@@ -385,154 +373,176 @@ export default function ATSCheckerPage() {
 
   const copyRecs = () => {
     if (!result?.recommendations) return;
-    navigator.clipboard.writeText(result.recommendations.join("\n")).then(() => {
-      setCopied(true);
-      toast.success("Recommendations copied");
-      setTimeout(() => setCopied(false), 2000);
-    });
+    navigator.clipboard
+      .writeText(result.recommendations.join("\n"))
+      .then(() => {
+        setCopied(true);
+        toast.success("Recommendations copied");
+        setTimeout(() => setCopied(false), 2000);
+      });
   };
 
-  const selectedTitle = resumeList.find((r) => r._id === selectedId)?.title || "";
+  const selectedTitle =
+    resumeList.find((r) => r._id === selectedId)?.title || "";
   const jobDescriptionError = getJobDescriptionValidationError(jobDescription);
-  const isReadyToAnalyze = sourceType === "saved"
-    ? Boolean(selectedId && resumeData && !loadingResume)
-    : Boolean(uploadedResumeText && !loadingUploadedPdf);
+  const isReadyToAnalyze =
+    sourceType === "saved"
+      ? Boolean(selectedId && resumeData && !loadingResume)
+      : Boolean(uploadedResumeText && !loadingUploadedPdf);
 
-  // ── RENDER ────────────────────────────────────────────────────────────────
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
-
-      {/* ── TOP BAR ── */}
-      <header className="flex-shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3.5 flex items-center gap-4 shadow-sm">
+    <div className="flex h-screen flex-col overflow-hidden bg-white text-slate-900 antialiased">
+      {/* ── Top bar ── */}
+      <header className="flex flex-shrink-0 items-center gap-4 border-b border-slate-200 bg-white px-6 py-3">
         <button
           onClick={() => navigate("/dashboard")}
-          className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-medium"
+          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-slate-600 transition-colors hover:text-slate-900"
         >
-          <ArrowLeft className="h-4 w-4" /> Dashboard
+          <ArrowLeft className="h-4 w-4" />
+          Dashboard
         </button>
-        <div className="h-4 w-px bg-gray-200 dark:bg-gray-600" />
+        <div className="h-4 w-px bg-slate-200" />
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-indigo-600 flex items-center justify-center">
-            <PieChart className="h-3.5 w-3.5 text-white" />
-          </div>
-          <span className="text-sm font-bold text-gray-800 dark:text-white">ATS Score Analyzer</span>
+          <span
+            className="text-[15px] font-semibold tracking-tight text-slate-900"
+            style={DISPLAY}
+          >
+            ATS Score Analyzer
+          </span>
+          <span className="hidden text-[11px] text-slate-400 sm:inline">
+            · Check how well your resume matches a job description
+          </span>
         </div>
-        <p className="text-xs text-gray-400 dark:text-gray-500 ml-1">
-          Check how well your resume matches a job description
-        </p>
       </header>
 
-      {/* ── BODY ── */}
+      {/* ── Body (2-column) ── */}
       <div className="flex flex-1 overflow-hidden">
-
-        {/* ══════════════ LEFT PANEL — 40% ══════════════ */}
-        <div className="w-[40%] flex-shrink-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-
-            {/* Step 1 — Select resume */}
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">1</span>
-                <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Choose Resume Source</h3>
+        {/* ══════════════ LEFT PANEL ══════════════ */}
+        <aside className="flex w-[42%] min-w-[380px] max-w-[540px] flex-shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-white">
+          <div className="flex-1 space-y-7 overflow-y-auto px-7 py-7">
+            {/* Step 1 — Source */}
+            <section>
+              <div className="mb-3 flex items-center gap-2">
+                <StepNumber n={1} />
+                <h3 className="text-[13px] font-semibold text-slate-800">
+                  Choose resume source
+                </h3>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                <button
-                  onClick={() => handleSourceChange("saved")}
-                  className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
-                    sourceType === "saved"
-                      ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-900/30 dark:text-indigo-300"
-                      : "border-gray-200 bg-gray-50 text-gray-500 hover:border-indigo-300 dark:border-gray-600 dark:bg-gray-700/50 dark:text-gray-300"
-                  }`}
-                >
-                  Saved Resume
-                </button>
-                <button
-                  onClick={() => handleSourceChange("pdf")}
-                  className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
-                    sourceType === "pdf"
-                      ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-900/30 dark:text-indigo-300"
-                      : "border-gray-200 bg-gray-50 text-gray-500 hover:border-indigo-300 dark:border-gray-600 dark:bg-gray-700/50 dark:text-gray-300"
-                  }`}
-                >
-                  Upload PDF
-                </button>
+              <div className="mb-3 inline-flex rounded-full border border-slate-200 bg-white p-1 text-[12.5px]">
+                {[
+                  { id: "saved", label: "Saved resume" },
+                  { id: "pdf", label: "Upload PDF" },
+                ].map((opt) => (
+                  <button
+                    key={opt.id}
+                    onClick={() => handleSourceChange(opt.id)}
+                    className={`rounded-full px-4 py-1.5 font-semibold transition-colors ${
+                      sourceType === opt.id
+                        ? "bg-slate-900 text-white"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
 
               {sourceType === "saved" ? (
                 <>
-              {/* Custom dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm text-left transition-colors hover:border-indigo-400 dark:hover:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <FileText className="h-4 w-4 text-indigo-400 flex-shrink-0" />
-                    <span className={`truncate ${selectedId ? "text-gray-800 dark:text-gray-200 font-medium" : "text-gray-400"}`}>
-                      {selectedId ? selectedTitle : "Choose a resume…"}
-                    </span>
-                  </div>
-                  <ChevronDown className={`h-4 w-4 text-gray-400 flex-shrink-0 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
-                </button>
-
-                {dropdownOpen && (
-                  <div className="absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl shadow-xl overflow-hidden">
-                    {resumeList.length === 0 ? (
-                      <p className="px-4 py-3 text-sm text-gray-400 text-center">No resumes found</p>
-                    ) : (
-                      resumeList.map((r) => (
-                        <button
-                          key={r._id}
-                          onClick={() => handleSelectResume(r._id)}
-                          className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-left transition-colors ${
-                            r._id === selectedId
-                              ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-medium"
-                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  <div className="relative">
+                    <button
+                      onClick={() => setDropdownOpen(!dropdownOpen)}
+                      className="flex w-full items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-left text-[13px] transition-colors hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+                    >
+                      <div className="flex min-w-0 items-center gap-2">
+                        <FileText className="h-4 w-4 flex-shrink-0 text-slate-400" />
+                        <span
+                          className={`truncate ${
+                            selectedId
+                              ? "font-medium text-slate-900"
+                              : "text-slate-400"
                           }`}
                         >
-                          <FileText className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
-                          <span className="truncate">{r.title}</span>
-                          {r._id === selectedId && <CheckCircle className="h-3.5 w-3.5 ml-auto text-indigo-500 flex-shrink-0" />}
-                        </button>
-                      ))
+                          {selectedId ? selectedTitle : "Choose a resume…"}
+                        </span>
+                      </div>
+                      <ChevronDown
+                        className={`h-4 w-4 flex-shrink-0 text-slate-400 transition-transform ${
+                          dropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {dropdownOpen && (
+                      <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
+                        {resumeList.length === 0 ? (
+                          <p className="px-4 py-3 text-center text-[12.5px] text-slate-400">
+                            No resumes found
+                          </p>
+                        ) : (
+                          resumeList.map((r) => (
+                            <button
+                              key={r._id}
+                              onClick={() => handleSelectResume(r._id)}
+                              className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-[13px] transition-colors ${
+                                r._id === selectedId
+                                  ? "bg-slate-50 font-medium text-slate-900"
+                                  : "text-slate-700 hover:bg-slate-50"
+                              }`}
+                            >
+                              <FileText className="h-3.5 w-3.5 flex-shrink-0 text-slate-400" />
+                              <span className="truncate">{r.title}</span>
+                              {r._id === selectedId && (
+                                <CheckCircle
+                                  className="ml-auto h-3.5 w-3.5 flex-shrink-0"
+                                  style={{ color: ACCENT }}
+                                />
+                              )}
+                            </button>
+                          ))
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
 
-              {loadingResume && (
-                <p className="text-xs text-indigo-500 mt-2 flex items-center gap-1.5">
-                  <span className="inline-block w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                  Loading resume data…
-                </p>
-              )}
-              {selectedId && !loadingResume && resumeData && (
-                <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2 flex items-center gap-1.5">
-                  <CheckCircle className="h-3 w-3" /> Resume loaded successfully
-                </p>
-              )}
+                  {loadingResume && (
+                    <p className="mt-2 flex items-center gap-1.5 text-[11.5px] text-slate-500">
+                      <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" />
+                      Loading resume data…
+                    </p>
+                  )}
+                  {selectedId && !loadingResume && resumeData && (
+                    <p className="mt-2 flex items-center gap-1.5 text-[11.5px] text-emerald-600">
+                      <CheckCircle className="h-3 w-3" /> Resume loaded
+                      successfully
+                    </p>
+                  )}
                 </>
               ) : (
                 <>
-                  <label className="block">
+                  <label className="block cursor-pointer">
                     <input
                       type="file"
                       accept=".pdf,application/pdf"
                       className="hidden"
                       onChange={handlePdfUpload}
                     />
-                    <div className="rounded-2xl border border-dashed border-indigo-200 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-900/10 px-4 py-5 cursor-pointer transition-colors hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20">
+                    <div className="rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-5 transition-colors hover:border-slate-400 hover:bg-white">
                       <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-white dark:bg-gray-800 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center flex-shrink-0">
-                          <Upload className="h-4 w-4 text-indigo-500" />
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-white">
+                          <Upload
+                            className="h-4 w-4"
+                            style={{ color: ACCENT }}
+                          />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
+                          <p className="truncate text-[13px] font-semibold text-slate-900">
                             {uploadedFileName || "Upload resume PDF"}
                           </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
-                            Choose a normal text-based PDF resume. Scanned image PDFs are not supported.
+                          <p className="mt-1 text-[11.5px] leading-relaxed text-slate-500">
+                            Choose a text-based PDF resume. Scanned image PDFs
+                            are not supported.
                           </p>
                         </div>
                       </div>
@@ -540,115 +550,151 @@ export default function ATSCheckerPage() {
                   </label>
 
                   {loadingUploadedPdf && (
-                    <p className="text-xs text-indigo-500 mt-2 flex items-center gap-1.5">
-                      <span className="inline-block w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                      Extracting text from PDF...
+                    <p className="mt-2 flex items-center gap-1.5 text-[11.5px] text-slate-500">
+                      <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" />
+                      Extracting text from PDF…
                     </p>
                   )}
                   {uploadedFileName && !loadingUploadedPdf && uploadedResumeText && (
-                    <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2 flex items-center gap-1.5">
-                      <CheckCircle className="h-3 w-3" /> PDF text loaded successfully
+                    <p className="mt-2 flex items-center gap-1.5 text-[11.5px] text-emerald-600">
+                      <CheckCircle className="h-3 w-3" /> PDF text loaded
+                      successfully
                     </p>
                   )}
                 </>
               )}
-            </div>
+            </section>
 
-            {/* Step 2 — Job Description */}
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">2</span>
-                <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Paste Job Description</h3>
+            {/* Step 2 — JD */}
+            <section>
+              <div className="mb-3 flex items-center gap-2">
+                <StepNumber n={2} />
+                <h3 className="text-[13px] font-semibold text-slate-800">
+                  Paste the job description
+                </h3>
               </div>
+
               <textarea
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
                 placeholder="Paste the full job description here…&#10;&#10;Include responsibilities, required skills, qualifications, and any other details from the job posting for the most accurate analysis."
                 rows={14}
-                className="w-full px-3.5 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 dark:focus:border-indigo-500 transition-colors leading-relaxed"
+                className="w-full resize-none rounded-lg border border-slate-200 bg-white px-3.5 py-3 text-[13px] leading-relaxed text-slate-900 placeholder:text-slate-400 focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
               />
               <div className="mt-1.5 flex items-start justify-between gap-3">
-                <div className="text-xs text-red-500">
-                  {jobDescription.trim().length > 0 && jobDescriptionError && jobDescriptionError}
+                <div className="text-[11.5px] text-red-500">
+                  {jobDescription.trim().length > 0 &&
+                    jobDescriptionError &&
+                    jobDescriptionError}
                 </div>
-                <p className="text-xs text-gray-400 text-right">{jobDescription.length} characters {jobDescription.length < 50 && jobDescription.length > 0 && <span className="text-amber-500">(minimum 50)</span>}</p>
+                <p className="text-[11px] text-slate-400">
+                  {jobDescription.length} characters
+                  {jobDescription.length < 50 && jobDescription.length > 0 && (
+                    <span className="text-amber-600"> (min 50)</span>
+                  )}
+                </p>
               </div>
-            </div>
+            </section>
           </div>
 
-          {/* Analyze button pinned to bottom */}
-          <div className="flex-shrink-0 px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
+          {/* Analyze button pinned */}
+          <div className="flex-shrink-0 border-t border-slate-200 bg-white px-7 py-4">
             <button
               onClick={handleAnalyze}
-              disabled={isAnalyzing || loadingResume || loadingUploadedPdf || Boolean(jobDescriptionError) || !isReadyToAnalyze}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-emerald-500 hover:from-indigo-700 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm py-3 rounded-xl shadow-md shadow-indigo-900/20 transition-all duration-200"
+              disabled={
+                isAnalyzing ||
+                loadingResume ||
+                loadingUploadedPdf ||
+                Boolean(jobDescriptionError) ||
+                !isReadyToAnalyze
+              }
+              className="group flex h-11 w-full items-center justify-center gap-2 rounded-full bg-slate-900 px-5 text-[13.5px] font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isAnalyzing ? (
                 <>
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                   Analyzing…
                 </>
               ) : (
                 <>
-                  <Zap className="h-4 w-4" />
-                  Analyze Resume
+                  <Sparkles className="h-4 w-4" />
+                  Analyze resume
+                  <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                 </>
               )}
             </button>
           </div>
-        </div>
+        </aside>
 
-        {/* ══════════════ RIGHT PANEL — 60% ══════════════ */}
-        <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
-
-          {/* ── IDLE STATE ── */}
+        {/* ══════════════ RIGHT PANEL ══════════════ */}
+        <main className="flex-1 overflow-y-auto bg-[#FAFAF9]">
+          {/* ── Idle ── */}
           {!isAnalyzing && !result && (
-            <div className="h-full flex flex-col items-center justify-center p-12 text-center">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-100 to-emerald-100 dark:from-indigo-900/30 dark:to-emerald-900/30 flex items-center justify-center mb-5 shadow-inner">
-                <Target className="h-9 w-9 text-indigo-500" />
+            <div className="flex h-full flex-col items-center justify-center px-12 py-12 text-center">
+              <div
+                className="mb-6 flex h-20 w-20 items-center justify-center rounded-full"
+                style={{ backgroundColor: `${ACCENT}18` }}
+              >
+                <Target className="h-9 w-9" style={{ color: ACCENT }} />
               </div>
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Ready to Analyze</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs leading-relaxed">
-                Select a saved resume or upload a PDF on the left, then paste a job description and click <strong>Analyze Resume</strong>.
+              <h2
+                className="text-[28px] font-semibold leading-tight tracking-tight text-slate-900"
+                style={DISPLAY}
+              >
+                Ready to analyze.
+              </h2>
+              <p className="mt-3 max-w-sm text-[14px] leading-relaxed text-slate-600">
+                Pick a saved resume or upload a PDF on the left, paste a job
+                description, and hit <strong>Analyze</strong>.
               </p>
-              <div className="mt-8 grid grid-cols-3 gap-3 w-full max-w-sm">
+              <div className="mt-10 grid w-full max-w-md grid-cols-3 gap-3">
                 {[
-                  { label: "ATS Score",           icon: <PieChart   className="h-5 w-5 text-indigo-400" /> },
-                  { label: "Keyword Gaps",         icon: <Search     className="h-5 w-5 text-emerald-400" /> },
-                  { label: "Recommendations",      icon: <Lightbulb  className="h-5 w-5 text-amber-400" /> },
-                ].map(({ label, icon }) => (
-                  <div key={label} className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700 flex flex-col items-center gap-2">
-                    {icon}
-                    <span className="text-xs text-gray-500 dark:text-gray-400 font-medium text-center">{label}</span>
+                  { label: "ATS score", icon: PieChart },
+                  { label: "Keyword gaps", icon: Search },
+                  { label: "Recommendations", icon: Lightbulb },
+                ].map(({ label, icon: Icon }) => (
+                  <div
+                    key={label}
+                    className="flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white p-4"
+                  >
+                    <Icon className="h-5 w-5 text-slate-700" />
+                    <span className="text-[12px] font-medium text-slate-600">
+                      {label}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* ── LOADING / ANIMATION STATE ── */}
+          {/* ── Analyzing ── */}
           {isAnalyzing && (
-            <div className="h-full flex flex-col items-center justify-center px-8 py-12">
-              {/* Animated ring */}
-              <div className="relative w-44 h-44 mb-8">
-                {/* outer dashed ring */}
-                <div className="absolute inset-0 animate-spin" style={{ animationDuration: "8s" }}>
-                  <svg viewBox="0 0 100 100" className="w-full h-full text-indigo-300 dark:text-indigo-700">
-                    <circle cx="50" cy="50" r="45" stroke="currentColor" strokeWidth="2" strokeDasharray="4 6" fill="none" />
-                  </svg>
-                </div>
-                {/* middle pulsing ring */}
-                <div className="absolute inset-0 animate-pulse">
-                  <svg viewBox="0 0 100 100" className="w-full h-full text-emerald-400 dark:text-emerald-600">
-                    <circle cx="50" cy="50" r="35" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.5" />
-                  </svg>
-                </div>
-                {/* progress arc */}
-                <div className="absolute inset-0">
-                  <svg viewBox="0 0 100 100" className="w-full h-full">
+            <div className="flex h-full flex-col items-center justify-center px-8 py-12">
+              {/* Ring */}
+              <div className="relative mb-8 h-40 w-40">
+                <div
+                  className="absolute inset-0 animate-spin"
+                  style={{ animationDuration: "8s" }}
+                >
+                  <svg viewBox="0 0 100 100" className="h-full w-full text-slate-200">
                     <circle
-                      cx="50" cy="50" r="25"
-                      stroke="#6366F1"
+                      cx="50"
+                      cy="50"
+                      r="45"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeDasharray="4 6"
+                      fill="none"
+                    />
+                  </svg>
+                </div>
+                <div className="absolute inset-0">
+                  <svg viewBox="0 0 100 100" className="h-full w-full">
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="25"
+                      stroke={ACCENT}
                       strokeWidth="4"
                       strokeDasharray={`${progress * 1.57} 157`}
                       strokeDashoffset="0"
@@ -658,150 +704,208 @@ export default function ATSCheckerPage() {
                     />
                   </svg>
                 </div>
-                {/* center icon */}
-                <div className="absolute inset-0 flex items-center justify-center text-indigo-500 dark:text-indigo-400">
-                  {React.createElement(analyzeStages[stage].icon, { className: "h-11 w-11 animate-pulse" })}
-                </div>
-                {/* orbiting dots */}
-                <div className="absolute inset-0 animate-spin" style={{ animationDuration: "4s" }}>
-                  <div className="absolute top-0 left-1/2 -translate-x-1.5 -translate-y-1.5 w-3 h-3 rounded-full bg-emerald-500" />
-                </div>
-                <div className="absolute inset-0 animate-spin" style={{ animationDuration: "7s", animationDirection: "reverse" }}>
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1.5 translate-y-1.5 w-2.5 h-2.5 rounded-full bg-indigo-400" />
-                </div>
-                <div className="absolute inset-0 animate-spin" style={{ animationDuration: "11s" }}>
-                  <div className="absolute top-1/2 right-0 translate-x-1.5 -translate-y-1.5 w-2 h-2 rounded-full bg-amber-400" />
+                <div className="absolute inset-0 flex items-center justify-center text-slate-900">
+                  {React.createElement(analyzeStages[stage].icon, {
+                    className: "h-10 w-10 animate-pulse",
+                  })}
                 </div>
               </div>
 
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-1">Analyzing your resume…</h3>
-              <p className="text-indigo-500 dark:text-indigo-400 font-medium text-sm mb-1">{analyzeStages[stage].label}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 text-center max-w-xs">
+              <h3
+                className="text-[24px] font-semibold tracking-tight text-slate-900"
+                style={DISPLAY}
+              >
+                Analyzing your resume…
+              </h3>
+              <p
+                className="mt-1 text-[13px] font-medium"
+                style={{ color: ACCENT }}
+              >
+                {analyzeStages[stage].label}
+              </p>
+              <p className="mt-1 max-w-xs text-center text-[11.5px] text-slate-500">
                 Comparing your resume against the job requirements in detail.
               </p>
 
-              {/* stage progress bar */}
+              {/* Progress bar */}
               <div className="mt-8 w-full max-w-sm">
-                <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
                   <div
-                    className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full transition-all duration-300"
-                    style={{ width: `${(stage / analyzeStages.length) * 100 + (progress / analyzeStages.length)}%` }}
+                    className="h-full rounded-full transition-all duration-300"
+                    style={{
+                      width: `${
+                        (stage / analyzeStages.length) * 100 +
+                        progress / analyzeStages.length
+                      }%`,
+                      backgroundColor: ACCENT,
+                    }}
                   />
                 </div>
-                <div className="flex justify-between text-[10px] text-gray-400 mt-1.5">
-                  <span>Scanning</span><span>Matching</span><span>Scoring</span>
+                <div className="mt-1.5 flex justify-between text-[10px] text-slate-400">
+                  <span>Scanning</span>
+                  <span>Matching</span>
+                  <span>Scoring</span>
                 </div>
               </div>
 
-              {/* stage pills */}
-              <div className="mt-6 flex flex-wrap gap-2 justify-center">
+              <div className="mt-6 flex flex-wrap justify-center gap-2">
                 {analyzeStages.map((s, i) => (
                   <span
                     key={i}
-                    className={`text-xs px-2.5 py-1 rounded-full font-medium transition-all duration-300 ${
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-all duration-300 ${
                       i < stage
-                        ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
+                        ? "bg-emerald-50 text-emerald-700"
                         : i === stage
-                        ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-400"
-                        : "bg-gray-100 dark:bg-gray-800 text-gray-400"
+                        ? "bg-slate-900 text-white"
+                        : "bg-slate-100 text-slate-400"
                     }`}
                   >
-                    {i < stage && "✓ "}{s.label}
+                    {i < stage && "✓ "}
+                    {s.label}
                   </span>
                 ))}
               </div>
             </div>
           )}
 
-          {/* ── RESULTS STATE ── */}
+          {/* ── Results ── */}
           {!isAnalyzing && result && (
-            <div className="p-6 space-y-5">
-
-              {/* ── Score hero ── */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 flex items-center gap-6 shadow-sm">
-                {/* Circular gauge */}
-                <div className="relative w-28 h-28 flex-shrink-0">
-                  <svg viewBox="0 0 100 100" className="w-full h-full">
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="#E5E7EB" strokeWidth="9" />
-                    <circle
-                      cx="50" cy="50" r="42"
-                      fill="none"
-                      stroke={scoreColor(result.score)}
-                      strokeWidth="9"
-                      strokeDasharray={`${result.score * 2.64} 264`}
-                      strokeDashoffset="0"
-                      strokeLinecap="round"
-                      transform="rotate(-90 50 50)"
-                      style={{ transition: "stroke-dasharray 1s ease" }}
-                    />
-                    <text x="50%" y="48%" dominantBaseline="middle" textAnchor="middle" fontSize="22" fontWeight="bold" fill={scoreColor(result.score)}>
-                      {result.score}
-                    </text>
-                    <text x="50%" y="65%" dominantBaseline="middle" textAnchor="middle" fontSize="9" fill="#9CA3AF">
-                      / 100
-                    </text>
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${scoreBg(result.score)}`}>
+            <div className="space-y-5 px-8 py-8">
+              {/* Score hero */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-6">
+                <div className="flex items-center gap-6">
+                  <div className="relative h-28 w-28 flex-shrink-0">
+                    <svg viewBox="0 0 100 100" className="h-full w-full">
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="42"
+                        fill="none"
+                        stroke="#E5E7EB"
+                        strokeWidth="9"
+                      />
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="42"
+                        fill="none"
+                        stroke={scoreColor(result.score)}
+                        strokeWidth="9"
+                        strokeDasharray={`${result.score * 2.64} 264`}
+                        strokeDashoffset="0"
+                        strokeLinecap="round"
+                        transform="rotate(-90 50 50)"
+                        style={{ transition: "stroke-dasharray 1s ease" }}
+                      />
+                      <text
+                        x="50%"
+                        y="48%"
+                        dominantBaseline="middle"
+                        textAnchor="middle"
+                        fontSize="22"
+                        fontWeight="700"
+                        fill="#0F172A"
+                        style={DISPLAY}
+                      >
+                        {result.score}
+                      </text>
+                      <text
+                        x="50%"
+                        y="65%"
+                        dominantBaseline="middle"
+                        textAnchor="middle"
+                        fontSize="9"
+                        fill="#9CA3AF"
+                      >
+                        / 100
+                      </text>
+                    </svg>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span
+                      className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold"
+                      style={{ color: scoreColor(result.score) }}
+                    >
                       {scoreLabel(result.score)}
                     </span>
-                  </div>
-                  <h2 className="text-xl font-extrabold text-gray-900 dark:text-white mb-1">ATS Match Score</h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {result.score >= 75
-                      ? "Your resume is a strong match. Apply with confidence!"
-                      : result.score >= 50
-                      ? "Moderate match. A few keyword tweaks can improve your chances."
-                      : "Low match. Add missing keywords and tailor your experience to the role."}
-                  </p>
-                  {result.missingKeywords?.length > 0 && (
-                    <p className="text-xs text-red-500 dark:text-red-400 mt-2 font-medium">
-                      {result.missingKeywords.length} missing keyword{result.missingKeywords.length > 1 ? "s" : ""} detected
+                    <h2
+                      className="mt-2 text-[26px] font-semibold leading-tight tracking-tight text-slate-900"
+                      style={DISPLAY}
+                    >
+                      ATS match score
+                    </h2>
+                    <p className="mt-1 text-[13.5px] leading-relaxed text-slate-600">
+                      {result.score >= 75
+                        ? "Your resume is a strong match. Apply with confidence."
+                        : result.score >= 50
+                        ? "Moderate match. A few keyword tweaks can improve your chances."
+                        : "Low match. Add missing keywords and tailor your experience."}
                     </p>
-                  )}
+                    {result.missingKeywords?.length > 0 && (
+                      <p
+                        className="mt-2 text-[12px] font-semibold"
+                        style={{ color: ACCENT }}
+                      >
+                        {result.missingKeywords.length} missing keyword
+                        {result.missingKeywords.length > 1 ? "s" : ""} detected
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* ── Two-col grid: strengths + improvements ── */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Strengths */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
-                      <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+              {/* Two cards: strengths + improvements */}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                  <div className="mb-3 flex items-center gap-2">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-50">
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
                     </div>
-                    <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">Strengths</h3>
-                    <span className="ml-auto text-xs bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full font-semibold">
+                    <h3
+                      className="text-[15px] font-semibold text-slate-900"
+                      style={DISPLAY}
+                    >
+                      Strengths
+                    </h3>
+                    <span className="ml-auto rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
                       {result.strengths?.length || 0}
                     </span>
                   </div>
                   <ul className="space-y-2">
                     {result.strengths?.map((s, i) => (
-                      <li key={i} className="flex gap-2 text-xs text-gray-600 dark:text-gray-400">
-                        <CheckCircle className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                      <li
+                        key={i}
+                        className="flex gap-2 text-[12.5px] leading-relaxed text-slate-700"
+                      >
+                        <CheckCircle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-emerald-500" />
                         <span>{s}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                {/* Improvements */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-6 h-6 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
-                      <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                  <div className="mb-3 flex items-center gap-2">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-50">
+                      <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
                     </div>
-                    <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">Improvements</h3>
-                    <span className="ml-auto text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full font-semibold">
+                    <h3
+                      className="text-[15px] font-semibold text-slate-900"
+                      style={DISPLAY}
+                    >
+                      Improvements
+                    </h3>
+                    <span className="ml-auto rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
                       {result.improvements?.length || 0}
                     </span>
                   </div>
                   <ul className="space-y-2">
                     {result.improvements?.map((s, i) => (
-                      <li key={i} className="flex gap-2 text-xs text-gray-600 dark:text-gray-400">
-                        <AlertTriangle className="h-3.5 w-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
+                      <li
+                        key={i}
+                        className="flex gap-2 text-[12.5px] leading-relaxed text-slate-700"
+                      >
+                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
                         <span>{s}</span>
                       </li>
                     ))}
@@ -809,21 +913,40 @@ export default function ATSCheckerPage() {
                 </div>
               </div>
 
-              {/* ── Missing keywords ── */}
+              {/* Missing keywords */}
               {result.missingKeywords?.length > 0 && (
-                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-6 h-6 rounded-lg bg-red-50 dark:bg-red-900/30 flex items-center justify-center">
-                      <XCircle className="h-3.5 w-3.5 text-red-500" />
+                <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                  <div className="mb-3 flex items-center gap-2">
+                    <div
+                      className="flex h-6 w-6 items-center justify-center rounded-md"
+                      style={{ backgroundColor: `${ACCENT}15` }}
+                    >
+                      <XCircle className="h-3.5 w-3.5" style={{ color: ACCENT }} />
                     </div>
-                    <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">Missing Keywords</h3>
-                    <span className="ml-auto text-xs bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full font-semibold">
+                    <h3
+                      className="text-[15px] font-semibold text-slate-900"
+                      style={DISPLAY}
+                    >
+                      Missing keywords
+                    </h3>
+                    <span
+                      className="ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold text-white"
+                      style={{ backgroundColor: ACCENT }}
+                    >
                       {result.missingKeywords.length}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {result.missingKeywords.map((kw, i) => (
-                      <span key={i} className="inline-flex items-center gap-1 text-xs bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800 px-2.5 py-1 rounded-full font-medium">
+                      <span
+                        key={i}
+                        className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[12px] font-medium"
+                        style={{
+                          borderColor: `${ACCENT}40`,
+                          backgroundColor: `${ACCENT}08`,
+                          color: ACCENT,
+                        }}
+                      >
                         <XCircle className="h-3 w-3" /> {kw}
                       </span>
                     ))}
@@ -831,37 +954,52 @@ export default function ATSCheckerPage() {
                 </div>
               )}
 
-              {/* ── Recommendations ── */}
+              {/* Recommendations */}
               {result.recommendations?.length > 0 && (
-                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center">
-                      <Lightbulb className="h-3.5 w-3.5 text-indigo-500" />
+                <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                  <div className="mb-3 flex items-center gap-2">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-slate-100">
+                      <Lightbulb className="h-3.5 w-3.5 text-slate-700" />
                     </div>
-                    <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">Recommendations</h3>
+                    <h3
+                      className="text-[15px] font-semibold text-slate-900"
+                      style={DISPLAY}
+                    >
+                      Recommendations
+                    </h3>
                     <button
                       onClick={copyRecs}
-                      className="ml-auto flex items-center gap-1.5 text-xs text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors font-medium"
+                      className="ml-auto inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-700 transition-colors hover:text-slate-900"
                     >
-                      {copied ? <ClipboardCheck className="h-3.5 w-3.5" /> : <Clipboard className="h-3.5 w-3.5" />}
-                      {copied ? "Copied!" : "Copy all"}
+                      {copied ? (
+                        <ClipboardCheck className="h-3.5 w-3.5" />
+                      ) : (
+                        <Clipboard className="h-3.5 w-3.5" />
+                      )}
+                      {copied ? "Copied" : "Copy all"}
                     </button>
                   </div>
-                  <ol className="space-y-2">
+                  <ol className="space-y-3">
                     {result.recommendations.map((r, i) => (
-                      <li key={i} className="flex gap-2.5 text-xs text-gray-600 dark:text-gray-400">
-                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] flex items-center justify-center mt-0.5">
+                      <li
+                        key={i}
+                        className="flex gap-3 text-[12.5px] leading-relaxed text-slate-700"
+                      >
+                        <span
+                          className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                          style={{ backgroundColor: ACCENT }}
+                        >
                           {i + 1}
                         </span>
-                        <span className="leading-relaxed">{r}</span>
+                        <span>{r}</span>
                       </li>
                     ))}
                   </ol>
                 </div>
               )}
 
-              {/* ── Re-analyze CTA ── */}
-              <div className="flex gap-3 pb-2">
+              {/* Actions */}
+              <div className="flex gap-3 pb-4">
                 <button
                   onClick={() => {
                     setResult(null);
@@ -873,22 +1011,37 @@ export default function ATSCheckerPage() {
                     setDropdownOpen(false);
                     setCopied(false);
                   }}
-                  className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="flex-1 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-[13px] font-semibold text-slate-700 transition-colors hover:border-slate-400"
                 >
-                  Start Over
+                  Start over
                 </button>
                 <button
                   onClick={handleAnalyze}
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-emerald-500 hover:from-indigo-700 hover:to-emerald-600 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-md shadow-indigo-900/20 transition-all"
+                  className="group flex flex-1 items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-slate-800"
                 >
-                  <TrendingUp className="h-4 w-4" /> Re-Analyze
+                  <TrendingUp className="h-4 w-4" />
+                  Re-analyze
                 </button>
               </div>
-
             </div>
           )}
-        </div>
+        </main>
       </div>
     </div>
+  );
+}
+
+// ── Small local component ────────────────────────────────────────────
+function StepNumber({ n }) {
+  return (
+    <span
+      className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
+      style={{
+        backgroundColor: ACCENT,
+        color: "#FFFFFF",
+      }}
+    >
+      {n}
+    </span>
   );
 }

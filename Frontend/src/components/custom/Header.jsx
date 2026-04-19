@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { logoutUser } from "@/Services/login";
 import { addUserData } from "@/features/user/userFeatures";
 import { Button } from "../ui/button";
-import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
+import NxtResumeWordmark from "@/components/brand/NxtResumeWordmark";
 import ChangePasswordModal from "./ChangePasswordModal";
 import {
   Menu,
@@ -88,14 +88,8 @@ function Header({ user }) {
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 lg:px-8">
           {/* Brand */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <NxtResumeLogoMark className="h-8 w-8" />
-            <span
-              className="text-[18px] font-semibold tracking-tight text-slate-900"
-              style={{ fontFamily: "Fraunces, Georgia, serif" }}
-            >
-              NxtResume
-            </span>
+          <Link to="/" className="flex items-center group">
+            <NxtResumeWordmark size="22px" color="#0F172A" />
           </Link>
 
           {/* Desktop nav */}

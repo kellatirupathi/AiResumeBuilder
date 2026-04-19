@@ -24,7 +24,6 @@ import {
   User,
   WandSparkles,
 } from "lucide-react";
-import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
 
 const sections = [
   { id: "overview", label: "Product Overview", icon: LayoutDashboard },

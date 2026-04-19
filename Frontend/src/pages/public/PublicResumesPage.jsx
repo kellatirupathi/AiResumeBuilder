@@ -5,7 +5,7 @@ import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { ArrowUpRight, Check, Star } from "lucide-react";
 import Header from "@/components/custom/Header";
-import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
+import NxtResumeWordmark from "@/components/brand/NxtResumeWordmark";
 import { resumeTemplates } from "@/pages/dashboard/edit-resume/components/resumeDesignOptions";
 import PreviewPage from "@/pages/dashboard/edit-resume/components/PreviewPage";
 import publicResumeTemplateData from "@/data/publicResumeTemplateData.json";
@@ -261,7 +261,7 @@ export default function PublicResumesPage() {
                           }12`,
                         }}
                       >
-                        <NxtResumeLogoMark className="h-10 w-10" />
+                        <NxtResumeWordmark size="18px" color={templateThemeColors[tpl.id] || "#0F172A"} />
                       </div>
                       {active && (
                         <div className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-white">
@@ -391,14 +391,8 @@ function PublicFooter() {
     <footer className="border-t border-slate-200 bg-white">
       <div className="mx-auto max-w-7xl px-5 py-10 lg:px-8">
         <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-          <div className="flex items-center gap-2.5">
-            <NxtResumeLogoMark className="h-7 w-7" />
-            <span
-              className="text-[15px] font-semibold tracking-tight text-slate-900"
-              style={DISPLAY}
-            >
-              NxtResume
-            </span>
+          <div className="flex items-center">
+            <NxtResumeWordmark size="18px" color="#0F172A" />
           </div>
           <div className="flex items-center gap-5 text-[12px] text-slate-500">
             <Link to="/resumes" className="hover:text-slate-900">

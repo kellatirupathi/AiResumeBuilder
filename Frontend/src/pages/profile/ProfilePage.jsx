@@ -752,27 +752,27 @@ function ProfilePage() {
     }
     
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="min-h-screen bg-white text-slate-900 antialiased">
           {/* Fixed sidebar */}
-          <div className="fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-20 hidden lg:block">
+          <div className="fixed left-0 top-0 h-full w-64 bg-white border-r border-slate-200 z-20 hidden lg:block">
             <div className="p-6">
-              <Button 
-                onClick={() => navigate('/dashboard')} 
-                variant="outline" 
-                className="w-full justify-start text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 mb-6"
+              <Button
+                onClick={() => navigate('/dashboard')}
+                variant="outline"
+                className="w-full justify-start text-slate-700 border-slate-200 hover:border-slate-400 rounded-full mb-6"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" /> Back to Dashboard
               </Button>
-              
+
               <div className="mb-6">
                 <div className="mb-2 flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Profile Completion</span>
-                  <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">{completionPercentage}%</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Profile Completion</span>
+                  <span className="text-sm font-bold" style={{ color: "#FF4800" }}>{completionPercentage}%</span>
                 </div>
-                <div className="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-indigo-500 dark:bg-indigo-600 transition-all duration-500" 
-                    style={{width: `${completionPercentage}%`}}
+                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full transition-all duration-500"
+                    style={{width: `${completionPercentage}%`, backgroundColor: "#FF4800"}}
                   ></div>
                 </div>
               </div>
@@ -786,15 +786,15 @@ function ProfilePage() {
                     <button
                       key={section.id}
                       onClick={() => scrollToSection(section.id)}
-                      className="w-full flex items-center justify-between p-3 rounded-lg text-sm text-left transition-colors"
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-md text-[13px] text-left transition-colors hover:bg-slate-50"
                     >
                       <div className="flex items-center">
-                        <Icon className={`h-4 w-4 mr-3 ${isComplete ? 'text-green-500 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`} />
-                        <span className={`${isComplete ? 'font-medium text-gray-800 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}>
+                        <Icon className={`h-4 w-4 mr-2.5 ${isComplete ? 'text-emerald-500' : 'text-slate-400'}`} />
+                        <span className={`${isComplete ? 'font-medium text-slate-900' : 'text-slate-600'}`}>
                           {section.name}
                         </span>
                       </div>
-                      {isComplete && <CheckCircle className="h-4 w-4 text-green-500 dark:text-green-400" />}
+                      {isComplete && <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />}
                     </button>
                   );
                 })}
@@ -804,9 +804,9 @@ function ProfilePage() {
           
           {/* Mobile floating navigation button */}
           <div className="fixed bottom-4 right-4 z-30 lg:hidden">
-            <button 
+            <button
               onClick={() => setShowMobileNav(!showMobileNav)}
-              className="bg-indigo-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg"
+              className="bg-slate-900 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg hover:bg-slate-800 transition-colors"
             >
               <Layers className="h-5 w-5" />
             </button>
@@ -815,13 +815,13 @@ function ProfilePage() {
               <div className="absolute bottom-14 right-0 w-60 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div className="p-3 border-b border-gray-200 dark:border-gray-700">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Profile Completion</span>
-                    <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">{completionPercentage}%</span>
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Profile Completion</span>
+                    <span className="text-sm font-bold" style={{ color: "#FF4800" }}>{completionPercentage}%</span>
                   </div>
-                  <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-indigo-500 dark:bg-indigo-600" 
-                      style={{width: `${completionPercentage}%`}}
+                  <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full"
+                      style={{width: `${completionPercentage}%`, backgroundColor: "#FF4800"}}
                     ></div>
                   </div>
                 </div>
@@ -866,27 +866,33 @@ function ProfilePage() {
           {/* Main content */}
           <div className="lg:pl-64">
             {/* Top sticky header */}
-            <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <div className="sticky top-0 z-10 bg-white border-b border-slate-200">
               <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                 <div className="lg:hidden flex items-center">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => navigate('/dashboard')} 
-                    className="text-gray-600 dark:text-gray-300"
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate('/dashboard')}
+                    className="text-slate-700"
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" /> Back
                   </Button>
                 </div>
-                
-                <h1 className="text-xl font-bold text-gray-800 dark:text-white hidden lg:block">My Profile</h1>
-                
-                <div className="flex items-center gap-3">
+
+                <h1
+                  className="text-[22px] font-semibold leading-tight tracking-tight text-slate-900 hidden lg:block"
+                  style={{ fontFamily: "Fraunces, Georgia, serif" }}
+                >
+                  My Profile
+                </h1>
+
+                <div className="flex items-center gap-2">
                    <Button
                        onClick={() => setPortfolioMode(true)}
                        disabled={isSaving || isGenerating}
                        size="sm"
-                       className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                       variant="outline"
+                       className="rounded-full border-slate-200 text-slate-800 hover:border-slate-400"
                    >
                        {isGenerating ? (
                            <LoaderCircle className="h-4 w-4 mr-2 animate-spin" />
@@ -900,11 +906,12 @@ function ProfilePage() {
                     onClick={handleSaveProfile}
                     disabled={isSaving}
                     size="sm"
-                    className={`text-white transition-all ${
+                    className={`rounded-full text-white transition-all ${
                       isDirty
-                        ? 'bg-amber-500 hover:bg-amber-600 shadow-md shadow-amber-200 animate-pulse'
-                        : 'bg-indigo-600 hover:bg-indigo-700'
+                        ? 'hover:opacity-90'
+                        : 'bg-slate-900 hover:bg-slate-800'
                     }`}
+                    style={isDirty ? { backgroundColor: "#FF4800" } : undefined}
                   >
                     {isSaving ? (
                       <LoaderCircle className="h-4 w-4 mr-2 animate-spin" />
@@ -919,17 +926,21 @@ function ProfilePage() {
             
             {/* Unsaved changes banner */}
             {isDirty && (
-              <div className="bg-amber-50 border-b border-amber-200 px-4 py-2">
+              <div
+                className="border-b px-4 py-2"
+                style={{ backgroundColor: "#FFF4EE", borderColor: "#FFD4C2" }}
+              >
                 <div className="max-w-5xl mx-auto flex items-center justify-between">
-                  <span className="text-sm text-amber-800 flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                  <span className="text-[13px] flex items-center gap-2" style={{ color: "#9A2D00" }}>
+                    <AlertTriangle className="h-4 w-4 flex-shrink-0" style={{ color: "#FF4800" }} />
                     You have unsaved changes. Click <strong>Save Changes</strong> to keep them.
                   </span>
                   <Button
                     size="sm"
                     onClick={handleSaveProfile}
                     disabled={isSaving}
-                    className="bg-amber-500 hover:bg-amber-600 text-white h-7 text-xs px-3"
+                    className="rounded-full text-white h-7 text-xs px-3 hover:opacity-90"
+                    style={{ backgroundColor: "#FF4800" }}
                   >
                     {isSaving ? <LoaderCircle className="h-3 w-3 animate-spin" /> : 'Save now'}
                   </Button>
@@ -1048,10 +1059,10 @@ function ProfilePage() {
                               <span className="text-slate-500">Completed sections</span>
                               <span className="font-semibold text-slate-900">{completedSections}/{totalSections}</span>
                             </div>
-                            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-200">
+                            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
                               <div
-                                className="h-full rounded-full bg-emerald-500 transition-all duration-500"
-                                style={{ width: `${completionPercentage}%` }}
+                                className="h-full rounded-full transition-all duration-500"
+                                style={{ width: `${completionPercentage}%`, backgroundColor: "#FF4800" }}
                               />
                             </div>
                             <div className="mt-2 text-xs text-slate-500">
@@ -1063,7 +1074,7 @@ function ProfilePage() {
                             <Button
                               onClick={() => setPortfolioConfirmOpen(true)}
                               disabled={isSaving || isGenerating}
-                              className="w-full bg-emerald-600 text-white hover:bg-emerald-700"
+                              className="w-full rounded-full bg-slate-900 text-white hover:bg-slate-800"
                             >
                               {isGenerating ? (
                                 <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
@@ -1081,8 +1092,8 @@ function ProfilePage() {
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-stretch">
                 <div className="xl:order-2 xl:sticky xl:top-24 self-start h-[calc(100vh-7rem)]">
                   <div className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                    <Bot className="h-4 w-4 text-indigo-500" />
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-900" style={{ fontFamily: "Fraunces, Georgia, serif" }}>
+                    <Bot className="h-4 w-4" style={{ color: "#FF4800" }} />
                     Profile Assistant
                   </div>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -1101,7 +1112,7 @@ function ProfilePage() {
                             return (
                               <div
                                 key={message.id || `${message.role}-${index}`}
-                                className="ml-6 rounded-2xl bg-indigo-600 px-4 py-3 text-sm leading-6 text-white"
+                                className="ml-6 rounded-2xl bg-slate-900 px-4 py-3 text-sm leading-6 text-white"
                               >
                                 {message.content}
                               </div>
@@ -1119,7 +1130,8 @@ function ProfilePage() {
                                 <div className="mt-3 space-y-2">
                                   <button
                                     type="button"
-                                    className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 disabled:text-slate-400"
+                                    className="inline-flex items-center gap-1 text-xs font-medium hover:opacity-80 disabled:text-slate-400"
+                                    style={{ color: "#FF4800" }}
                                     onClick={() => applyAssistantContent(message.id)}
                                     disabled={message.applied}
                                   >
@@ -1143,7 +1155,8 @@ function ProfilePage() {
                                         <button
                                           key={`${message.id}-${option.index}`}
                                           type="button"
-                                          className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700"
+                                          className="inline-flex items-center gap-1 text-xs font-medium hover:opacity-80"
+                                          style={{ color: "#FF4800" }}
                                           onClick={() =>
                                             applyAssistantContent(message.id, {
                                               ...message.applyTarget,
@@ -1180,7 +1193,7 @@ function ProfilePage() {
                       className="min-h-28"
                     />
                     <Button
-                      className="w-full bg-slate-900 text-white hover:bg-slate-800"
+                      className="w-full rounded-full bg-slate-900 text-white hover:bg-slate-800"
                       onClick={handleAssistantSend}
                       disabled={aiLoading.assistant}
                     >
@@ -1199,38 +1212,37 @@ function ProfilePage() {
                 const Icon = section.icon;
                 
                 return (
-                  <div 
+                  <div
                     id={section.id}
-                    key={section.id} 
-                    className="mb-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden scroll-mt-20"
+                    key={section.id}
+                    className="mb-4 bg-white rounded-xl border border-slate-200 overflow-hidden scroll-mt-20"
                   >
-                    <div 
-                      className={`flex items-center justify-between p-4 cursor-pointer ${
-                        isComplete ? 'bg-green-50 dark:bg-green-900/20 border-b border-green-100 dark:border-green-800/30' : 
-                        'bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700'
-                      }`}
+                    <div
+                      className="flex items-center justify-between p-4 cursor-pointer bg-white border-b border-slate-100 hover:bg-slate-50 transition-colors"
                       onClick={() => toggleSection(section.id)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`rounded-md p-2 ${
-                          isComplete ? 'bg-green-100 dark:bg-green-800/30 text-green-600 dark:text-green-400' : 
-                          'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                        <div className={`rounded-lg p-2 ${
+                          isComplete ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'
                         }`}>
-                          <Icon className="h-5 w-5" />
+                          <Icon className="h-4 w-4" />
                         </div>
                         <div>
-                          <h3 className="font-medium text-gray-800 dark:text-white flex items-center">
+                          <h3
+                            className="font-semibold text-slate-900 flex items-center text-[16px] tracking-tight"
+                            style={{ fontFamily: "Fraunces, Georgia, serif" }}
+                          >
                             {section.name}
                             {isComplete && (
-                              <span className="ml-2 inline-flex items-center bg-green-100 dark:bg-green-800/30 text-green-700 dark:text-green-400 text-xs px-2 py-0.5 rounded-full">
+                              <span className="ml-2 inline-flex items-center bg-emerald-50 text-emerald-700 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ fontFamily: "Inter, sans-serif" }}>
                                 <CheckCircle className="h-3 w-3 mr-1" /> Complete
                               </span>
                             )}
                           </h3>
                         </div>
                       </div>
-                      
-                      <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+
+                      <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                     </div>
                     
                     {isExpanded && (
@@ -1258,7 +1270,7 @@ function ProfilePage() {
                 <Button type="button" variant="outline" onClick={handlePortfolioReadyNo} disabled={isGenerating}>
                   I need to update my profile
                 </Button>
-                <Button type="button" onClick={handlePortfolioReadyYes} disabled={isGenerating} className="bg-emerald-600 text-white hover:bg-emerald-700">
+                <Button type="button" onClick={handlePortfolioReadyYes} disabled={isGenerating} className="rounded-full bg-slate-900 text-white hover:bg-slate-800">
                   {isGenerating ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
                   Yes, my profile is ready
                 </Button>

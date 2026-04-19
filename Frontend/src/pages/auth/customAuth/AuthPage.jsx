@@ -20,7 +20,7 @@ import {
   Sparkles,
   FileText,
 } from "lucide-react";
-import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
+import NxtResumeWordmark from "@/components/brand/NxtResumeWordmark";
 
 // ── Design tokens ─────────────────────────────────────────────────────
 const DISPLAY = { fontFamily: "Fraunces, Georgia, serif" };
@@ -256,14 +256,8 @@ function AuthPage() {
         <section className="flex h-full items-center justify-center overflow-y-auto px-6 py-6 sm:px-10 lg:px-14">
           <div className="w-full max-w-[400px]">
             {/* Mobile brand row */}
-            <Link to="/" className="mb-5 flex items-center gap-2.5 lg:hidden">
-              <NxtResumeLogoMark className="h-8 w-8" />
-              <span
-                className="text-[18px] font-semibold tracking-tight text-slate-900"
-                style={DISPLAY}
-              >
-                NxtResume
-              </span>
+            <Link to="/" className="mb-5 flex items-center lg:hidden">
+              <NxtResumeWordmark size="20px" color="#0F172A" />
             </Link>
 
             {/* Tab switcher */}
@@ -577,14 +571,8 @@ function LeftBrandPanel({ isSignUp }) {
 
       <div className="relative z-10 px-12 pt-10">
         {/* Brand */}
-        <Link to="/" className="flex items-center gap-2.5">
-          <NxtResumeLogoMark className="h-9 w-9" />
-          <span
-            className="text-[20px] font-semibold tracking-tight text-white"
-            style={DISPLAY}
-          >
-            NxtResume
-          </span>
+        <Link to="/" className="flex items-center">
+          <NxtResumeWordmark size="22px" color="#FFFFFF" />
         </Link>
 
         {/* Headline */}

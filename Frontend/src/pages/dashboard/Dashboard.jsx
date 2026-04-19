@@ -1,120 +1,76 @@
-// C:\Users\NxtWave\Downloads\AiResumeBuilder-3\Frontend\src\pages\dashboard\Dashboard.jsx
-
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { logoutUser } from "@/Services/login";
-import { addUserData } from "@/features/user/userFeatures";
-import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
-import AddResume from "./components/AddResume";
-import ResumeCard from "./components/ResumeCard";
-import AddCoverLetter from "./components/AddCoverLetter";
-import CoverLetterCard from "./components/CoverLetterCard";
-import ATSScoreChecker from "./components/ATSScoreChecker";
-import { getAllCoverLetters } from "@/Services/coverLetterAPI";
-import { resolveApiData } from "@/lib/queryCacheUtils";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaEdit, FaKey, FaSignOutAlt, FaBell } from "react-icons/fa";
+import {
+  useNavigate,
+  useOutletContext,
+  useSearchParams,
+} from "react-router-dom";
 import {
   Search,
   Grid,
   List,
-  Plus,
   FileText,
   PieChart,
   ChevronDown,
-  Clock,
-  ArrowUpDown,
+  ChevronUp,
   LoaderCircle,
-  Briefcase,
-  GraduationCap,
-  FolderGit,
-  Award,
-  Edit,
-  BadgePlus,
-  PlusCircle,
   User,
-  Filter,
   SlidersHorizontal,
   Moon,
   Sun,
   LayoutDashboard,
   HelpCircle,
   LogOut,
-  ChevronUp,
   CircleAlert,
   Sparkles,
   Mail,
+  Edit,
+  Bell,
+  Key,
+  Check,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
-import { useProfileQuery, useResumeListQuery } from "@/hooks/useAppQueryData";
+
+import { logoutUser } from "@/Services/login";
+import { addUserData } from "@/features/user/userFeatures";
+import { getAllCoverLetters } from "@/Services/coverLetterAPI";
+import { resolveApiData } from "@/lib/queryCacheUtils";
+import {
+  useProfileQuery,
+  useResumeListQuery,
+} from "@/hooks/useAppQueryData";
 import { getProfileCompletionDetails } from "@/lib/profileCompletion";
 
-// Animated User Icon Component
-const AnimatedUserIcon = ({ fullName }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [displayLetter, setDisplayLetter] = useState('');
+import NxtResumeWordmark from "@/components/brand/NxtResumeWordmark";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
-  // Get all letters from the full name (remove spaces and convert to uppercase)
-  const letters = fullName ? fullName.replace(/\s+/g, '').toUpperCase().split('') : ['U'];
+import AddResume from "./components/AddResume";
+import ResumeCard from "./components/ResumeCard";
+import AddCoverLetter from "./components/AddCoverLetter";
+import CoverLetterCard from "./components/CoverLetterCard";
+import ATSScoreChecker from "./components/ATSScoreChecker";
 
-  useEffect(() => {
-    if (letters.length === 0) return;
+// ── Design tokens ─────────────────────────────────────────────────────
+const DISPLAY = { fontFamily: "Fraunces, Georgia, serif" };
+const ACCENT = "#FF4800";
 
-    const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % letters.length);
-    }, 2000); // Change letter every 2 seconds
+const PROFILE_COACHMARK_DISMISSED_KEY = "dashboard-profile-coachmark-dismissed";
 
-    return () => clearInterval(interval);
-  }, [letters.length]);
-
-  useEffect(() => {
-    setDisplayLetter(letters[currentIndex] || 'U');
-  }, [currentIndex, letters]);
-
-  return (
-    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-emerald-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-md overflow-hidden relative">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentIndex}
-          initial={{ x: 30, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: -30, opacity: 0 }}
-          transition={{
-            type: "spring",
-            stiffness: 300,
-            damping: 25,
-            duration: 0.4
-          }}
-          className="absolute inset-0 flex items-center justify-center"
-        >
-          {displayLetter}
-        </motion.div>
-      </AnimatePresence>
-    </div>
-  );
-};
-
-// More compact, visually appealing stat card component
-const StatCard = ({ icon, label, count, className = "" }) => (
-  <div className={`flex items-center gap-2 bg-white/60 dark:bg-gray-800/60 px-3 py-2 rounded-lg backdrop-blur-sm border border-white/20 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300 ${className}`}>
-    <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 dark:from-indigo-500/20 dark:to-purple-500/20 p-1.5 rounded-md">
-      {React.cloneElement(icon, { className: "w-4 h-4 text-indigo-600 dark:text-indigo-400" })}
-    </div>
-    <div>
-      <span className="text-base font-bold text-gray-800 dark:text-white leading-none">{count}</span>
-      <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">{label}</span>
-    </div>
-  </div>
-);
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "alphabetical", label: "A to Z" },
+];
 
 function Dashboard() {
-  const PROFILE_COACHMARK_DISMISSED_KEY = "dashboard-profile-coachmark-dismissed";
   const { darkMode, toggleDarkMode } = useOutletContext();
   const user = useSelector((state) => state.editUser.userData);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  // ── UI state ──
   const [viewMode, setViewMode] = useState("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [showSortOptions, setShowSortOptions] = useState(false);
@@ -122,32 +78,39 @@ function Dashboard() {
   const [showATSModal, setShowATSModal] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [activeNav, setActiveNav] = useState("dashboard");
+
+  // ── Tab state (URL-synced) ──
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTabState] = useState(
     searchParams.get("tab") === "cover-letters" ? "cover-letters" : "resumes"
   );
-
-  // Setter that updates BOTH local state and URL query param
   const setActiveTab = (tab) => {
     setActiveTabState(tab);
     setSearchParams({ tab }, { replace: true });
   };
-
-  // Sync tab when URL query param changes (e.g. browser back/forward)
   useEffect(() => {
     const tab = searchParams.get("tab");
     if (tab === "cover-letters") setActiveTabState("cover-letters");
     else if (tab === "resumes") setActiveTabState("resumes");
   }, [searchParams]);
+
+  // ── Cover letters (local list) ──
   const [coverLetterList, setCoverLetterList] = useState([]);
   const [isCoverLettersLoading, setIsCoverLettersLoading] = useState(false);
+
+  // ── Coachmark ──
   const [showProfileCoachmark, setShowProfileCoachmark] = useState(false);
-  const [coachmarkPosition, setCoachmarkPosition] = useState({ top: 24, left: 280 });
+  const [coachmarkPosition, setCoachmarkPosition] = useState({
+    top: 24,
+    left: 280,
+  });
+
+  // ── Refs ──
   const sortDropdownRef = useRef(null);
-  const userDropdownRef = useRef(null);
   const profileDropdownRef = useRef(null);
   const profileNavRef = useRef(null);
-  const navigate = useNavigate();
+
+  // ── Data ──
   const resumeListQuery = useResumeListQuery({ enabled: Boolean(user) });
   const profileQuery = useProfileQuery({
     enabled: Boolean(user),
@@ -156,18 +119,40 @@ function Dashboard() {
   });
   const resumeList = resumeListQuery.data || [];
   const isLoading = resumeListQuery.isPending && !resumeListQuery.data;
+
   const filteredList = useMemo(() => {
-    let filtered = [...resumeList];
+    let list = [...resumeList];
     if (searchQuery.trim()) {
-      filtered = filtered.filter((resume) =>
-        resume.title.toLowerCase().includes(searchQuery.toLowerCase())
+      list = list.filter((r) =>
+        r.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    if (sortOption === "newest") filtered.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-    else if (sortOption === "oldest") filtered.sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
-    else if (sortOption === "alphabetical") filtered.sort((a, b) => a.title.localeCompare(b.title));
-    return filtered;
+    if (sortOption === "newest")
+      list.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    else if (sortOption === "oldest")
+      list.sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
+    else if (sortOption === "alphabetical")
+      list.sort((a, b) => a.title.localeCompare(b.title));
+    return list;
   }, [resumeList, searchQuery, sortOption]);
+
+  const filteredCoverLetters = useMemo(() => {
+    let list = [...coverLetterList];
+    if (searchQuery.trim()) {
+      list = list.filter((cl) =>
+        (cl.title || "").toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    if (sortOption === "newest")
+      list.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    else if (sortOption === "oldest")
+      list.sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
+    else if (sortOption === "alphabetical")
+      list.sort((a, b) =>
+        (a.title || "").localeCompare(b.title || "")
+      );
+    return list;
+  }, [coverLetterList, searchQuery, sortOption]);
 
   const completionDetails = useMemo(
     () => getProfileCompletionDetails(profileQuery.data || user || {}),
@@ -175,7 +160,6 @@ function Dashboard() {
   );
   const profileCompletion = completionDetails.percentage;
 
-  const isDarkMode = document.documentElement.classList.contains('dark');
   const refreshResumeData = () => resumeListQuery.refetch();
 
   const refreshCoverLetters = async () => {
@@ -195,19 +179,6 @@ function Dashboard() {
     if (!user) return;
     refreshCoverLetters();
   }, [user?._id]);
-
-  const filteredCoverLetters = useMemo(() => {
-    let filtered = [...coverLetterList];
-    if (searchQuery.trim()) {
-      filtered = filtered.filter((cl) =>
-        (cl.title || "").toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    if (sortOption === "newest") filtered.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-    else if (sortOption === "oldest") filtered.sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
-    else if (sortOption === "alphabetical") filtered.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
-    return filtered;
-  }, [coverLetterList, searchQuery, sortOption]);
 
   useEffect(() => {
     if (resumeListQuery.isError) {
@@ -237,15 +208,19 @@ function Dashboard() {
     }
   };
 
+  // ── Click-outside handlers ──
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target)) {
+      if (
+        sortDropdownRef.current &&
+        !sortDropdownRef.current.contains(event.target)
+      ) {
         setShowSortOptions(false);
       }
-      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
-        setUserDropdownOpen(false);
-      }
-      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(event.target)
+      ) {
         setUserDropdownOpen(false);
       }
     };
@@ -253,22 +228,18 @@ function Dashboard() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // ── Coachmark visibility ──
   useEffect(() => {
-    if (!user || profileQuery.isFetching) {
-      return;
-    }
-
+    if (!user || profileQuery.isFetching) return;
     const dismissed =
       typeof window !== "undefined" &&
       window.sessionStorage.getItem(PROFILE_COACHMARK_DISMISSED_KEY) === "true";
-
     setShowProfileCoachmark(profileCompletion < 50 && !dismissed);
   }, [profileCompletion, profileQuery.isFetching, user]);
 
+  // ── Coachmark positioning ──
   useEffect(() => {
-    if (!showProfileCoachmark || !profileNavRef.current) {
-      return;
-    }
+    if (!showProfileCoachmark || !profileNavRef.current) return;
 
     if (
       typeof document !== "undefined" &&
@@ -277,14 +248,10 @@ function Dashboard() {
     ) {
       document.activeElement.blur();
     }
-
     setShowSortOptions(false);
 
-    const updateCoachmarkPosition = () => {
-      if (!profileNavRef.current) {
-        return;
-      }
-
+    const update = () => {
+      if (!profileNavRef.current) return;
       const rect = profileNavRef.current.getBoundingClientRect();
       setCoachmarkPosition({
         top: Math.max(rect.top + rect.height / 2 - 110, 24),
@@ -292,266 +259,409 @@ function Dashboard() {
       });
     };
 
-    updateCoachmarkPosition();
-    window.addEventListener("resize", updateCoachmarkPosition);
-    window.addEventListener("scroll", updateCoachmarkPosition, true);
-
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
     return () => {
-      window.removeEventListener("resize", updateCoachmarkPosition);
-      window.removeEventListener("scroll", updateCoachmarkPosition, true);
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
     };
   }, [showProfileCoachmark]);
 
-  const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08 } } };
-  const itemVariants = { hidden: { y: 15, opacity: 0 }, visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 120, damping: 12 } } };
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
+  };
+  const itemVariants = {
+    hidden: { y: 12, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 120, damping: 14 },
+    },
+  };
 
-  // Get time-based greeting
   const getGreeting = () => {
     const hour = new Date().getHours();
-    const firstName = user.fullName ? user.fullName.split(' ')[0] : 'User';
+    const firstName = user?.fullName ? user.fullName.split(" ")[0] : "User";
     if (hour < 12) return `Good morning, ${firstName}`;
     if (hour < 18) return `Good afternoon, ${firstName}`;
     return `Good evening, ${firstName}`;
   };
 
-  const getLastUpdatedDate = () => {
-    if (resumeList.length > 0) {
-      return new Date(Math.max(...resumeList.map(r => new Date(r.updatedAt)))).toLocaleDateString();
-    }
-    return "-";
-  };
+  const initials = user?.fullName
+    ? user.fullName
+        .split(" ")
+        .map((w) => w[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
+    : "U";
+
+  const sortLabel =
+    SORT_OPTIONS.find((o) => o.value === sortOption)?.label || "Sort";
 
   const navItems = [
-    { key: "dashboard",     label: "Dashboard",     icon: <LayoutDashboard className="h-4 w-4" /> },
-    { key: "resumes",       label: "Resumes",       icon: <FileText        className="h-4 w-4" /> },
-    { key: "cover-letters", label: "Cover Letters", icon: <Mail            className="h-4 w-4" /> },
-    { key: "profile",       label: "Profile",       icon: <User            className="h-4 w-4" /> },
-    { key: "ats",           label: "ATS Checker",   icon: <PieChart        className="h-4 w-4" /> },
-    { key: "help",          label: "Help",          icon: <HelpCircle      className="h-4 w-4" /> },
+    {
+      key: "dashboard",
+      label: "Dashboard",
+      icon: LayoutDashboard,
+    },
+    { key: "resumes", label: "Resumes", icon: FileText },
+    { key: "cover-letters", label: "Cover Letters", icon: Mail },
+    { key: "profile", label: "Profile", icon: User },
+    { key: "ats", label: "ATS Checker", icon: PieChart },
+    { key: "help", label: "Help", icon: HelpCircle },
   ];
 
+  const handleNav = (key) => {
+    if (key === "ats") return navigate("/app/ats-checker");
+    if (key === "resumes") return navigate("/app/resumes");
+    if (key === "cover-letters") return navigate("/app/cover-letters");
+    if (key === "profile") return navigate("/profile");
+    if (key === "help") return navigate("/app/documentation");
+    setActiveNav(key);
+  };
+
   return (
-    <div className="h-screen flex overflow-hidden bg-gray-50 dark:bg-gray-900">
-
-      {/* ─── LEFT SIDEBAR ─── */}
-      <aside className="w-60 flex-shrink-0 bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 flex flex-col h-screen shadow-xl z-20">
-
-        {/* Logo */}
-        <div className="px-5 py-5 border-b border-white/10 flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <NxtResumeLogoMark className="h-9 w-9" />
-            <span className="text-white font-bold text-base">NxtResume</span>
-          </div>
+    <div className="flex h-screen overflow-hidden bg-white text-slate-900 antialiased">
+      {/* ═══════════════ SIDEBAR ═══════════════ */}
+      <aside className="z-20 flex h-screen w-60 flex-shrink-0 flex-col border-r border-slate-200 bg-white">
+        {/* Brand */}
+        <div className="flex-shrink-0 px-5 py-5">
+          <NxtResumeWordmark size="20px" color="#0F172A" />
         </div>
 
-        {/* Nav items */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar">
-          {navItems.map(({ key, label, icon }) => (
-            <button
-              key={key}
-              ref={key === "profile" ? profileNavRef : null}
-              onClick={() => {
-                if (key === "ats")           { navigate("/app/ats-checker");    return; }
-                if (key === "resumes")       { navigate("/app/resumes");        return; }
-                if (key === "cover-letters") { navigate("/app/cover-letters");  return; }
-                if (key === "profile")       { navigate("/profile");            return; }
-                if (key === "help")          { navigate("/app/documentation");  return; }
-                setActiveNav(key);
-              }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                activeNav === key
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/40"
-                  : "text-indigo-200 hover:bg-white/10 hover:text-white"
-              } ${showProfileCoachmark && key === "profile" ? "relative z-40 ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-900" : ""}`}
-            >
-              {icon}
-              {label}
-              {key === "resumes" && (
-                <span className={`ml-auto text-xs px-1.5 py-0.5 rounded-full font-bold ${activeNav === key ? "bg-white/20 text-white" : "bg-white/10 text-indigo-300"}`}>
-                  {resumeList.length}
-                </span>
-              )}
-              {key === "cover-letters" && (
-                <span className={`ml-auto text-xs px-1.5 py-0.5 rounded-full font-bold ${activeTab === "cover-letters" ? "bg-white/20 text-white" : "bg-white/10 text-indigo-300"}`}>
-                  {coverLetterList.length}
-                </span>
-              )}
-              {key === "profile" && (() => {
-                const size = 26;
-                const strokeWidth = 2.5;
-                const radius = (size - strokeWidth) / 2;
-                const circumference = 2 * Math.PI * radius;
-                const offset = circumference - (profileCompletion / 100) * circumference;
-                const color = profileCompletion >= 80 ? '#34d399' : profileCompletion >= 50 ? '#fbbf24' : '#f87171';
-                return (
-                  <div className="relative ml-auto flex-shrink-0" style={{ width: size, height: size }}>
-                    <svg width={size} height={size} className="-rotate-90">
-                      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={strokeWidth} />
-                      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={color} strokeWidth={strokeWidth} strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-700" />
-                    </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-[7px] font-bold" style={{ color }}>
-                      {profileCompletion}
-                    </span>
-                  </div>
-                );
-              })()}
-            </button>
-          ))}
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto px-3 py-2">
+          <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+            Workspace
+          </p>
+
+          {navItems.map(({ key, label, icon: Icon }) => {
+            const active = activeNav === key;
+            const isCoachTarget = showProfileCoachmark && key === "profile";
+            return (
+              <button
+                key={key}
+                ref={key === "profile" ? profileNavRef : null}
+                onClick={() => handleNav(key)}
+                className={`group relative flex w-full items-center gap-3 rounded-md px-3 py-2 text-[13px] font-medium transition-colors ${
+                  active
+                    ? "bg-slate-50 text-slate-900"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                } ${
+                  isCoachTarget
+                    ? "z-40 ring-2 ring-amber-300 ring-offset-2 ring-offset-white"
+                    : ""
+                }`}
+              >
+                {active && (
+                  <span
+                    className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r"
+                    style={{ backgroundColor: ACCENT }}
+                  />
+                )}
+                <Icon
+                  className={`h-4 w-4 ${
+                    active ? "text-slate-900" : "text-slate-500"
+                  }`}
+                />
+                <span>{label}</span>
+
+                {key === "resumes" && (
+                  <span
+                    className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                      active
+                        ? "bg-slate-900 text-white"
+                        : "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {resumeList.length}
+                  </span>
+                )}
+
+                {key === "cover-letters" && (
+                  <span
+                    className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                      activeTab === "cover-letters"
+                        ? "bg-slate-900 text-white"
+                        : "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {coverLetterList.length}
+                  </span>
+                )}
+
+                {key === "profile" &&
+                  (() => {
+                    const size = 24;
+                    const stroke = 2.5;
+                    const r = (size - stroke) / 2;
+                    const circ = 2 * Math.PI * r;
+                    const offset = circ - (profileCompletion / 100) * circ;
+                    const color =
+                      profileCompletion >= 80
+                        ? "#10B981"
+                        : profileCompletion >= 50
+                        ? "#F59E0B"
+                        : ACCENT;
+                    return (
+                      <div
+                        className="relative ml-auto flex-shrink-0"
+                        style={{ width: size, height: size }}
+                      >
+                        <svg
+                          width={size}
+                          height={size}
+                          className="-rotate-90"
+                        >
+                          <circle
+                            cx={size / 2}
+                            cy={size / 2}
+                            r={r}
+                            fill="none"
+                            stroke="rgba(15,23,42,0.08)"
+                            strokeWidth={stroke}
+                          />
+                          <circle
+                            cx={size / 2}
+                            cy={size / 2}
+                            r={r}
+                            fill="none"
+                            stroke={color}
+                            strokeWidth={stroke}
+                            strokeDasharray={circ}
+                            strokeDashoffset={offset}
+                            strokeLinecap="round"
+                            className="transition-all duration-700"
+                          />
+                        </svg>
+                        <span
+                          className="absolute inset-0 flex items-center justify-center text-[7px] font-bold"
+                          style={{ color }}
+                        >
+                          {profileCompletion}
+                        </span>
+                      </div>
+                    );
+                  })()}
+              </button>
+            );
+          })}
         </nav>
 
-        {/* Profile button at bottom — dropdown opens up-right */}
-        <div className="px-3 py-4 border-t border-white/10 flex-shrink-0" ref={profileDropdownRef}>
+        {/* Profile at bottom */}
+        <div
+          className="relative flex-shrink-0 border-t border-slate-200 px-3 py-3"
+          ref={profileDropdownRef}
+        >
           <button
             onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-indigo-200 hover:bg-white/10 hover:text-white transition-all duration-200 text-sm font-medium"
+            className="flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors hover:bg-slate-50"
           >
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-              {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white">
+              {initials}
             </div>
-            <div className="flex-1 min-w-0 text-left">
-              <p className="truncate text-xs font-semibold text-white leading-tight">{user.fullName || "User"}</p>
-              <p className="truncate text-[10px] text-indigo-400 leading-tight">{user.email || ""}</p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[12.5px] font-semibold text-slate-900">
+                {user?.fullName || "User"}
+              </p>
+              <p className="truncate text-[10.5px] text-slate-500">
+                {user?.email || ""}
+              </p>
             </div>
-            <ChevronUp className={`h-3.5 w-3.5 flex-shrink-0 transition-transform ${userDropdownOpen ? "rotate-180" : ""}`} />
+            <ChevronUp
+              className={`h-3.5 w-3.5 flex-shrink-0 text-slate-400 transition-transform ${
+                userDropdownOpen ? "" : "rotate-180"
+              }`}
+            />
           </button>
 
-          {/* Dropdown — pops up and to the RIGHT of sidebar */}
           {userDropdownOpen && (
-            <div className="fixed bottom-16 left-60 ml-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-[9999] py-2 text-left">
-              <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user.fullName || "User"}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 break-all mt-0.5">{user.email || ""}</p>
+            <div className="fixed bottom-16 left-60 ml-2 z-[9999] w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+              <div className="border-b border-slate-100 px-4 py-3">
+                <p className="truncate text-sm font-semibold text-slate-900">
+                  {user?.fullName || "User"}
+                </p>
+                <p className="truncate text-xs text-slate-500">
+                  {user?.email || ""}
+                </p>
               </div>
-              <div className="px-4 py-2 space-y-1">
-                <div className="flex justify-between text-xs py-1">
-                  <span className="text-gray-500 dark:text-gray-400">Student ID</span>
-                  <span className="font-mono text-gray-700 dark:text-gray-300">{user.niatId || "—"}</span>
+              <div className="px-4 py-2">
+                <div className="flex items-center justify-between py-1 text-[11.5px]">
+                  <span className="text-slate-500">Student ID</span>
+                  <span className="font-mono text-slate-700">
+                    {user?.niatId || "—"}
+                  </span>
                 </div>
               </div>
-              <div className="px-4 py-1 border-t border-gray-100 dark:border-gray-700 space-y-0.5">
-                <button
-                  onClick={() => { navigate('/profile'); setUserDropdownOpen(false); }}
-                  className="w-full text-left text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 flex items-center gap-2 py-1.5"
-                >
-                  <FaEdit className="w-3 h-3" /> Edit Profile
-                </button>
-                <button
-                  onClick={() => { navigate('/notifications'); setUserDropdownOpen(false); }}
-                  className="w-full text-left text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 flex items-center gap-2 py-1.5"
-                >
-                  <FaBell className="w-3 h-3" /> Notifications
-                </button>
-                <button
-                  onClick={() => { navigate('/change-password'); setUserDropdownOpen(false); }}
-                  className="w-full text-left text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 flex items-center gap-2 py-1.5"
-                >
-                  <FaKey className="w-3 h-3" /> Change Password
-                </button>
-                <button
+              <div className="border-t border-slate-100 py-1">
+                <DropdownItem
+                  icon={<Edit className="h-3.5 w-3.5" />}
+                  label="Edit profile"
+                  onClick={() => {
+                    navigate("/profile");
+                    setUserDropdownOpen(false);
+                  }}
+                />
+                <DropdownItem
+                  icon={<Bell className="h-3.5 w-3.5" />}
+                  label="Notifications"
+                  onClick={() => {
+                    navigate("/notifications");
+                    setUserDropdownOpen(false);
+                  }}
+                />
+                <DropdownItem
+                  icon={<Key className="h-3.5 w-3.5" />}
+                  label="Change password"
+                  onClick={() => {
+                    navigate("/change-password");
+                    setUserDropdownOpen(false);
+                  }}
+                />
+              </div>
+              <div className="border-t border-slate-100 py-1">
+                <DropdownItem
+                  icon={<LogOut className="h-3.5 w-3.5" />}
+                  label="Sign out"
                   onClick={handleLogout}
-                  className="w-full text-left text-sm text-red-500 hover:text-red-700 flex items-center gap-2 py-1.5"
-                >
-                  <FaSignOutAlt className="w-3 h-3" /> Sign out
-                </button>
+                  danger
+                />
               </div>
             </div>
           )}
         </div>
       </aside>
 
-      {showProfileCoachmark ? (
+      {/* ═══════════════ COACHMARK OVERLAY ═══════════════ */}
+      {showProfileCoachmark && (
         <>
           <div className="pointer-events-none fixed inset-0 z-30 bg-slate-950/45" />
           <div
-            className="fixed z-40 hidden w-[340px] rounded-2xl border border-amber-100 bg-white p-5 shadow-2xl shadow-slate-950/20 lg:block"
+            className="fixed z-40 hidden w-[340px] rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl lg:block"
             style={{
               top: `${coachmarkPosition.top}px`,
               left: `${coachmarkPosition.left}px`,
             }}
           >
-            <div className="absolute left-[-10px] top-24 h-5 w-5 rotate-45 border-b border-l border-amber-100 bg-white" />
+            <div className="absolute left-[-10px] top-24 h-5 w-5 rotate-45 border-b border-l border-slate-200 bg-white" />
             <div className="mb-3 flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
+              <div
+                className="flex h-11 w-11 items-center justify-center rounded-xl"
+                style={{
+                  backgroundColor: `${ACCENT}18`,
+                  color: ACCENT,
+                }}
+              >
                 <CircleAlert className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-500">
-                  Quick Start
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-[0.2em]"
+                  style={{ color: ACCENT }}
+                >
+                  Quick start
                 </p>
-                <h3 className="text-xl font-semibold text-slate-900">Complete Your Profile</h3>
+                <h3
+                  className="text-[20px] font-semibold tracking-tight text-slate-900"
+                  style={DISPLAY}
+                >
+                  Complete your profile
+                </h3>
               </div>
             </div>
 
-            <p className="text-sm leading-6 text-slate-600">
-              Your profile is currently {profileCompletion}% complete. Tap the
-              Profile menu and finish at least 50% so your details stay ready
-              across the app.
+            <p className="text-[13px] leading-relaxed text-slate-600">
+              Your profile is {profileCompletion}% complete. Finish at least
+              50% so your details stay ready across the app.
             </p>
 
-            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <div className="mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                 <span>Progress</span>
                 <span>{profileCompletion}%</span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+              <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-indigo-500 transition-all duration-500"
-                  style={{ width: `${Math.max(profileCompletion, 8)}%` }}
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${Math.max(profileCompletion, 8)}%`,
+                    backgroundColor: ACCENT,
+                  }}
                 />
               </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {completionDetails.missingSections.slice(0, 4).map((section) => (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {completionDetails.missingSections.slice(0, 4).map((s) => (
                   <span
-                    key={section}
-                    className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200"
+                    key={s}
+                    className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600 ring-1 ring-slate-200"
                   >
-                    {section}
+                    {s}
                   </span>
                 ))}
               </div>
             </div>
 
-            <div className="mt-5 flex items-center justify-between gap-3">
-              <Button variant="outline" onClick={dismissProfileCoachmark}>
-                Maybe Later
+            <div className="mt-4 flex items-center justify-between gap-2">
+              <Button
+                variant="outline"
+                className="rounded-full border-slate-200"
+                onClick={dismissProfileCoachmark}
+              >
+                Maybe later
               </Button>
               <Button
-                className="bg-indigo-600 text-white hover:bg-indigo-700"
+                className="rounded-full bg-slate-900 text-white hover:bg-slate-800"
                 onClick={() => {
                   dismissProfileCoachmark();
                   navigate("/profile");
                 }}
               >
-                <Sparkles className="mr-2 h-4 w-4" />
-                Complete Profile
+                <Sparkles className="mr-1.5 h-4 w-4" />
+                Complete profile
               </Button>
             </div>
           </div>
         </>
-      ) : null}
+      )}
 
-      {/* ─── MAIN CONTENT ─── */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-
+      {/* ═══════════════ MAIN ═══════════════ */}
+      <div className="flex h-screen flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="flex-shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between shadow-sm">
+        <header className="flex flex-shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white px-6 py-4">
           <div>
-            <h1 className="text-lg font-bold text-gray-800 dark:text-white">{getGreeting()} 👋</h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            <h1
+              className="text-[22px] font-semibold leading-tight tracking-tight text-slate-900"
+              style={DISPLAY}
+            >
+              {getGreeting()}
+            </h1>
+            <p className="mt-0.5 text-[11.5px] text-slate-500">
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
           </div>
 
-          {/* Toolbar: search + sort + view + dark mode toggle */}
-          <div className="flex items-center gap-3">
+          {/* Toolbar */}
+          <div className="flex items-center gap-2.5">
+            {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
               <Input
-                placeholder="Search resumes..."
+                placeholder={`Search ${activeTab === "resumes" ? "resumes" : "cover letters"}…`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 w-56 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-lg h-9 text-sm"
+                className="h-9 w-60 rounded-lg border-slate-200 bg-white pl-9 text-[13px] focus-visible:ring-slate-900/10"
               />
             </div>
 
+            {/* Sort */}
             <div
               ref={sortDropdownRef}
               className={`relative ${showProfileCoachmark ? "z-0" : "z-50"}`}
@@ -559,35 +669,42 @@ function Dashboard() {
               <Button
                 variant="outline"
                 onClick={() => setShowSortOptions(!showSortOptions)}
-                className="h-9 rounded-lg bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm flex items-center"
+                className="h-9 gap-1.5 rounded-lg border-slate-200 bg-white text-[13px] font-medium text-slate-700"
               >
-                <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5" />
-                {sortOption === "newest" && "Newest first"}
-                {sortOption === "oldest" && "Oldest first"}
-                {sortOption === "alphabetical" && "A to Z"}
-                <ChevronDown className="h-3.5 w-3.5 ml-1.5" />
+                <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" />
+                {sortLabel}
+                <ChevronDown
+                  className={`h-3.5 w-3.5 text-slate-400 transition-transform ${
+                    showSortOptions ? "rotate-180" : ""
+                  }`}
+                />
               </Button>
               {showSortOptions && (
                 <div
-                  className={`absolute mt-1 right-0 w-44 rounded-md shadow-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 ${
+                  className={`absolute right-0 mt-1 w-44 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg ${
                     showProfileCoachmark ? "z-20" : "z-[9999]"
                   }`}
                 >
                   <div className="py-1">
-                    {[
-                      { value: "newest", label: "Newest first" },
-                      { value: "oldest", label: "Oldest first" },
-                      { value: "alphabetical", label: "A to Z" },
-                    ].map(({ value, label }) => (
+                    {SORT_OPTIONS.map(({ value, label }) => (
                       <button
                         key={value}
-                        onClick={() => { setSortOption(value); setShowSortOptions(false); }}
-                        className={`w-full text-left px-3 py-2 text-sm ${sortOption === value ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"}`}
+                        onClick={() => {
+                          setSortOption(value);
+                          setShowSortOptions(false);
+                        }}
+                        className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] ${
+                          sortOption === value
+                            ? "bg-slate-50 font-medium text-slate-900"
+                            : "text-slate-700 hover:bg-slate-50"
+                        }`}
                       >
-                        <div className="flex items-center">
-                          {sortOption === value && <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
-                          <span className={sortOption === value ? "" : "ml-6"}>{label}</span>
-                        </div>
+                        {sortOption === value ? (
+                          <Check className="h-3.5 w-3.5" />
+                        ) : (
+                          <span className="w-3.5" />
+                        )}
+                        {label}
                       </button>
                     ))}
                   </div>
@@ -595,65 +712,67 @@ function Dashboard() {
               )}
             </div>
 
-            <div className="bg-gray-100 dark:bg-gray-700 rounded-lg flex p-1">
-              <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-white dark:bg-gray-600 text-emerald-500 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"}`}>
-                <Grid className="h-4 w-4" />
-              </button>
-              <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-white dark:bg-gray-600 text-emerald-500 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"}`}>
-                <List className="h-4 w-4" />
-              </button>
+            {/* View toggle */}
+            <div className="flex items-center gap-0 rounded-lg border border-slate-200 bg-white p-0.5">
+              {[
+                { mode: "grid", Icon: Grid },
+                { mode: "list", Icon: List },
+              ].map(({ mode, Icon }) => (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  className={`rounded-md p-1.5 transition-colors ${
+                    viewMode === mode
+                      ? "bg-slate-900 text-white"
+                      : "text-slate-500 hover:text-slate-900"
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                </button>
+              ))}
             </div>
 
-            <Button onClick={toggleDarkMode} variant="outline" size="icon" className="h-9 w-9 border-gray-200 dark:border-gray-600">
-              {darkMode ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-indigo-600" />}
+            {/* Dark mode */}
+            <Button
+              onClick={toggleDarkMode}
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-lg border-slate-200 bg-white"
+            >
+              {darkMode ? (
+                <Sun className="h-4 w-4 text-amber-500" />
+              ) : (
+                <Moon className="h-4 w-4 text-slate-700" />
+              )}
             </Button>
           </div>
         </header>
 
-        {/* Tab Switcher: Resumes / Cover Letters */}
-        <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-6">
-          <div className="flex gap-1">
-            <button
+        {/* Tab Switcher */}
+        <div className="flex-shrink-0 border-b border-slate-200 bg-white px-6">
+          <div className="flex gap-0">
+            <TabButton
+              active={activeTab === "resumes"}
               onClick={() => setActiveTab("resumes")}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === "resumes"
-                  ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
-                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-              }`}
-            >
-              <FileText className="h-4 w-4 inline mr-1.5" />
-              Resumes
-              <span className="ml-2 text-xs bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
-                {resumeList.length}
-              </span>
-            </button>
-            <button
+              icon={<FileText className="h-3.5 w-3.5" />}
+              label="Resumes"
+              count={resumeList.length}
+            />
+            <TabButton
+              active={activeTab === "cover-letters"}
               onClick={() => setActiveTab("cover-letters")}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === "cover-letters"
-                  ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
-                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-              }`}
-            >
-              <Mail className="h-4 w-4 inline mr-1.5" />
-              Cover Letters
-              <span className="ml-2 text-xs bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
-                {coverLetterList.length}
-              </span>
-            </button>
+              icon={<Mail className="h-3.5 w-3.5" />}
+              label="Cover Letters"
+              count={coverLetterList.length}
+            />
           </div>
         </div>
 
-        {/* Cards — only this scrolls */}
-        <main className="flex-1 overflow-y-auto custom-scrollbar p-6">
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto bg-[#FAFAF9] px-6 py-6">
           {activeTab === "resumes" ? (
             isLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <LoaderCircle className="h-10 w-10 animate-spin text-indigo-500 mx-auto mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">Loading your resumes...</p>
-                </div>
-              </div>
+              <LoadingBlock label="Loading your resumes…" />
             ) : (
               <AnimatePresence>
                 <motion.div
@@ -662,71 +781,171 @@ function Dashboard() {
                   initial="hidden"
                   animate="visible"
                   exit="exit"
-                  className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4" : "flex flex-col space-y-3"}
+                  className={
+                    viewMode === "grid"
+                      ? "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
+                      : "flex flex-col gap-3"
+                  }
                 >
                   {!searchQuery && (
-                    <motion.div variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
+                    <motion.div
+                      variants={itemVariants}
+                      className={viewMode === "list" ? "w-full" : ""}
+                    >
                       <AddResume viewMode={viewMode} />
                     </motion.div>
                   )}
                   {filteredList.map((resume) => (
-                    <motion.div key={resume._id} variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
-                    <ResumeCard resume={resume} refreshData={refreshResumeData} viewMode={viewMode} />
+                    <motion.div
+                      key={resume._id}
+                      variants={itemVariants}
+                      className={viewMode === "list" ? "w-full" : ""}
+                    >
+                      <ResumeCard
+                        resume={resume}
+                        refreshData={refreshResumeData}
+                        viewMode={viewMode}
+                      />
                     </motion.div>
                   ))}
                   {filteredList.length === 0 && searchQuery && (
-                    <div className="col-span-full text-center py-16">
-                      <Search className="h-10 w-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                      <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300">No matches found</h3>
-                      <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Try adjusting your search query</p>
-                    </div>
+                    <EmptySearch query={searchQuery} />
                   )}
                 </motion.div>
               </AnimatePresence>
             )
+          ) : isCoverLettersLoading ? (
+            <LoadingBlock label="Loading your cover letters…" />
           ) : (
-            isCoverLettersLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <LoaderCircle className="h-10 w-10 animate-spin text-indigo-500 mx-auto mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">Loading your cover letters...</p>
-                </div>
-              </div>
-            ) : (
-              <AnimatePresence>
-                <motion.div
-                  key={`cover-letters-${viewMode}`}
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4" : "flex flex-col space-y-3"}
-                >
-                  {!searchQuery && (
-                    <motion.div variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
-                      <AddCoverLetter viewMode={viewMode} onCreated={refreshCoverLetters} />
-                    </motion.div>
-                  )}
-                  {filteredCoverLetters.map((cl) => (
-                    <motion.div key={cl._id} variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
-                      <CoverLetterCard coverLetter={cl} refreshData={refreshCoverLetters} viewMode={viewMode} />
-                    </motion.div>
-                  ))}
-                  {filteredCoverLetters.length === 0 && searchQuery && (
-                    <div className="col-span-full text-center py-16">
-                      <Search className="h-10 w-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                      <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300">No matches found</h3>
-                      <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Try adjusting your search query</p>
-                    </div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            )
+            <AnimatePresence>
+              <motion.div
+                key={`cover-letters-${viewMode}`}
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className={
+                  viewMode === "grid"
+                    ? "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
+                    : "flex flex-col gap-3"
+                }
+              >
+                {!searchQuery && (
+                  <motion.div
+                    variants={itemVariants}
+                    className={viewMode === "list" ? "w-full" : ""}
+                  >
+                    <AddCoverLetter
+                      viewMode={viewMode}
+                      onCreated={refreshCoverLetters}
+                    />
+                  </motion.div>
+                )}
+                {filteredCoverLetters.map((cl) => (
+                  <motion.div
+                    key={cl._id}
+                    variants={itemVariants}
+                    className={viewMode === "list" ? "w-full" : ""}
+                  >
+                    <CoverLetterCard
+                      coverLetter={cl}
+                      refreshData={refreshCoverLetters}
+                      viewMode={viewMode}
+                    />
+                  </motion.div>
+                ))}
+                {filteredCoverLetters.length === 0 && searchQuery && (
+                  <EmptySearch query={searchQuery} />
+                )}
+              </motion.div>
+            </AnimatePresence>
           )}
         </main>
       </div>
 
-      <ATSScoreChecker isOpen={showATSModal} onClose={() => setShowATSModal(false)} resumes={resumeList} />
+      <ATSScoreChecker
+        isOpen={showATSModal}
+        onClose={() => setShowATSModal(false)}
+        resumes={resumeList}
+      />
+    </div>
+  );
+}
+
+// ── Small components ─────────────────────────────────────────────────
+function TabButton({ active, onClick, icon, label, count }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`group relative -mb-px flex items-center gap-1.5 border-b-2 px-3 py-3 text-[13px] font-medium transition-colors ${
+        active
+          ? "border-slate-900 text-slate-900"
+          : "border-transparent text-slate-500 hover:text-slate-800"
+      }`}
+    >
+      {active && (
+        <span
+          className="absolute bottom-[-2px] left-0 right-0 h-[2px]"
+          style={{ backgroundColor: ACCENT }}
+        />
+      )}
+      {icon}
+      {label}
+      <span
+        className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+          active
+            ? "bg-slate-900 text-white"
+            : "bg-slate-100 text-slate-600"
+        }`}
+      >
+        {count}
+      </span>
+    </button>
+  );
+}
+
+function DropdownItem({ icon, label, onClick, danger }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex w-full items-center gap-2.5 px-4 py-2 text-left text-[12.5px] transition-colors ${
+        danger
+          ? "text-red-600 hover:bg-red-50"
+          : "text-slate-700 hover:bg-slate-50"
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+function LoadingBlock({ label }) {
+  return (
+    <div className="flex h-full items-center justify-center">
+      <div className="text-center">
+        <LoaderCircle className="mx-auto mb-3 h-8 w-8 animate-spin text-slate-400" />
+        <p className="text-[13px] text-slate-500">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+function EmptySearch({ query }) {
+  return (
+    <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100">
+        <Search className="h-6 w-6 text-slate-400" />
+      </div>
+      <h3
+        className="text-[18px] font-semibold tracking-tight text-slate-900"
+        style={{ fontFamily: "Fraunces, Georgia, serif" }}
+      >
+        No results for "{query}"
+      </h3>
+      <p className="mt-1 text-[13px] text-slate-500">
+        Try a different keyword
+      </p>
     </div>
   );
 }

@@ -14,7 +14,7 @@ import {
   Star,
 } from "lucide-react";
 import Header from "@/components/custom/Header";
-import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
+import NxtResumeWordmark from "@/components/brand/NxtResumeWordmark";
 import { addUserData } from "@/features/user/userFeatures";
 import { useSessionUserQuery } from "@/hooks/useAppQueryData";
 import { coverLetterTemplates } from "@/pages/dashboard/cover-letter/components/coverLetterDesignOptions";
@@ -981,14 +981,8 @@ function Footer() {
       <div className="mx-auto max-w-7xl px-5 py-16 lg:px-8">
         <div className="grid grid-cols-2 gap-10 md:grid-cols-5">
           <div className="col-span-2">
-            <Link to="/" className="flex items-center gap-2.5">
-              <NxtResumeLogoMark className="h-8 w-8" />
-              <span
-                className="text-[18px] font-semibold tracking-tight text-slate-900"
-                style={DISPLAY_FONT}
-              >
-                NxtResume
-              </span>
+            <Link to="/" className="flex items-center">
+              <NxtResumeWordmark size="22px" color="#0F172A" />
             </Link>
             <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-slate-600">
               Resumes, cover letters, and ATS insights — crafted by AI, designed
