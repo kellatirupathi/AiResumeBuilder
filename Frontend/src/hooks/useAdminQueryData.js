@@ -9,6 +9,7 @@ import {
   getExternalUsers,
   getNotifications,
   getNiatIds,
+  getCoverLettersPaginated,
   getResumesByUser,
   getResumesPaginated,
   getUserById,
@@ -111,6 +112,21 @@ export function useAdminResumesQuery(params = {}, options = {}) {
     queryFn: async () => {
       const response = await getResumesPaginated(normalizedParams);
       return response?.data || { resumes: [], pagination: { page: 1, totalPages: 1, total: 0 } };
+    },
+    staleTime: ADMIN_LIST_STALE_TIME,
+    placeholderData: keepPreviousData,
+    ...options,
+  });
+}
+
+export function useAdminCoverLettersQuery(params = {}, options = {}) {
+  const normalizedParams = normalizePaginationParams(params);
+
+  return useQuery({
+    queryKey: queryKeys.admin.coverLetters(normalizedParams),
+    queryFn: async () => {
+      const response = await getCoverLettersPaginated(normalizedParams);
+      return response?.data || { coverLetters: [], pagination: { page: 1, totalPages: 1, total: 0 } };
     },
     staleTime: ADMIN_LIST_STALE_TIME,
     placeholderData: keepPreviousData,

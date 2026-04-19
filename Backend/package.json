@@ -8,7 +8,8 @@
     "dev": "nodemon src/index.js",
     "job:send-reminders": "node src/jobs/sendReminders.job.js",
     "job:process-resume-links": "node src/jobs/processResumeLinks.job.js",
-    "backfill": "node scripts/backfillDriveLinks.js"
+    "backfill": "node scripts/backfillDriveLinks.js",
+    "drive:backfill-permissions": "node scripts/backfillDrivePermissions.js"
   },
   "keywords": [],
   "author": "",
@@ -27,7 +28,9 @@
     "handlebars": "^4.7.8",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.5.1",
+    "multer": "^2.1.1",
     "nodemailer": "^7.0.5",
+    "pdf-parse": "^1.1.1",
     "pdfkit": "^0.17.1"
   }
 }

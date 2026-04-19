@@ -7,7 +7,11 @@ import { addUserData } from "@/features/user/userFeatures";
 import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
 import AddResume from "./components/AddResume";
 import ResumeCard from "./components/ResumeCard";
+import AddCoverLetter from "./components/AddCoverLetter";
+import CoverLetterCard from "./components/CoverLetterCard";
 import ATSScoreChecker from "./components/ATSScoreChecker";
+import { getAllCoverLetters } from "@/Services/coverLetterAPI";
+import { resolveApiData } from "@/lib/queryCacheUtils";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaEdit, FaKey, FaSignOutAlt, FaBell } from "react-icons/fa";
 import {
@@ -39,11 +43,12 @@ import {
   ChevronUp,
   CircleAlert,
   Sparkles,
+  Mail,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { useProfileQuery, useResumeListQuery } from "@/hooks/useAppQueryData";
 import { getProfileCompletionDetails } from "@/lib/profileCompletion";
 
@@ -117,6 +122,25 @@ function Dashboard() {
   const [showATSModal, setShowATSModal] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [activeNav, setActiveNav] = useState("dashboard");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTabState] = useState(
+    searchParams.get("tab") === "cover-letters" ? "cover-letters" : "resumes"
+  );
+
+  // Setter that updates BOTH local state and URL query param
+  const setActiveTab = (tab) => {
+    setActiveTabState(tab);
+    setSearchParams({ tab }, { replace: true });
+  };
+
+  // Sync tab when URL query param changes (e.g. browser back/forward)
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "cover-letters") setActiveTabState("cover-letters");
+    else if (tab === "resumes") setActiveTabState("resumes");
+  }, [searchParams]);
+  const [coverLetterList, setCoverLetterList] = useState([]);
+  const [isCoverLettersLoading, setIsCoverLettersLoading] = useState(false);
   const [showProfileCoachmark, setShowProfileCoachmark] = useState(false);
   const [coachmarkPosition, setCoachmarkPosition] = useState({ top: 24, left: 280 });
   const sortDropdownRef = useRef(null);
@@ -153,6 +177,37 @@ function Dashboard() {
 
   const isDarkMode = document.documentElement.classList.contains('dark');
   const refreshResumeData = () => resumeListQuery.refetch();
+
+  const refreshCoverLetters = async () => {
+    setIsCoverLettersLoading(true);
+    try {
+      const res = await getAllCoverLetters();
+      const data = resolveApiData(res);
+      setCoverLetterList(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Failed to load cover letters", error);
+    } finally {
+      setIsCoverLettersLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    refreshCoverLetters();
+  }, [user?._id]);
+
+  const filteredCoverLetters = useMemo(() => {
+    let filtered = [...coverLetterList];
+    if (searchQuery.trim()) {
+      filtered = filtered.filter((cl) =>
+        (cl.title || "").toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    if (sortOption === "newest") filtered.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    else if (sortOption === "oldest") filtered.sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
+    else if (sortOption === "alphabetical") filtered.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+    return filtered;
+  }, [coverLetterList, searchQuery, sortOption]);
 
   useEffect(() => {
     if (resumeListQuery.isError) {
@@ -267,11 +322,12 @@ function Dashboard() {
   };
 
   const navItems = [
-    { key: "dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
-    { key: "resumes",   label: "Resumes",   icon: <FileText        className="h-4 w-4" /> },
-    { key: "profile",   label: "Profile",   icon: <User            className="h-4 w-4" /> },
-    { key: "ats",       label: "ATS Checker", icon: <PieChart      className="h-4 w-4" /> },
-    { key: "help",      label: "Help",      icon: <HelpCircle      className="h-4 w-4" /> },
+    { key: "dashboard",     label: "Dashboard",     icon: <LayoutDashboard className="h-4 w-4" /> },
+    { key: "resumes",       label: "Resumes",       icon: <FileText        className="h-4 w-4" /> },
+    { key: "cover-letters", label: "Cover Letters", icon: <Mail            className="h-4 w-4" /> },
+    { key: "profile",       label: "Profile",       icon: <User            className="h-4 w-4" /> },
+    { key: "ats",           label: "ATS Checker",   icon: <PieChart        className="h-4 w-4" /> },
+    { key: "help",          label: "Help",          icon: <HelpCircle      className="h-4 w-4" /> },
   ];
 
   return (
@@ -295,10 +351,11 @@ function Dashboard() {
               key={key}
               ref={key === "profile" ? profileNavRef : null}
               onClick={() => {
-                if (key === "ats")     { navigate("/app/ats-checker");   return; }
-                if (key === "resumes") { navigate("/app/resumes");       return; }
-                if (key === "profile") { navigate("/profile");       return; }
-                if (key === "help")    { navigate("/app/documentation"); return; }
+                if (key === "ats")           { navigate("/app/ats-checker");    return; }
+                if (key === "resumes")       { navigate("/app/resumes");        return; }
+                if (key === "cover-letters") { navigate("/app/cover-letters");  return; }
+                if (key === "profile")       { navigate("/profile");            return; }
+                if (key === "help")          { navigate("/app/documentation");  return; }
                 setActiveNav(key);
               }}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
@@ -312,6 +369,11 @@ function Dashboard() {
               {key === "resumes" && (
                 <span className={`ml-auto text-xs px-1.5 py-0.5 rounded-full font-bold ${activeNav === key ? "bg-white/20 text-white" : "bg-white/10 text-indigo-300"}`}>
                   {resumeList.length}
+                </span>
+              )}
+              {key === "cover-letters" && (
+                <span className={`ml-auto text-xs px-1.5 py-0.5 rounded-full font-bold ${activeTab === "cover-letters" ? "bg-white/20 text-white" : "bg-white/10 text-indigo-300"}`}>
+                  {coverLetterList.length}
                 </span>
               )}
               {key === "profile" && (() => {
@@ -548,62 +610,118 @@ function Dashboard() {
           </div>
         </header>
 
-        {/* Stats row */}
-        <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-6 py-3 flex items-center gap-4">
-          {[
-            { icon: <FileText  className="h-4 w-4 text-indigo-500"  />, label: "Resumes",    value: resumeList.length },
-            { icon: <Briefcase className="h-4 w-4 text-blue-500"    />, label: "Experience", value: user.experience?.length    || 0 },
-            { icon: <BadgePlus className="h-4 w-4 text-emerald-500" />, label: "Skills",     value: user.skills?.length        || 0 },
-            { icon: <Award     className="h-4 w-4 text-amber-500"   />, label: "Certs",      value: user.certifications?.length || 0 },
-            { icon: <FolderGit className="h-4 w-4 text-purple-500"  />, label: "Projects",   value: user.projects?.length      || 0 },
-            { icon: <Clock     className="h-4 w-4 text-gray-400"    />, label: "Last Updated", value: getLastUpdatedDate() },
-          ].map(({ icon, label, value }) => (
-            <div key={label} className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700/50 px-3 py-1.5 rounded-lg border border-gray-100 dark:border-gray-700">
-              {icon}
-              <span className="text-sm font-bold text-gray-800 dark:text-white">{value}</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">{label}</span>
-            </div>
-          ))}
+        {/* Tab Switcher: Resumes / Cover Letters */}
+        <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-6">
+          <div className="flex gap-1">
+            <button
+              onClick={() => setActiveTab("resumes")}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "resumes"
+                  ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
+                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+              }`}
+            >
+              <FileText className="h-4 w-4 inline mr-1.5" />
+              Resumes
+              <span className="ml-2 text-xs bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
+                {resumeList.length}
+              </span>
+            </button>
+            <button
+              onClick={() => setActiveTab("cover-letters")}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "cover-letters"
+                  ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
+                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+              }`}
+            >
+              <Mail className="h-4 w-4 inline mr-1.5" />
+              Cover Letters
+              <span className="ml-2 text-xs bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
+                {coverLetterList.length}
+              </span>
+            </button>
+          </div>
         </div>
 
-        {/* Resume cards — only this scrolls */}
+        {/* Cards — only this scrolls */}
         <main className="flex-1 overflow-y-auto custom-scrollbar p-6">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <LoaderCircle className="h-10 w-10 animate-spin text-indigo-500 mx-auto mb-3" />
-                <p className="text-gray-500 dark:text-gray-400 text-sm">Loading your resumes...</p>
+          {activeTab === "resumes" ? (
+            isLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <LoaderCircle className="h-10 w-10 animate-spin text-indigo-500 mx-auto mb-3" />
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">Loading your resumes...</p>
+                </div>
               </div>
-            </div>
+            ) : (
+              <AnimatePresence>
+                <motion.div
+                  key={`resumes-${viewMode}`}
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4" : "flex flex-col space-y-3"}
+                >
+                  {!searchQuery && (
+                    <motion.div variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
+                      <AddResume viewMode={viewMode} />
+                    </motion.div>
+                  )}
+                  {filteredList.map((resume) => (
+                    <motion.div key={resume._id} variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
+                    <ResumeCard resume={resume} refreshData={refreshResumeData} viewMode={viewMode} />
+                    </motion.div>
+                  ))}
+                  {filteredList.length === 0 && searchQuery && (
+                    <div className="col-span-full text-center py-16">
+                      <Search className="h-10 w-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                      <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300">No matches found</h3>
+                      <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Try adjusting your search query</p>
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            )
           ) : (
-            <AnimatePresence>
-              <motion.div
-                key={viewMode}
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4" : "flex flex-col space-y-3"}
-              >
-                {!searchQuery && (
-                  <motion.div variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
-                    <AddResume viewMode={viewMode} />
-                  </motion.div>
-                )}
-                {filteredList.map((resume) => (
-                  <motion.div key={resume._id} variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
-                  <ResumeCard resume={resume} refreshData={refreshResumeData} viewMode={viewMode} />
-                  </motion.div>
-                ))}
-                {filteredList.length === 0 && searchQuery && (
-                  <div className="col-span-full text-center py-16">
-                    <Search className="h-10 w-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                    <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300">No matches found</h3>
-                    <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Try adjusting your search query</p>
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
+            isCoverLettersLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <LoaderCircle className="h-10 w-10 animate-spin text-indigo-500 mx-auto mb-3" />
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">Loading your cover letters...</p>
+                </div>
+              </div>
+            ) : (
+              <AnimatePresence>
+                <motion.div
+                  key={`cover-letters-${viewMode}`}
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4" : "flex flex-col space-y-3"}
+                >
+                  {!searchQuery && (
+                    <motion.div variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
+                      <AddCoverLetter viewMode={viewMode} onCreated={refreshCoverLetters} />
+                    </motion.div>
+                  )}
+                  {filteredCoverLetters.map((cl) => (
+                    <motion.div key={cl._id} variants={itemVariants} className={viewMode === "list" ? "w-full" : ""}>
+                      <CoverLetterCard coverLetter={cl} refreshData={refreshCoverLetters} viewMode={viewMode} />
+                    </motion.div>
+                  ))}
+                  {filteredCoverLetters.length === 0 && searchQuery && (
+                    <div className="col-span-full text-center py-16">
+                      <Search className="h-10 w-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                      <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300">No matches found</h3>
+                      <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Try adjusting your search query</p>
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            )
           )}
         </main>
       </div>

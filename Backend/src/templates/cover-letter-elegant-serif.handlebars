@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{title}}</title>
+  <style>
+    @page { margin: 15mm; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #ffffff; }
+    body {
+      font-family: Georgia, "Times New Roman", serif;
+      color: #2c2c2c;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .page { padding: 48px 56px; }
+    .rule-thin { height: 1px; background-color: {{themeColor}}; }
+    .monogram {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: {{themeColor}};
+      color: #ffffff;
+      font-size: 22px;
+      font-weight: 700;
+      font-family: Georgia, serif;
+      margin: 0 auto;
+      text-align: center;
+      line-height: 50px;
+    }
+    h1.name {
+      font-size: 26px;
+      font-style: italic;
+      font-weight: 400;
+      margin: 12px 0 4px 0;
+      color: #2c2c2c;
+      text-align: center;
+    }
+    p.job-title {
+      font-size: 10.5px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: {{themeColor}};
+      margin: 0 0 10px 0;
+      text-align: center;
+    }
+    p.contact-line {
+      font-size: 10.5px;
+      color: #5b5b5b;
+      margin: 0;
+      text-align: center;
+    }
+    .rule-top { margin-bottom: 20px; }
+    .rule-bottom { margin-top: 20px; margin-bottom: 24px; }
+    .date-line {
+      font-size: 11px;
+      font-style: italic;
+      color: #5b5b5b;
+      text-align: right;
+      margin-bottom: 18px;
+    }
+    .recipient {
+      margin-bottom: 18px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .recipient p { margin: 0; }
+    .recipient p.name { font-weight: 700; }
+    .greeting {
+      font-size: 12px;
+      font-style: italic;
+      margin-bottom: 14px;
+      color: {{themeColor}};
+    }
+    p.para {
+      margin: 0 0 12px 0;
+      text-align: justify;
+      font-size: 11px;
+      line-height: 1.55;
+      color: #2c2c2c;
+      font-family: Georgia, "Times New Roman", serif;
+      page-break-inside: avoid;
+    }
+    .signature-block { margin-top: 26px; }
+    .signature-block .signoff {
+      font-size: 11px;
+      font-style: italic;
+      margin: 0 0 22px 0;
+    }
+    .signature-block .sender-name {
+      font-size: 16px;
+      font-style: italic;
+      margin: 0;
+      color: {{themeColor}};
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="rule-thin rule-top"></div>
+
+    <div class="monogram">{{#if senderName}}{{firstChar senderName}}{{else}}?{{/if}}</div>
+
+    {{#if senderName}}<h1 class="name">{{senderName}}</h1>{{/if}}
+    {{#if jobTitle}}<p class="job-title">{{jobTitle}}</p>{{/if}}
+
+    {{#if senderEmail}}
+      <p class="contact-line">{{senderEmail}}{{#if senderPhone}}&nbsp;&nbsp;&middot;&nbsp;&nbsp;{{senderPhone}}{{/if}}{{#if senderAddress}}&nbsp;&nbsp;&middot;&nbsp;&nbsp;{{senderAddress}}{{/if}}</p>
+    {{else}}{{#if senderPhone}}
+      <p class="contact-line">{{senderPhone}}{{#if senderAddress}}&nbsp;&nbsp;&middot;&nbsp;&nbsp;{{senderAddress}}{{/if}}</p>
+    {{else}}{{#if senderAddress}}
+      <p class="contact-line">{{senderAddress}}</p>
+    {{/if}}{{/if}}{{/if}}
+
+    <div class="rule-thin rule-bottom"></div>
+
+    <p class="date-line">{{formattedDate}}</p>
+
+    <div class="recipient">
+      <p class="name">{{#if hiringManagerName}}{{hiringManagerName}}{{else}}Hiring Manager{{/if}}</p>
+      {{#if companyName}}<p>{{companyName}}</p>{{/if}}
+    </div>
+
+    {{#if generatedContent.greeting}}<p class="greeting">~ {{generatedContent.greeting}} ~</p>{{/if}}
+
+    {{#if generatedContent.openingParagraph}}<p class="para">{{generatedContent.openingParagraph}}</p>{{/if}}
+    {{#each generatedContent.bodyParagraphs}}<p class="para">{{this}}</p>{{/each}}
+    {{#if generatedContent.closingParagraph}}<p class="para">{{generatedContent.closingParagraph}}</p>{{/if}}
+
+    <div class="signature-block">
+      {{#if generatedContent.signature}}<p class="signoff">{{generatedContent.signature}}</p>{{/if}}
+      {{#if senderName}}<p class="sender-name">{{senderName}}</p>{{/if}}
+    </div>
+  </div>
+</body>
+</html>

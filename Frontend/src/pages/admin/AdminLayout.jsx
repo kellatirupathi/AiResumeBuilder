@@ -3,13 +3,14 @@ import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { toast } from "sonner";
 import { logoutAdmin } from "@/Services/adminApi";
 import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
-import { LayoutDashboard, Users, FileText, Fingerprint, Bell, LogOut, ShieldCheck, Link2 } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Fingerprint, Bell, LogOut, ShieldCheck, Link2, Mail } from "lucide-react";
 import { useAdminSessionQuery } from "@/hooks/useAdminQueryData";
 
 const NAV = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
   { label: "Users", icon: Users, path: "/admin/users" },
   { label: "Resumes", icon: FileText, path: "/admin/resumes" },
+  { label: "Cover Letters", icon: Mail, path: "/admin/cover-letters" },
   { label: "Invite Users", icon: Link2, path: "/admin/invite-users" },
   { label: "Student IDs", icon: Fingerprint, path: "/admin/student-ids" },
   { label: "Notifications", icon: Bell, path: "/admin/notifications" },

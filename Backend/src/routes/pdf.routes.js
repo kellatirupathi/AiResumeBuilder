@@ -1,13 +1,23 @@
 import { Router } from "express";
-import { generateResumePDF, generatePublicResumePDF } from "../controller/pdf.controller.js";
+import {
+  generateResumePDF,
+  generatePublicResumePDF,
+  generateCoverLetterPDF,
+  generatePublicCoverLetterPDF,
+  generatePublicCoverLetterPDFDirect,
+} from "../controller/pdf.controller.js";
 import { isUserAvailable } from "../middleware/auth.js";
 
 const router = Router();
 
-// Route to generate and download a PDF (Authenticated)
+// Resume PDF
 router.get("/download", isUserAvailable, generateResumePDF);
-
-// Public route to view a resume PDF by ID (Unauthenticated)
 router.get("/public/:resumeId", generatePublicResumePDF);
+
+// Cover Letter PDF
+router.get("/cover-letter/download", isUserAvailable, generateCoverLetterPDF);
+router.get("/cover-letter/public/:slugOrId", generatePublicCoverLetterPDF);
+// Direct on-the-fly PDF for public requests (no Drive required)
+router.get("/cover-letter/public-direct/:slugOrId", generatePublicCoverLetterPDFDirect);
 
 export default router;

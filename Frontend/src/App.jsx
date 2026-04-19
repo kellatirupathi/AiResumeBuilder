@@ -99,9 +99,12 @@ function App() {
   const isDocumentationPage = location.pathname === '/app/documentation';
   const isATSPage     = location.pathname === '/app/ats-checker';
   const isResumesPage        = location.pathname === '/app/resumes';
+  const isCoverLettersPage   = location.pathname === '/app/cover-letters';
+  const isCoverLetterEditPage = location.pathname.includes('/dashboard/cover-letter');
+  const isCoverLetterCreatePage = location.pathname === '/cover-letter/creation-part';
   const isChangePasswordPage = location.pathname === '/change-password';
   const isNotificationsPage = location.pathname === '/notifications';
-  const shouldHideHeader = isEditResumePage || isViewResumePage || isProfilePage || isDashboardPage || isDocumentationPage || isATSPage || isResumesPage || isChangePasswordPage || isNotificationsPage;
+  const shouldHideHeader = isEditResumePage || isViewResumePage || isProfilePage || isDashboardPage || isDocumentationPage || isATSPage || isResumesPage || isCoverLettersPage || isCoverLetterEditPage || isCoverLetterCreatePage || isChangePasswordPage || isNotificationsPage;
 
   if (sessionQuery.isPending && !user) {
     return (

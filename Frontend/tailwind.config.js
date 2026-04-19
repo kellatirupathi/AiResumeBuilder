@@ -17,11 +17,6 @@ module.exports = {
       },
     },
     extend: {
-      fontFamily: {
-        // Inter is loaded in index.html and in every backend handlebars template.
-        // This ensures preview and downloaded PDF render with the SAME font.
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],
-      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{title}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    @page { margin: 15mm; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #ffffff; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #1f2937;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .page { padding: 48px; }
+    .header {
+      display: table;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    .header-right {
+      display: table-cell;
+      text-align: right;
+      vertical-align: top;
+    }
+    h1.name {
+      font-size: 26px;
+      font-weight: 800;
+      color: {{themeColor}};
+      margin: 0;
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+    }
+    p.job-title {
+      font-size: 12px;
+      margin: 4px 0 0 0;
+      color: #4b5563;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .contact-block {
+      text-align: right;
+      font-size: 10.5px;
+      color: #374151;
+      line-height: 1.6;
+    }
+    .contact-block p { margin: 0; }
+    .contact-block .label { font-weight: 600; }
+    hr.rule {
+      border: 0;
+      border-top: 1.5px solid {{themeColor}};
+      margin: 16px 0 20px 0;
+    }
+    .recipient-row {
+      display: table;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    .recipient-cell {
+      display: table-cell;
+      font-size: 11px;
+      color: #1f2937;
+      line-height: 1.5;
+      vertical-align: top;
+    }
+    .date-cell {
+      display: table-cell;
+      text-align: right;
+      font-size: 11px;
+      color: #4b5563;
+      vertical-align: top;
+    }
+    .recipient-cell p { margin: 0; }
+    .recipient-cell p.name { font-weight: 600; }
+    .greeting { font-size: 11px; margin-bottom: 10px; color: #1f2937; }
+    .re-line {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: {{themeColor}};
+      margin: 0 0 14px 0;
+    }
+    p.para {
+      margin: 0 0 12px 0;
+      text-align: justify;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #1f2937;
+      page-break-inside: avoid;
+    }
+    .intro-line {
+      font-size: 11px;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0 0 8px 0;
+    }
+    ul.bullets {
+      padding-left: 20px;
+      margin: 0 0 14px 0;
+      list-style-type: disc;
+    }
+    ul.bullets li {
+      font-size: 11px;
+      line-height: 1.5;
+      color: #1f2937;
+      margin-bottom: 8px;
+      text-align: justify;
+      page-break-inside: avoid;
+    }
+    .signature { margin-top: 22px; }
+    .signature p.signoff { font-size: 11px; color: #1f2937; margin: 0 0 24px 0; }
+    .signature p.sign-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: {{themeColor}};
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div class="header-right">
+        {{#if senderName}}<h1 class="name">{{senderName}}</h1>{{/if}}
+        {{#if jobTitle}}<p class="job-title">{{jobTitle}}</p>{{/if}}
+      </div>
+    </div>
+
+    <div class="contact-block">
+      {{#if senderAddress}}<p><span class="label">Address:</span> {{senderAddress}}</p>{{/if}}
+      {{#if senderEmail}}<p><span class="label">Email:</span> {{senderEmail}}</p>{{/if}}
+      {{#if senderPhone}}<p><span class="label">Cell:</span> {{senderPhone}}</p>{{/if}}
+      {{#if senderLinkedin}}<p><span class="label">LinkedIn:</span> {{senderLinkedin}}</p>{{/if}}
+    </div>
+
+    <hr class="rule" />
+
+    <div class="recipient-row">
+      <div class="recipient-cell">
+        <p class="name">{{#if hiringManagerName}}{{hiringManagerName}}{{else}}Hiring Manager{{/if}}</p>
+        {{#if companyName}}<p>{{companyName}}</p>{{/if}}
+      </div>
+      <div class="date-cell">{{formattedDate}}</div>
+    </div>
+
+    {{#if generatedContent.greeting}}<p class="greeting">{{generatedContent.greeting}}</p>{{/if}}
+
+    {{#if jobTitle}}<p class="re-line">Re: {{jobTitle}} Position</p>{{/if}}
+
+    {{#if generatedContent.openingParagraph}}<p class="para">{{generatedContent.openingParagraph}}</p>{{/if}}
+
+    {{#if generatedContent.bodyParagraphs.length}}
+      <p class="intro-line">Here&apos;s how I can add value to your organization:</p>
+      <ul class="bullets">
+        {{#each generatedContent.bodyParagraphs}}
+          <li>{{this}}</li>
+        {{/each}}
+      </ul>
+    {{/if}}
+
+    {{#if generatedContent.closingParagraph}}<p class="para">{{generatedContent.closingParagraph}}</p>{{/if}}
+
+    <div class="signature">
+      <p class="signoff">Yours sincerely,</p>
+      {{#if senderName}}<p class="sign-name">{{senderName}}</p>{{/if}}
+    </div>
+  </div>
+</body>
+</html>

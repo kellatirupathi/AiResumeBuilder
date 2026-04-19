@@ -2,6 +2,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import userRouter from "./routes/user.routes.js";
 import resumeRouter from "./routes/resume.routes.js";
+import coverLetterRouter from "./routes/coverLetter.routes.js";
 import pdfRouter from "./routes/pdf.routes.js";
 import adminRouter from "./routes/admin.routes.js";
 import niatIdRouter from "./routes/niatId.routes.js";
@@ -42,6 +43,7 @@ app.use((req, res, next) => {
 // API routes
 app.use("/api/users", userRouter);
 app.use("/api/resumes", resumeRouter);
+app.use("/api/cover-letters", coverLetterRouter);
 app.use("/api/pdf", pdfRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/niat-ids", niatIdRouter);

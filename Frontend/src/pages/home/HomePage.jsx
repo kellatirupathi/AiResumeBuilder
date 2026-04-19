@@ -5,13 +5,14 @@ import heroSnapshot from "@/assets/heroSnapshot.png";
 import heroSnapshot2 from "@/assets/heroSnapshot2.png";
 import heroSnapshot3 from "@/assets/heroSnapshot3.png";
 import heroSnapshot4 from "@/assets/heroSnapshot4.png";
-import { useNavigate } from "react-router-dom";
-import { FaArrowRight, FaRegLightbulb, FaRegFileAlt, FaRegStar, FaRegClock, FaRegChartBar, FaCheck, FaPlay, FaExpand, FaVideo } from "react-icons/fa";
+import { useNavigate, Link } from "react-router-dom";
+import { FaArrowRight, FaRegLightbulb, FaRegFileAlt, FaRegStar, FaRegClock, FaRegChartBar, FaCheck, FaPlay, FaExpand, FaVideo, FaRegEnvelope } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { useDispatch, useSelector } from "react-redux";
 import { addUserData } from "@/features/user/userFeatures.js";
 import { motion } from "framer-motion";
 import NxtResumeLogoMark from "@/components/brand/NxtResumeLogoMark";
+import { coverLetterTemplates } from "@/pages/dashboard/cover-letter/components/coverLetterDesignOptions";
 import { useSessionUserQuery } from "@/hooks/useAppQueryData";
 
 function HomePage() {
@@ -196,6 +197,12 @@ function HomePage() {
       bg: "bg-teal-50 dark:bg-teal-900/20",
       title: "One-Click Export",
       description: "Download your polished resume as PDF instantly"
+    },
+    {
+      icon: <FaRegEnvelope className="w-6 h-6 text-indigo-500" />,
+      bg: "bg-indigo-50 dark:bg-indigo-900/20",
+      title: "AI Cover Letters",
+      description: "Generate tailored cover letters from your resume + JD in seconds. 10 professional templates"
     },
   ];
 
@@ -680,6 +687,116 @@ function HomePage() {
                 <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{step.description}</p>
               </motion.div>
             ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ─── COVER LETTERS ─── */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-950">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <span className="px-4 py-1.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-sm font-medium inline-block mb-4 border border-indigo-200 dark:border-indigo-800">
+              <FaRegEnvelope className="inline w-3.5 h-3.5 mr-1.5" />
+              AI Cover Letters
+            </span>
+            <h2 className="text-4xl font-extrabold text-gray-900 dark:text-white">
+              Tailored Cover Letters in Seconds
+            </h2>
+            <p className="mt-4 text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
+              Generate personalized cover letters from your resume and any job description. AI matches your experience to the role's requirements automatically.
+            </p>
+          </motion.div>
+
+          {/* 3-step preview */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            className="grid sm:grid-cols-3 gap-6 mb-12"
+          >
+            {[
+              { num: "1", title: "Pick a resume", desc: "Choose an existing resume or upload a PDF" },
+              { num: "2", title: "Paste the JD", desc: "Add the job title, company, and description" },
+              { num: "3", title: "AI generates", desc: "Edit the result and download as PDF" },
+            ].map((item) => (
+              <motion.div
+                key={item.num}
+                variants={itemVariants}
+                className="relative bg-gradient-to-br from-indigo-50 to-emerald-50 dark:from-indigo-900/20 dark:to-emerald-900/20 rounded-2xl p-6 border border-indigo-100 dark:border-indigo-900"
+              >
+                <div className="absolute -top-3 -left-3 w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-emerald-500 flex items-center justify-center text-white font-bold shadow-lg">
+                  {item.num}
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-3 mb-2">{item.title}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Template highlights */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-r from-indigo-600 to-emerald-600 rounded-3xl p-8 sm:p-12 text-white shadow-xl"
+          >
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div>
+                <h3 className="text-3xl font-extrabold mb-3">10 Professional Templates</h3>
+                <p className="text-indigo-100 text-lg leading-relaxed mb-6">
+                  Executive Classic, Modern Minimal, Creative Bold, Corporate Formal, Tech Sidebar, Elegant Serif, Split Header, Vertical Accent, Modern Card, and Newsletter — pick the design that fits your industry.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {["Tone control", "Switch templates anytime", "Drive sharing", "Public link"].map((feat) => (
+                    <span
+                      key={feat}
+                      className="px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-sm text-sm font-medium border border-white/30"
+                    >
+                      <FaCheck className="inline w-3 h-3 mr-1.5" />
+                      {feat}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {coverLetterTemplates.slice(0, 9).map((tpl) => (
+                  <Link
+                    key={tpl.id}
+                    to="/cover-letters"
+                    className="group relative aspect-[3/4] overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-white/30 transition-transform hover:-translate-y-1 hover:ring-white"
+                    title={tpl.name}
+                  >
+                    <img
+                      src={tpl.previewUrl}
+                      alt={tpl.name}
+                      className="h-full w-full object-cover object-top"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        const fb = e.currentTarget.nextElementSibling;
+                        if (fb) fb.style.display = "flex";
+                      }}
+                    />
+                    <div
+                      className="absolute inset-0 hidden items-center justify-center"
+                      style={{ backgroundColor: tpl.accentColor }}
+                    >
+                      <FaRegEnvelope className="w-6 h-6 text-white/80" />
+                    </div>
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+                      <p className="text-[10px] font-semibold text-white truncate">{tpl.name}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
           </motion.div>
         </div>
       </section>

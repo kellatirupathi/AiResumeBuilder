@@ -118,6 +118,9 @@ function Header({ user, darkMode, toggleDarkMode }) {
                   <Link to="/resumes" className="transition-colors hover:text-indigo-600 dark:hover:text-indigo-400">
                     Resumes
                   </Link>
+                  <Link to="/cover-letters" className="transition-colors hover:text-indigo-600 dark:hover:text-indigo-400">
+                    Cover Letters
+                  </Link>
                   <Link to="/ats-checker" className="transition-colors hover:text-indigo-600 dark:hover:text-indigo-400">
                     ATS Checker
                   </Link>
@@ -177,6 +180,9 @@ function Header({ user, darkMode, toggleDarkMode }) {
                 <div className="flex flex-col gap-3">
                   <Link to="/resumes" className="w-full text-sm font-medium text-slate-600 dark:text-slate-300" onClick={() => setMenuOpen(false)}>
                     Resumes
+                  </Link>
+                  <Link to="/cover-letters" className="w-full text-sm font-medium text-slate-600 dark:text-slate-300" onClick={() => setMenuOpen(false)}>
+                    Cover Letters
                   </Link>
                   <Link to="/ats-checker" className="w-full text-sm font-medium text-slate-600 dark:text-slate-300" onClick={() => setMenuOpen(false)}>
                     ATS Checker

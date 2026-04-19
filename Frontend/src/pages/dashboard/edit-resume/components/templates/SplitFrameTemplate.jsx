@@ -140,7 +140,7 @@ const SplitFrameTemplate = ({ resumeInfo }) => {
             
             <div className="flex flex-col">
               {resumeInfo.skills.map((skill, index) => (
-                <span>
+                <span key={index}>
                   {skill.name}
                 </span>
               ))}

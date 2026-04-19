@@ -173,6 +173,42 @@ export const processPendingResumeLinks = async () => {
   }
 };
 
+export const getCoverLettersPaginated = async ({ page = 1, limit = 20, search = '' } = {}) => {
+  try {
+    const response = await adminAxios.get('/cover-letters/paginated', { params: { page, limit, search } });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch cover letters.');
+  }
+};
+
+export const getAdminCoverLetterById = async (id) => {
+  try {
+    const response = await adminAxios.get(`/cover-letters/${id}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch cover letter.');
+  }
+};
+
+export const deleteAdminCoverLetter = async (id) => {
+  try {
+    const response = await adminAxios.delete(`/cover-letters/${id}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to delete cover letter.');
+  }
+};
+
+export const processPendingCoverLetterLinks = async () => {
+  try {
+    const response = await adminAxios.post('/cover-letters/process-pending-links');
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to process pending cover letter links.');
+  }
+};
+
 export const getDashboardStats = async (days = 30) => {
   try {
     const response = await adminAxios.get('/stats', { params: { days } });

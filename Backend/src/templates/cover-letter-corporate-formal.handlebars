@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{title}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    @page { margin: 15mm; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #ffffff; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #1f2937;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .page { padding: 48px 48px 24px 48px; }
+    .center { text-align: center; }
+    h1.name {
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0;
+      color: {{themeColor}};
+      letter-spacing: 0.02em;
+    }
+    p.job-title {
+      font-size: 12px;
+      margin: 4px 0 0 0;
+      color: #4b5563;
+      font-weight: 500;
+    }
+    p.contact-line {
+      font-size: 10.5px;
+      margin: 8px 0 0 0;
+      color: #374151;
+    }
+    .double-rule {
+      margin: 16px 0 20px 0;
+    }
+    .double-rule .top { height: 2px; background-color: {{themeColor}}; }
+    .double-rule .bot { height: 1px; background-color: {{themeColor}}; opacity: 0.4; margin-top: 2px; }
+    .date-right {
+      text-align: right;
+      font-size: 11px;
+      color: #374151;
+      margin-bottom: 18px;
+    }
+    .recipient {
+      margin-bottom: 18px;
+      font-size: 11px;
+      line-height: 1.55;
+    }
+    .recipient p { margin: 0; }
+    .recipient p.name { font-weight: 600; }
+    .greeting { font-size: 11px; margin-bottom: 14px; }
+    p.para {
+      margin: 0 0 12px 0;
+      text-align: justify;
+      font-size: 11px;
+      line-height: 1.55;
+      color: #1f2937;
+      text-indent: 1.5em;
+      page-break-inside: avoid;
+    }
+    .signature { margin-top: 28px; }
+    .signature p.signoff { font-size: 11px; margin: 0 0 28px 0; }
+    .signature p.sign-name { font-size: 12px; font-weight: 700; margin: 0; color: {{themeColor}}; }
+    .signature p.sign-title { font-size: 10.5px; margin: 2px 0 0 0; color: #6b7280; }
+    .footer-rule {
+      padding: 0 48px 24px 48px;
+    }
+    .footer-rule .border { border-top: 1px solid #e5e7eb; padding-top: 8px; }
+    .footer-rule p {
+      font-size: 9px;
+      color: #9ca3af;
+      text-align: center;
+      margin: 0;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="center">
+      {{#if senderName}}<h1 class="name">{{senderName}}</h1>{{/if}}
+      {{#if jobTitle}}<p class="job-title">{{jobTitle}}</p>{{/if}}
+      {{#if senderEmail}}
+        <p class="contact-line">
+          {{senderEmail}}{{#if senderPhone}} | {{senderPhone}}{{/if}}{{#if senderAddress}} | {{senderAddress}}{{/if}}{{#if senderLinkedin}} | {{senderLinkedin}}{{/if}}
+        </p>
+      {{else}}{{#if senderPhone}}
+        <p class="contact-line">{{senderPhone}}{{#if senderAddress}} | {{senderAddress}}{{/if}}{{#if senderLinkedin}} | {{senderLinkedin}}{{/if}}</p>
+      {{/if}}{{/if}}
+    </div>
+
+    <div class="double-rule">
+      <div class="top"></div>
+      <div class="bot"></div>
+    </div>
+
+    <div class="date-right">{{formattedDate}}</div>
+
+    <div class="recipient">
+      <p class="name">{{#if hiringManagerName}}{{hiringManagerName}}{{else}}Hiring Manager{{/if}}</p>
+      {{#if companyName}}<p>{{companyName}}</p>{{/if}}
+    </div>
+
+    {{#if generatedContent.greeting}}<p class="greeting">{{generatedContent.greeting}}</p>{{/if}}
+
+    {{#if generatedContent.openingParagraph}}<p class="para">{{generatedContent.openingParagraph}}</p>{{/if}}
+    {{#each generatedContent.bodyParagraphs}}<p class="para">{{this}}</p>{{/each}}
+    {{#if generatedContent.closingParagraph}}<p class="para">{{generatedContent.closingParagraph}}</p>{{/if}}
+
+    <div class="signature">
+      <p class="signoff">Respectfully yours,</p>
+      {{#if senderName}}<p class="sign-name">{{senderName}}</p>{{/if}}
+      {{#if jobTitle}}<p class="sign-title">{{jobTitle}}</p>{{/if}}
+    </div>
+  </div>
+
+  <div class="footer-rule">
+    <div class="border">
+      <p>{{#if senderName}}{{senderName}}{{else}}Confidential{{/if}} &middot; Cover Letter</p>
+    </div>
+  </div>
+</body>
+</html>

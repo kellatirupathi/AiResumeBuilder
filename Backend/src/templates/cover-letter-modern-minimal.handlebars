@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{title}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    @page { margin: 15mm; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #ffffff; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #1f2937;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .page { padding: 56px; }
+    .center { text-align: center; }
+    h1.name {
+      font-size: 32px;
+      font-weight: 300;
+      color: {{themeColor}};
+      margin: 0;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+    }
+    p.job-title {
+      font-size: 11px;
+      margin-top: 8px;
+      color: #6b7280;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+    hr.short-rule {
+      border: 0;
+      border-top: 1px solid {{themeColor}};
+      margin: 20px auto;
+      width: 60px;
+    }
+    p.contact-line {
+      text-align: center;
+      font-size: 10.5px;
+      color: #4b5563;
+      margin: 0 0 32px 0;
+      letter-spacing: 0.02em;
+    }
+    .date-right {
+      text-align: right;
+      font-size: 10.5px;
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+    .recipient {
+      margin-bottom: 18px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .recipient p { margin: 0; }
+    .recipient p.name { font-weight: 600; }
+    .recipient p.company { color: #4b5563; }
+    .greeting { font-size: 11px; margin-bottom: 14px; }
+    p.para {
+      margin: 0 0 12px 0;
+      text-align: justify;
+      font-size: 11px;
+      line-height: 1.6;
+      color: #1f2937;
+      page-break-inside: avoid;
+    }
+    .signature { margin-top: 28px; }
+    .signature p.signoff { font-size: 11px; color: #1f2937; margin: 0 0 24px 0; }
+    .signature p.sign-name { font-size: 12px; font-weight: 500; color: {{themeColor}}; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="center">
+      {{#if senderName}}<h1 class="name">{{senderName}}</h1>{{/if}}
+      {{#if jobTitle}}<p class="job-title">{{jobTitle}}</p>{{/if}}
+    </div>
+
+    <hr class="short-rule" />
+
+    {{#if senderEmail}}
+      <p class="contact-line">
+        {{senderEmail}}{{#if senderPhone}} &middot; {{senderPhone}}{{/if}}{{#if senderLinkedin}} &middot; {{senderLinkedin}}{{/if}}
+      </p>
+    {{else}}{{#if senderPhone}}
+      <p class="contact-line">{{senderPhone}}{{#if senderLinkedin}} &middot; {{senderLinkedin}}{{/if}}</p>
+    {{else}}{{#if senderLinkedin}}
+      <p class="contact-line">{{senderLinkedin}}</p>
+    {{/if}}{{/if}}{{/if}}
+
+    <div class="date-right">{{formattedDate}}</div>
+
+    <div class="recipient">
+      <p class="name">{{#if hiringManagerName}}{{hiringManagerName}}{{else}}Hiring Manager{{/if}}</p>
+      {{#if companyName}}<p class="company">{{companyName}}</p>{{/if}}
+    </div>
+
+    {{#if generatedContent.greeting}}<p class="greeting">{{generatedContent.greeting}}</p>{{/if}}
+
+    {{#if generatedContent.openingParagraph}}<p class="para">{{generatedContent.openingParagraph}}</p>{{/if}}
+    {{#each generatedContent.bodyParagraphs}}<p class="para">{{this}}</p>{{/each}}
+    {{#if generatedContent.closingParagraph}}<p class="para">{{generatedContent.closingParagraph}}</p>{{/if}}
+
+    <div class="signature">
+      {{#if generatedContent.signature}}<p class="signoff">{{generatedContent.signature}}</p>{{/if}}
+      {{#if senderName}}<p class="sign-name">{{senderName}}</p>{{/if}}
+    </div>
+  </div>
+</body>
+</html>

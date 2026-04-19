@@ -449,6 +449,7 @@ export default function AdminUsersPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Student ID</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Email</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Resumes Count</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">CVs</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Student ID</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">External</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-indigo-700">Created At</th>
@@ -483,6 +484,11 @@ export default function AdminUsersPage() {
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
+                        <span className="inline-flex min-w-10 items-center justify-center text-sm font-semibold text-indigo-700">
+                          {user.coverLetterCount || 0}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4">
                         <span
                           className={`inline-flex items-center gap-2 text-xs font-semibold ${
                             user.niatIdVerified
@@ -509,7 +515,7 @@ export default function AdminUsersPage() {
                     </tr>
                   ))}
                   {users.length === 0 && (
-                    <tr><td colSpan="8" className="px-6 py-12 text-center text-gray-400">No users found</td></tr>
+                    <tr><td colSpan="9" className="px-6 py-12 text-center text-gray-400">No users found</td></tr>
                   )}
                 </tbody>
               </table>
