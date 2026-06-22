@@ -170,9 +170,32 @@ const downloadResumePDF = async (resumeID) => {
     return true;
   } catch (error) {
     console.error("Error downloading PDF:", error);
-    throw new Error(
-      error?.response?.data?.message || error?.message || "Failed to download resume"
-    );
+
+    // The download request uses responseType: 'blob', so an error body comes
+    // back as a Blob rather than parsed JSON. Read it so we can surface the
+    // real server message (e.g. the "PDF service is busy" 503).
+    let serverMessage;
+    const status = error?.response?.status;
+    const data = error?.response?.data;
+    if (data instanceof Blob) {
+      try {
+        const text = await data.text();
+        serverMessage = JSON.parse(text)?.message;
+      } catch {
+        serverMessage = undefined;
+      }
+    } else if (data?.message) {
+      serverMessage = data.message;
+    }
+
+    if (status === 503 || status === 429) {
+      throw new Error(
+        serverMessage ||
+          "The PDF service is busy right now. Please try again in a few moments."
+      );
+    }
+
+    throw new Error(serverMessage || error?.message || "Failed to download resume");
   }
 };
 
