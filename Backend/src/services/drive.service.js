@@ -216,3 +216,23 @@ export const uploadOrUpdatePdf = async (resumeId, userFullName, pdfBuffer, exist
       throw new Error("Failed to upload/update PDF on Google Drive.");
   }
 };
+
+/**
+ * Download the raw bytes of a PDF already stored in Google Drive.
+ * Used as a resilient fallback for resume downloads when the external
+ * PDF service (PDFSpark) is unavailable but a generated copy exists.
+ * @param {string} fileId - The Google Drive file ID.
+ * @returns {Promise<Buffer>} - The PDF content.
+ */
+export const downloadPdfFromDrive = async (fileId) => {
+  if (!fileId) {
+    throw new Error("A Google Drive file ID is required to download the PDF.");
+  }
+
+  const response = await drive.files.get(
+    { fileId, alt: "media", supportsAllDrives: true },
+    { responseType: "arraybuffer" }
+  );
+
+  return Buffer.from(response.data);
+};

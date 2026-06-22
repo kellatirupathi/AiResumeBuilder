@@ -4,8 +4,51 @@ import Resume from '../models/resume.model.js';
 import CoverLetter from '../models/coverLetter.model.js';
 import Notification from '../models/notification.model.js';
 import { sendDriveLinkEmail } from '../services/email.service.js';
+import { downloadPdfFromDrive } from '../services/drive.service.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
+
+// Obtain a resume PDF buffer resiliently.
+//
+// PDFSpark (the external HTML->PDF service) periodically returns 503 "Server
+// busy" and can be fully unavailable. To keep downloads working we:
+//   1. Serve the already-generated Google Drive copy directly when it is in
+//      sync (no PDFSpark call needed at all — the common case).
+//   2. Otherwise regenerate via PDFSpark.
+//   3. If regeneration fails, fall back to the last Drive copy if one exists
+//      (a slightly stale PDF beats a hard failure).
+const resolveResumePdfBuffer = async (resume) => {
+  const fileId = resume.googleDriveFileId;
+  const inSync = Boolean(fileId) && resume.driveOutOfSync !== true;
+
+  if (inSync) {
+    try {
+      return await downloadPdfFromDrive(fileId);
+    } catch (driveErr) {
+      console.warn(
+        `Drive copy fetch failed for resume ${resume._id}, regenerating via PDFSpark: ${driveErr.message}`
+      );
+    }
+  }
+
+  try {
+    return await generatePDF(resume.toObject());
+  } catch (genErr) {
+    if (fileId) {
+      try {
+        console.warn(
+          `PDFSpark failed for resume ${resume._id} (${genErr.message}); serving last Google Drive copy as fallback.`
+        );
+        return await downloadPdfFromDrive(fileId);
+      } catch (driveErr) {
+        console.error(
+          `Drive fallback also failed for resume ${resume._id}: ${driveErr.message}`
+        );
+      }
+    }
+    throw genErr;
+  }
+};
 
 // PDF generation depends on the external PDFSpark service. When it is
 // overloaded (503) or rate limiting us (429), surface that as a retryable
@@ -51,9 +94,9 @@ export const generateResumePDF = async (req, res) => {
       );
     }
     
-    // Generate PDF using the service
-    const pdfBuffer = await generatePDF(resume.toObject());
-    
+    // Prefer the existing Drive copy; regenerate (and fall back) as needed.
+    const pdfBuffer = await resolveResumePdfBuffer(resume);
+
     // Set up response headers for PDF download
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${resume.title || 'resume'}.pdf"`);
