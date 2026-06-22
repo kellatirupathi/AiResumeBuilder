@@ -236,6 +236,18 @@ const generateDriveLink = async (req, res) => {
     return res.status(200).json(new ApiResponse(200, { googleDriveLink: updatedResume.googleDriveLink, driveOutOfSync: false }, "Drive link generated successfully"));
   } catch (error) {
     console.error("Error generating drive link:", error);
+    const status = error?.cause?.status || error?.status;
+    if (status === 503 || status === 429 || status === 504) {
+      return res
+        .status(503)
+        .json(
+          new ApiError(
+            503,
+            "The PDF service is busy right now. Please try again in a few moments.",
+            [error.message]
+          )
+        );
+    }
     return res.status(500).json(new ApiError(500, "Failed to generate drive link", [error.message], error.stack));
   }
 };

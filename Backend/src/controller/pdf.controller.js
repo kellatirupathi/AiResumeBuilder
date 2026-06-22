@@ -7,6 +7,27 @@ import { sendDriveLinkEmail } from '../services/email.service.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 
+// PDF generation depends on the external PDFSpark service. When it is
+// overloaded (503) or rate limiting us (429), surface that as a retryable
+// "busy" response instead of a generic 500 so the UI can prompt a retry.
+const respondWithPdfError = (res, error, fallbackMessage) => {
+  const status = error?.cause?.status || error?.status;
+  if (status === 503 || status === 429 || status === 504) {
+    return res
+      .status(503)
+      .json(
+        new ApiError(
+          503,
+          "The PDF service is busy right now. Please try again in a few moments.",
+          [error.message]
+        )
+      );
+  }
+  return res
+    .status(500)
+    .json(new ApiError(500, fallbackMessage, [error.message], error.stack));
+};
+
 // Generate and download PDF for a specific resume (Authenticated user)
 export const generateResumePDF = async (req, res) => {
   try {
@@ -70,9 +91,7 @@ export const generateResumePDF = async (req, res) => {
     }
   } catch (error) {
     console.error("Error generating PDF:", error);
-    return res.status(500).json(
-      new ApiError(500, "Failed to generate PDF", [error.message], error.stack)
-    );
+    return respondWithPdfError(res, error, "Failed to generate PDF");
   }
 };
 
@@ -147,9 +166,7 @@ export const generateCoverLetterPDF = async (req, res) => {
     res.send(pdfBuffer);
   } catch (error) {
     console.error("Error generating cover letter PDF:", error);
-    return res
-      .status(500)
-      .json(new ApiError(500, "Failed to generate cover letter PDF", [error.message], error.stack));
+    return respondWithPdfError(res, error, "Failed to generate cover letter PDF");
   }
 };
 
@@ -199,16 +216,7 @@ export const generatePublicCoverLetterPDFDirect = async (req, res) => {
     res.send(pdfBuffer);
   } catch (error) {
     console.error("Error generating public cover letter PDF:", error);
-    return res
-      .status(500)
-      .json(
-        new ApiError(
-          500,
-          "Failed to generate cover letter PDF",
-          [error.message],
-          error.stack
-        )
-      );
+    return respondWithPdfError(res, error, "Failed to generate cover letter PDF");
   }
 };
 

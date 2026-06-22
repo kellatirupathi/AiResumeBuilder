@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { requestPdfFromHtml, PDFSPARK_MAX_HTML_BYTES } from './pdfspark.client.js';
 
 // Get current directory
 const __filename = fileURLToPath(import.meta.url);
@@ -97,14 +98,6 @@ handlebars.registerHelper('if_odd', function(index, options) {
   }
 });
 
-const PDFSPARK_API_URL = process.env.PDFSPARK_API_URL || 'https://pdfspark.dev/api/v1/pdf/from-html';
-const PDFSPARK_TIMEOUT_MS = Number(process.env.PDFSPARK_TIMEOUT_MS || 60000);
-const PDFSPARK_MAX_RETRIES = Math.max(1, Number(process.env.PDFSPARK_MAX_RETRIES || 2));
-const PDFSPARK_RETRY_DELAY_MS = Math.max(0, Number(process.env.PDFSPARK_RETRY_DELAY_MS || 1500));
-const PDFSPARK_MAX_HTML_BYTES = 5 * 1024 * 1024;
-
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
 const sanitizeResumeDataForPdf = (resumeData = {}) => ({
   _id: resumeData._id,
   firstName: resumeData.firstName || '',
@@ -127,31 +120,6 @@ const sanitizeResumeDataForPdf = (resumeData = {}) => ({
   certifications: Array.isArray(resumeData.certifications) ? resumeData.certifications : [],
   additionalSections: Array.isArray(resumeData.additionalSections) ? resumeData.additionalSections : [],
 });
-
-const createPdfsparkHttpError = async (response) => {
-  const errorBody = await response.text().catch(() => '');
-  const error = new Error(
-    `PDFSpark request failed with status ${response.status}${errorBody ? `: ${errorBody}` : ''}`
-  );
-  error.status = response.status;
-  return error;
-};
-
-const shouldRetryPdfsparkError = (error) => {
-  if (!error) {
-    return false;
-  }
-
-  if (error.name === 'AbortError') {
-    return true;
-  }
-
-  if (typeof error.status === 'number') {
-    return error.status === 429 || error.status >= 500;
-  }
-
-  return error instanceof TypeError;
-};
 
 export const renderResumeHtml = (resumeData) => {
   // Ensure we have template data
@@ -258,61 +226,7 @@ export const generatePDF = async (resumeData) => {
     );
   }
 
-  let lastError;
-
-  for (let attempt = 1; attempt <= PDFSPARK_MAX_RETRIES; attempt += 1) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), PDFSPARK_TIMEOUT_MS);
-    const requestStartedAt = Date.now();
-
-    try {
-      const response = await fetch(PDFSPARK_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          html,
-          options: {
-            format: 'A4',
-            printBackground: true
-          }
-        }),
-        signal: controller.signal
-      });
-
-      if (!response.ok) {
-        throw await createPdfsparkHttpError(response);
-      }
-
-      const arrayBuffer = await response.arrayBuffer();
-      return Buffer.from(arrayBuffer);
-    } catch (error) {
-      const durationMs = Date.now() - requestStartedAt;
-      const isTimeout = error?.name === 'AbortError';
-      const failureReason = isTimeout
-        ? `PDFSpark request timed out after ${PDFSPARK_TIMEOUT_MS}ms`
-        : error.message;
-
-      lastError = new Error(
-        `Failed to generate PDF for resume ${resumeId} using template ${templateName} on attempt ${attempt}/${PDFSPARK_MAX_RETRIES}: ${failureReason}`,
-        { cause: error }
-      );
-
-      if (attempt < PDFSPARK_MAX_RETRIES && shouldRetryPdfsparkError(error)) {
-        console.warn(
-          `Retrying PDF generation for resume ${resumeId} after attempt ${attempt} failed in ${durationMs}ms: ${failureReason}`
-        );
-        await wait(PDFSPARK_RETRY_DELAY_MS * attempt);
-        continue;
-      }
-
-      console.error('Error generating PDF with PDFSpark:', lastError);
-      throw lastError;
-    } finally {
-      clearTimeout(timeout);
-    }
-  }
-
-  throw lastError || new Error('Failed to generate PDF');
+  return requestPdfFromHtml(html, {
+    label: `resume ${resumeId} using template ${templateName}`,
+  });
 };
