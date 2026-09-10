@@ -36,4 +36,31 @@ const isUserAvailable = async (req, res, next) => {
   }
 };
 
-export { isUserAvailable };
+/**
+ * Attaches req.user when a valid session cookie is present, but never rejects
+ * the request. Used by endpoints that serve both signed-in and anonymous
+ * callers (e.g. the public ATS checker) where identity only changes the rate
+ * limit applied, not access.
+ */
+const attachUserIfAvailable = async (req, res, next) => {
+  const { token } = req.cookies;
+
+  if (!token) {
+    return next();
+  }
+
+  try {
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    const user = await User.findById(decodedToken.id);
+
+    if (user) {
+      req.user = user;
+    }
+  } catch {
+    // An invalid or expired token is treated as anonymous here.
+  }
+
+  return next();
+};
+
+export { isUserAvailable, attachUserIfAvailable };

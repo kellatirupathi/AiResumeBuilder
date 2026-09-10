@@ -1,229 +1,124 @@
-import {
-  MISTRAL_API_KEY,
-  MISTRAL_ENDPOINT,
-  MISTRAL_MODEL,
-  OPENAI_API_KEY,
-  OPENAI_ENDPOINT,
-  OPENAI_MODEL,
-} from "../config/config";
+// AI client.
+//
+// This used to call Mistral/OpenAI directly from the browser using
+// VITE_-prefixed API keys — which Vite inlines into the public bundle, making
+// the keys readable by anyone who loaded the site. All generation now goes
+// through the backend (POST /api/ai/generate), which holds the Cloudflare
+// Workers AI credential server-side and applies rate limiting.
+//
+// The exported shape is unchanged: callers still do
+//   const result = await AIChatSession.sendMessage(prompt);
+//   const text = result.response.text();
 
-const REQUEST_TIMEOUT_MS = 60000;
+import { getApiUrl } from "../config/config";
+
+const REQUEST_TIMEOUT_MS = 90000;
+
 const JSON_PROMPT_PATTERN = /\bjson\b/i;
 const PLAIN_TEXT_OVERRIDE_PATTERN =
   /do not wrap.*json|not a json object|only the enhanced summary text|response must be only|must be only the enhanced summary text/i;
 
-const stripCodeFences = (value) =>
-  value.replace(/^```(?:json)?\s*/i, "").replace(/```$/i, "").trim();
-
+// Kept in sync with the same heuristic on the backend. Sent explicitly so the
+// two never drift apart.
 const shouldRequestJson = (prompt) =>
   JSON_PROMPT_PATTERN.test(prompt) && !PLAIN_TEXT_OVERRIDE_PATTERN.test(prompt);
 
-const normalizeResponseText = (prompt, text) => {
-  const cleanText = stripCodeFences(text || "");
+const stripCodeFences = (value) =>
+  String(value || "")
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```$/i, "")
+    .trim();
 
-  if (!cleanText) {
-    throw new Error("Provider returned an empty response.");
-  }
-
-  if (shouldRequestJson(prompt)) {
-    JSON.parse(cleanText);
-  }
-
-  return cleanText;
-};
-
-const toUserFacingErrorMessage = (error, providerName) => {
-  if (error?.name === "AbortError") {
-    return "AI provider took too long. Please try again.";
-  }
-
-  const message = String(error?.message || "");
-
-  if (/status 401|unauthorized/i.test(message)) {
-    return `${providerName} authentication failed. Please check the API configuration.`;
-  }
-
-  if (/status 429|rate limit|capacity exceeded|service tier capacity exceeded/i.test(message)) {
-    return `${providerName} is busy right now. Please try again in a moment.`;
-  }
-
-  if (/status 500|status 502|status 503|status 504|server error/i.test(message)) {
-    return `${providerName} is temporarily unavailable. Please try again.`;
-  }
-
-  return `${providerName} request failed. Please try again.`;
-};
-
-const buildMessages = (prompt) => [{ role: "user", content: prompt }];
-
-const buildMistralBody = (prompt, wantsJson) => {
-  const body = {
-    model: MISTRAL_MODEL,
-    messages: buildMessages(prompt),
-    temperature: 1,
-    top_p: 0.95,
-    max_tokens: 8192,
-  };
-
-  if (wantsJson) {
-    body.response_format = { type: "json_object" };
-  }
-
-  return body;
-};
-
-const buildOpenAIBody = (prompt, wantsJson) => {
-  const body = {
-    model: OPENAI_MODEL,
-    messages: buildMessages(prompt),
-    temperature: 1,
-    max_tokens: 8192,
-  };
-
-  if (wantsJson) {
-    body.response_format = { type: "json_object" };
-  }
-
-  return body;
-};
-
-const extractChatCompletionText = (data, providerName) => {
-  const content = data?.choices?.[0]?.message?.content;
-
-  if (typeof content === "string") {
-    return content;
-  }
-
-  if (Array.isArray(content)) {
-    const mergedContent = content
-      .map((part) => {
-        if (typeof part === "string") return part;
-        if (typeof part?.text === "string") return part.text;
-        return "";
-      })
-      .join("")
-      .trim();
-
-    if (mergedContent) {
-      return mergedContent;
-    }
-  }
-
-  throw new Error(`${providerName} returned no message content.`);
-};
-
-const fetchWithTimeout = async (url, options, timeoutMs, controller = new AbortController()) => {
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
+const parseErrorMessage = async (response) => {
   try {
-    return await fetch(url, {
-      ...options,
-      signal: controller.signal,
-    });
-  } finally {
-    clearTimeout(timeoutId);
+    const data = await response.json();
+    return data?.message || "";
+  } catch {
+    return "";
   }
 };
 
-const providers = [
-  {
-    name: "Mistral",
-    apiKey: MISTRAL_API_KEY,
-    endpoint: MISTRAL_ENDPOINT,
-    buildBody: buildMistralBody,
-  },
-  {
-    name: "OpenAI",
-    apiKey: OPENAI_API_KEY,
-    endpoint: OPENAI_ENDPOINT,
-    buildBody: buildOpenAIBody,
-  },
-].filter((provider) => provider.apiKey && provider.endpoint);
-
-const callProvider = async (provider, prompt, wantsJson, controller) => {
-  const response = await fetchWithTimeout(
-    provider.endpoint,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${provider.apiKey}`,
-      },
-      body: JSON.stringify(provider.buildBody(prompt, wantsJson)),
-    },
-    REQUEST_TIMEOUT_MS,
-    controller
-  );
-
-  if (!response.ok) {
-    let errorBody = "";
-
-    try {
-      errorBody = await response.text();
-    } catch {
-      errorBody = "";
-    }
-
-    throw new Error(
-      `${provider.name} request failed with status ${response.status}${errorBody ? `: ${errorBody.slice(0, 300)}` : ""}`
-    );
+const toUserFacingErrorMessage = (status, serverMessage) => {
+  if (serverMessage) {
+    return serverMessage;
   }
 
-  const data = await response.json();
-  const text = extractChatCompletionText(data, provider.name);
+  if (status === 429) {
+    return "You have made too many AI requests. Please try again in a little while.";
+  }
 
-  return normalizeResponseText(prompt, text);
+  if (status === 503) {
+    return "The AI service is busy right now. Please try again in a moment.";
+  }
+
+  if (status === 504) {
+    return "The AI service took too long. Please try again.";
+  }
+
+  if (status === 413) {
+    return "There is too much text to analyse. Please shorten it and try again.";
+  }
+
+  return "The AI request failed. Please try again.";
 };
 
 export const AIChatSession = {
   async sendMessage(prompt) {
-    if (!providers.length) {
-      throw new Error("No AI provider is configured.");
+    if (typeof prompt !== "string" || !prompt.trim()) {
+      throw new Error("A prompt is required.");
     }
 
-    const wantsJson = shouldRequestJson(prompt);
-    const errors = [];
-    const userFacingErrors = [];
-    const controllers = providers.map(() => new AbortController());
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-    const providerPromises = providers.map((provider, index) =>
-      callProvider(provider, prompt, wantsJson, controllers[index])
-        .then((text) => ({
-          provider: provider.name,
-          response: {
-            text: () => text,
-          },
-        }))
-        .catch((error) => {
-          console.warn(`[AI] ${provider.name} failed, trying fallback if available.`, error);
-          errors.push(`${provider.name}: ${error.message}`);
-          userFacingErrors.push(toUserFacingErrorMessage(error, provider.name));
-          throw error;
-        })
-    );
+    let response;
 
     try {
-      const result = await Promise.any(providerPromises);
-
-      controllers.forEach((controller, index) => {
-        if (providers[index].name !== result.provider && !controller.signal.aborted) {
-          controller.abort();
-        }
+      response = await fetch(getApiUrl("ai/generate"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ prompt, json: shouldRequestJson(prompt) }),
+        signal: controller.signal,
       });
-
-      return result;
-    } catch {
-      controllers.forEach((controller) => {
-        if (!controller.signal.aborted) {
-          controller.abort();
-        }
-      });
+    } catch (error) {
+      if (error?.name === "AbortError") {
+        throw new Error("The AI request took too long. Please try again.");
+      }
+      throw new Error("Could not reach the AI service. Check your connection.");
+    } finally {
+      clearTimeout(timeoutId);
     }
 
-    const uniqueMessages = [...new Set(userFacingErrors)].filter(Boolean);
+    if (!response.ok) {
+      const serverMessage = await parseErrorMessage(response);
+      throw new Error(toUserFacingErrorMessage(response.status, serverMessage));
+    }
 
-    throw new Error(
-      uniqueMessages[0] || `All AI providers failed. ${errors.join(" | ")}`
-    );
+    const payload = await response.json();
+    const text = stripCodeFences(payload?.data?.text);
+
+    if (!text) {
+      throw new Error("The AI service returned an empty response.");
+    }
+
+    // Callers JSON.parse this directly, so fail here with a clear message
+    // rather than surfacing a raw SyntaxError from the call site.
+    if (shouldRequestJson(prompt)) {
+      try {
+        JSON.parse(text);
+      } catch {
+        throw new Error(
+          "The AI returned an unexpected format. Please try again."
+        );
+      }
+    }
+
+    return {
+      provider: "cloudflare",
+      response: {
+        text: () => text,
+      },
+    };
   },
 };

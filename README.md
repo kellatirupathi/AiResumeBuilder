@@ -64,8 +64,7 @@ The product is built around one reusable user profile. That profile powers:
 
 ### Integrations
 
-- OpenAI
-- Mistral
+- Cloudflare Workers AI
 - Google OAuth
 - Google Drive
 - GitHub Pages
@@ -112,7 +111,7 @@ When a user downloads a PDF:
 - MongoDB database
 - Google OAuth credentials
 - Google Drive service account credentials
-- OpenAI and/or Mistral API access if you want AI features enabled
+- Cloudflare account ID and an API token with Workers AI read access, if you want AI features enabled
 - PDFSpark endpoint access for PDF generation
 
 ### Install Dependencies
@@ -153,6 +152,12 @@ FROM_EMAIL=
 PDFSPARK_API_URL=https://pdfspark.dev/api/v1/pdf/from-html
 PDFSPARK_TIMEOUT_MS=30000
 
+# Cloudflare Workers AI — powers all AI generation.
+# The token is server-side only and must never be exposed to the frontend.
+CLOUDFLARE_ACCOUNT_ID=
+CLOUDFLARE_API_TOKEN=
+CLOUDFLARE_AI_MODEL=@cf/meta/llama-3.3-70b-instruct-fp8-fast
+
 GOOGLE_CREDENTIALS_BASE64=
 GOOGLE_APPLICATION_CREDENTIALS=
 GOOGLE_DRIVE_FOLDER_ID=
@@ -170,14 +175,6 @@ CRON_SECRET=
 VITE_APP_URL=http://localhost:5001/
 VITE_PUBLIC_URL=http://localhost:5173
 VITE_GOOGLE_CLIENT_ID=
-
-VITE_OPENAI_API_KEY=
-VITE_OPENAI_MODEL=gpt-4.1-mini
-VITE_OPENAI_ENDPOINT=https://api.openai.com/v1/chat/completions
-
-VITE_MISTRAL_API_KEY=
-VITE_MISTRAL_MODEL=mistral-medium-latest
-VITE_MISTRAL_ENDPOINT=https://api.mistral.ai/v1/chat/completions
 
 VITE_STRAPI_API_KEY=
 VITE_BASE_URL=
@@ -237,6 +234,7 @@ Main backend route groups:
 - `/api/admin` - admin auth, stats, user management, resume management, notifications, reminders
 - `/api/niat-ids` - protected NIAT ID management
 - `/api/cron` - scheduled-job endpoints protected by a cron secret
+- `/api/ai` - Cloudflare Workers AI proxy for all AI generation, rate limited per user and per IP
 
 ## Important Application Notes
 

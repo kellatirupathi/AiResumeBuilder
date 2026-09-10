@@ -7,6 +7,7 @@ import pdfRouter from "./routes/pdf.routes.js";
 import adminRouter from "./routes/admin.routes.js";
 import niatIdRouter from "./routes/niatId.routes.js";
 import cronRouter from "./routes/cron.routes.js";
+import aiRouter from "./routes/ai.routes.js";
 import cors from "cors";
 import { config } from "dotenv";
 config();
@@ -48,6 +49,7 @@ app.use("/api/pdf", pdfRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/niat-ids", niatIdRouter);
 app.use("/api/cron", cronRouter);
+app.use("/api/ai", aiRouter);
 
 // Simple status endpoint
 app.get("/api/status", (req, res) => {
