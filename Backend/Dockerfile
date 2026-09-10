@@ -1,4 +1,7 @@
-FROM node:20-bullseye
+# Debian 12 (bookworm). Bullseye's security repository stopped being refreshed
+# once it went end-of-life, so apt rejected its expired Release file and every
+# build failed at apt-get update with exit 100.
+FROM node:20-bookworm
 
 WORKDIR /app
 
@@ -16,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libexpat1 \
     libfontconfig1 \
     libgbm1 \
-    libgcc1 \
+    libgcc-s1 \
     libglib2.0-0 \
     libgtk-3-0 \
     libnspr4 \
